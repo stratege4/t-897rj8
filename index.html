@@ -1,0 +1,1470 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F6EFE3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Thailand">
+<meta name="robots" content="noindex,nofollow">
+<title>Thailand 2027</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#F6EFE3; --surface:#FFFBF4; --surface2:#EFE4D2; --line:rgba(74,52,32,.12); --line2:rgba(74,52,32,.2);
+  --text:#3A2E24; --mute:#8A7866; --accent:#C65D3B; --accent-ink:#FFF8EF; --accent2:#2F7E8A; --gold:#D9A441;
+  --t-strand:#2E8FA3; --t-ort:#C65D3B; --t-essen:#A8475F; --t-cafe:#8A5A3C; --t-aussicht:#6E8B3D; --t-erlebnis:#C98D1F;
+  --plan:#8B5E3C; --plan-ink:#FFF8EF; --good:#6E8B3D; --warn:#C98D1F; --bad:#A8475F; --pinring:#FFFBF4; --ink-on-color:#FFFBF4;
+  --display:"Fraunces", Georgia, serif; --sans:"Manrope", -apple-system, system-ui, sans-serif;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --shadow:0 10px 28px rgba(92,62,34,.16); --panelh:52dvh;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg);color:var(--text);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+a{color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+[hidden]{display:none!important}
+.ic{width:24px;height:24px;display:block;flex:none}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--mute)} .small{font-size:13px}
+.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:700}
+
+/* map */
+.mapwrap{position:fixed;inset:0;height:100dvh;z-index:0}
+#map{position:absolute!important;inset:0;background:#0E3A4A}
+.leaflet-container{background:#0E3A4A;font-family:var(--sans)}
+.leaflet-tile{transition:opacity .2s ease-out}
+.basemap{image-rendering:auto}
+.mapshade{position:absolute;inset:0;pointer-events:none;z-index:450;background:linear-gradient(to bottom,rgba(246,239,227,.30),rgba(246,239,227,0) 15%);}
+.mapui{position:absolute;z-index:700;pointer-events:none}
+.mapui>*{pointer-events:auto}
+.mapui.top{top:calc(var(--safe-t) + 10px);left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.mapui.right{right:12px;top:calc(var(--safe-t) + 70px);display:flex;flex-direction:column;gap:8px}
+.mapui.bottom{left:0;right:0;bottom:calc(var(--panelh) + 16px);display:flex;justify-content:center;align-items:stretch;gap:8px;padding-inline:12px;transition:bottom .34s cubic-bezier(.32,.72,0,1)}
+.glass{background:rgba(255,251,244,.82);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);border:1px solid var(--line2);border-radius:16px;box-shadow:var(--shadow)}
+.daybadge{padding:8px 13px;display:flex;flex-direction:column;line-height:1.2;font-size:12px;font-weight:700;color:var(--mute)}
+.daybadge .big{font-family:var(--display);font-size:22px;color:var(--text);display:flex;align-items:baseline;gap:4px}
+.daybadge .big small{font-size:14px;color:var(--mute)}
+.daybadge .row{display:flex;align-items:center;gap:5px}
+.daybadge .ic{width:15px;height:15px}
+.gbtn.on{background:var(--accent2)!important;color:#FFFBF4!important}
+.gbtn{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;cursor:pointer;border:1px solid var(--line2);background:rgba(255,251,244,.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--shadow);color:var(--text)}
+.tfbar{display:flex;gap:2px;padding:5px}
+.tfil{height:42px;padding:0 14px;border-radius:12px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;gap:7px;color:var(--mute);opacity:.5;font-size:12.5px;font-weight:800;letter-spacing:.01em}
+.tfl{white-space:nowrap}
+.tfil .ic{width:22px;height:22px}
+.tfil.on{opacity:1;color:var(--c);background:rgba(74,52,32,.06)}
+.offline{display:flex;align-items:center;gap:6px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--bad)}
+.attrib{position:absolute;right:8px;bottom:calc(var(--panelh) + 2px);z-index:460;font-size:9px;color:rgba(255,255,255,.62);text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none;transition:bottom .34s cubic-bezier(.32,.72,0,1)}
+
+/* pins and labels */
+.mpin{position:relative;border-radius:50%;background:var(--c);color:#FFFBF4;display:grid;place-items:center;box-shadow:0 0 0 2.5px #FFFBF4,0 4px 10px rgba(74,52,32,.35);cursor:pointer}
+.mpin .ic{width:58%;height:58%;stroke-width:2.2}
+.mpin.done{background:var(--surface);color:var(--c);box-shadow:0 0 0 2.5px var(--c),0 3px 8px rgba(74,52,32,.25);opacity:.5}
+.mpin.done .ic{stroke-width:2.4}
+.hotelpin{width:38px;height:38px;border-radius:13px;background:var(--text);color:#FFFBF4;display:grid;place-items:center;box-shadow:0 0 0 2.5px #FFFBF4,0 5px 12px rgba(74,52,32,.4)}
+.hotelpin .ic{width:22px;height:22px;stroke-width:2.2}
+.lbl{color:#FFFFFF;white-space:nowrap;pointer-events:none;text-shadow:0 0 2px rgba(10,20,25,.95),0 1px 3px rgba(10,20,25,.85),0 0 9px rgba(10,20,25,.6)}
+.lbl.town{font:700 13px/1 var(--sans);letter-spacing:.02em}
+.lbl.town.major{font:700 16.5px/1 var(--sans);letter-spacing:.01em}
+.lbl.poi.done{opacity:.5}
+.lbl.poi{display:inline-block;color:var(--text);font:800 12.5px/1 var(--sans);background:rgba(255,251,244,.95);padding:5px 9px;border-radius:9px;text-shadow:none;box-shadow:0 2px 8px rgba(20,14,8,.3)}
+.mepin{position:relative;width:20px;height:20px;border-radius:50%;background:#1E7BFF;box-shadow:0 0 0 3px #FFFFFF,0 2px 8px rgba(0,0,0,.45)}
+.mepin:after{content:"";position:absolute;inset:-9px;border-radius:50%;background:rgba(30,123,255,.35);animation:mepulse 2s ease-out infinite}
+@keyframes mepulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mepin:after{animation:none;opacity:.35}}
+.mepin.stale{background:#8A9BB0}
+.crosshair #map{cursor:crosshair}
+.placing{position:absolute;left:12px;right:12px;top:calc(var(--safe-t) + 10px);z-index:900;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:700}
+
+/* panel */
+.panel{position:fixed;left:0;right:0;bottom:0;height:var(--panelh);background:var(--bg);border-radius:26px 26px 0 0;z-index:800;box-shadow:0 -10px 30px rgba(92,62,34,.16);display:flex;flex-direction:column;transition:transform .34s cubic-bezier(.32,.72,0,1)}
+.grip{flex:none;height:26px;display:grid;place-items:center;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.grip:before{content:"";width:44px;height:5px;border-radius:5px;background:var(--line2)}
+.wrap{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;max-width:560px;width:100%;margin:0 auto;padding-inline:16px;padding-block:4px calc(118px + var(--safe-b));display:flex;flex-direction:column;gap:18px}
+/* eingeklappt: nur Griff und Tagesplan-Knopf bleiben sichtbar, der Rest ist Karte */
+body{--peek:calc(110px + var(--safe-b))}
+body.mapfull{--panelh:var(--peek)}
+body.mapfull .panel{transform:translateY(calc(100% - var(--peek)))}
+body.mapfull .grip{height:30px}
+.wrap{transition:opacity .2s}
+body.mapfull .wrap{opacity:0;pointer-events:none}
+#morning:empty,#planpin:empty{display:none}
+.card{box-shadow:0 6px 18px rgba(92,62,34,.08);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card.hi{background:linear-gradient(160deg,var(--surface2),var(--surface));border-color:var(--line2)}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cardhead h2{font-family:var(--display);font-size:19px;font-weight:600}
+.rowhead{display:flex;align-items:center;gap:8px}
+.rowhead h2{font-family:var(--display);font-size:20px;margin-right:auto}
+.iconlink{border:0;background:none;color:var(--mute);display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;cursor:pointer;padding:8px 4px}
+.iconlink .ic{width:18px;height:18px}
+.iconlink.accent{color:var(--accent2)}
+.iconlink.plan{color:var(--plan)}
+
+.helpbtn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line2);background:var(--surface);color:var(--mute);font:800 15px/1 var(--sans);cursor:pointer;display:grid;place-items:center}
+.helprow{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}
+.helprow:first-of-type{border-top:0}
+.helprow .hi{width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--text)}
+.helprow b{display:block;font-size:14px}
+.helprow span{font-size:13px;color:var(--mute)}
+
+/* suggestion cards */
+.scards{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 16px 8px;margin-inline:-16px;scrollbar-width:none}
+.scards::-webkit-scrollbar{display:none}
+.scard{box-shadow:0 6px 18px rgba(92,62,34,.1);flex:none;width:70%;max-width:260px;scroll-snap-align:start;scroll-margin-left:16px;border:1px solid var(--line);background:var(--surface);border-radius:20px;overflow:hidden;padding:0;text-align:left;cursor:pointer;display:flex;flex-direction:column}
+.sc-top{position:relative;height:112px;background:radial-gradient(120% 90% at 20% 10%,color-mix(in srgb,var(--c) 22%,#FFFBF4),color-mix(in srgb,var(--c) 45%,#EFE4D2));display:grid;place-items:center;overflow:hidden;color:var(--c)}
+.sc-top img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sc-top .ic{width:44px;height:44px;stroke-width:1.6}
+.sc-top img~.tchip{position:absolute;left:8px;bottom:8px}
+.tchip{width:30px;height:30px;border-radius:10px;background:var(--c);color:#FFFBF4;display:grid;place-items:center}
+.tchip .ic{width:18px!important;height:18px!important;stroke-width:2.2!important}
+.sc-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.sc-name{font-weight:800;font-size:15px;line-height:1.2}
+.meta{display:flex;gap:10px;font-size:12.5px;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums}
+.meta span{display:inline-flex;align-items:center;gap:4px}
+.meta .ic{width:15px;height:15px}
+.sc-why{font-size:12.5px;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* bottom bar */
+.bottombar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + var(--safe-b));background:linear-gradient(to top,var(--bg) 65%,rgba(246,239,227,0));z-index:900;transition:transform .34s cubic-bezier(.32,.72,0,1)}
+.bottombar .in{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.primary{flex:1;border:0;border-radius:18px;min-height:56px;background:var(--plan);color:var(--plan-ink);font-weight:800;font-size:16.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px rgba(139,94,60,.35)}
+.round{width:56px;height:56px;border-radius:18px;border:1px solid rgba(139,94,60,.25);background:#E8D9C0;color:#6B4A2F;box-shadow:0 10px 24px rgba(139,94,60,.2);cursor:pointer;display:grid;place-items:center}
+.round .ic{width:26px;height:26px;stroke-width:2.2}
+
+/* buttons */
+.btn{border:1px solid var(--line2);background:var(--surface2);border-radius:14px;min-height:46px;padding:0 14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn .ic{width:19px;height:19px}
+.btn.solid{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.light{background:var(--text);color:var(--bg);border-color:transparent}
+.btn[disabled]{opacity:.45}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow .btn{flex:1 1 auto}
+.chip{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:8px 12px;min-height:38px;cursor:pointer;font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.chip .ic{width:16px;height:16px}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:transparent}
+a.chip{text-decoration:none;color:var(--text)}
+.chiprow{display:flex;gap:6px;flex-wrap:wrap}
+
+/* sheet */
+.overlay{position:fixed;inset:0;background:rgba(58,46,36,.35);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:600px;max-height:90%;border-radius:26px 26px 0 0;overflow:auto;padding:8px 18px calc(24px + var(--safe-b));display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line2);box-shadow:0 -12px 40px rgba(92,62,34,.25);overscroll-behavior:contain}
+.sheet>*{flex-shrink:0}
+.sheet.tall{height:92%}
+.spotsearch{position:relative}
+.spotsearch .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--mute);pointer-events:none}
+.spotsearch input{width:100%;font:600 16px/1.2 var(--sans);color:var(--text);background:var(--surface);border:1.5px solid var(--line2);border-radius:16px;padding:15px 14px 15px 44px;-webkit-appearance:none;appearance:none}
+.spotsearch input:focus{border-color:var(--accent2);outline:none}
+.spotsearch input::-webkit-search-cancel-button{-webkit-appearance:none}
+.sres{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:-6px}
+.sres:empty{display:none}
+.sritem{display:grid;grid-template-columns:34px 1fr 40px;gap:10px;align-items:center;min-height:58px;padding:8px 10px 8px 12px;border:0;border-top:1px solid var(--line);background:none;text-align:left;cursor:pointer;color:var(--text);width:100%}
+.sritem:first-child{border-top:0}
+.sritem .tchip{width:34px;height:34px}
+.sritem .srtxt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sritem .srtxt b{font-size:15px;line-height:1.25}
+.sritem .srtxt b mark{background:none;color:var(--plan);font-weight:800}
+.sritem .srtxt span{font-size:12.5px;color:var(--mute)}
+.sradd{width:40px;height:40px;border-radius:12px;background:var(--plan);color:var(--plan-ink);display:grid;place-items:center}
+.sradd .ic{width:20px;height:20px;stroke-width:2.4}
+.sritem[disabled]{cursor:default}
+.sritem[disabled] .sradd{background:var(--plan);opacity:.5}
+.sritem[disabled] .srtxt b{color:var(--mute)}
+.srnone{padding:14px;font-size:13.5px;color:var(--mute)}
+.addmsg{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;color:var(--plan);min-height:0;margin:-4px 0}
+.addmsg:empty{display:none}
+.addmsg .ic{width:18px;height:18px}
+.addmsg.show{animation:addpop .5s cubic-bezier(.32,.72,0,1)}
+@keyframes addpop{0%{opacity:0;transform:translateY(-4px)}100%{opacity:1;transform:none}}
+.dayrow{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-18px;padding-inline:18px}
+.dayrow::-webkit-scrollbar{display:none}
+.dayrow .chip{flex:none}
+.dayrow .chip[aria-pressed="true"]{background:var(--plan);color:var(--plan-ink)}
+.btn.plan{background:var(--plan);color:var(--plan-ink);border-color:transparent}
+.rtlbl{display:inline-block;white-space:nowrap;background:var(--plan);color:var(--plan-ink);font:800 12px/1 var(--sans);padding:5px 8px;border-radius:9px;border:1.5px solid #EAD9B8;box-shadow:0 2px 8px rgba(20,14,8,.35);transform:translate(-50%,-50%)}
+.dpsum{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+.dpsum span{display:inline-flex;align-items:center;gap:5px}
+.dpsum .ic{width:16px;height:16px}
+.dpempty{text-align:center;padding:22px 12px;color:var(--mute);font-size:14px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.dpempty .ic{width:30px;height:30px;color:var(--line2)}
+@keyframes rowin{0%{background:color-mix(in srgb,var(--plan) 18%,transparent)}100%{background:transparent}}
+.tlrow.added{animation:rowin 1.6s ease-out;border-radius:12px}
+.sc-plan{position:absolute;top:8px;right:8px;background:var(--plan);color:var(--plan-ink);border-radius:999px;padding:3px 8px 3px 5px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:3px}
+.sc-plan .ic{width:14px;height:14px;stroke-width:2.6}
+.sc-plan.done{background:var(--surface);color:var(--mute);box-shadow:inset 0 0 0 1.5px var(--line2)}
+.scard.done .sc-top img{opacity:.5}
+.scard.done .sc-name{color:var(--mute)}
+.grab{width:42px;height:5px;border-radius:5px;background:var(--line2);margin:4px auto 0}
+.sheethead{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ph{display:flex;gap:12px;align-items:center;min-width:0}
+.ph h2{font-family:var(--display);font-size:23px;line-height:1.15}
+.tbig{width:54px;height:54px;border-radius:17px;background:var(--c);color:#FFFBF4;display:grid;place-items:center;flex:none}
+.tbig .ic{width:30px;height:30px;stroke-width:2}
+.closebtn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:6px}
+.fact{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;background:var(--surface);border-radius:14px;font-size:11.5px;color:var(--mute);font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.fact .ic{width:22px;height:22px;color:var(--text)}
+.fact .wx{display:flex;gap:1px}
+.fact .wx .ic{width:17px;height:17px}
+.why{border-left:3px solid var(--accent);padding-left:11px;font-size:14.5px}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.act{border:1px solid var(--line);background:var(--surface);border-radius:16px;min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:11.5px;font-weight:800;text-decoration:none;cursor:pointer;padding:4px;color:var(--text)}
+.act .ic{width:24px;height:24px}
+.act.on{background:var(--gold);color:#FFFBF4;border-color:transparent}
+.act.on .ic{fill:#FFFBF4}
+.rates{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rate{border:1px solid var(--line);background:var(--surface);border-radius:16px;min-height:58px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--mute);font-size:10.5px;font-weight:800}
+.rate .ic{width:26px;height:26px}
+.rate.down .ic{transform:rotate(180deg)}
+.rate[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.rate.r-herz[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.rate.r-herz[aria-pressed="true"] .ic{fill:currentColor}
+input[type=text],input[type=time],input[type=date],input[type=number],textarea{width:100%;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--line2);border-radius:14px;padding:12px}
+textarea{min-height:80px;resize:vertical}
+.etrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;padding:11px 0;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer}
+.etrow:first-child{border-top:0}
+.etrow .tchip{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--surface2);color:var(--plan)}
+.etrow .tchip .ic{width:19px;height:19px}
+.etrow b{display:block;font-weight:800;overflow-wrap:anywhere}
+.etrow .sub{display:block;font-size:13px;color:var(--mute);overflow-wrap:anywhere}
+.etst{font-size:11.5px;font-weight:800;border-radius:999px;padding:3px 9px;border:1.5px solid currentColor;white-space:nowrap}
+.etst.idee{color:var(--mute)} .etst.geplant{color:var(--warn)} .etst.gebucht{color:var(--good)}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.formgrid label,.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mute);min-width:0}
+.formgrid .wide{grid-column:1/-1}
+.etnote{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;font-size:13.5px;cursor:pointer;width:100%;text-align:left;color:inherit;font-family:inherit}
+.etnote .ic{width:19px;height:19px;color:var(--plan);flex:none}
+.note{background:var(--surface);border-radius:14px;padding:11px 12px;font-size:13.5px;color:var(--mute)}
+details{border-top:1px solid var(--line);padding-top:6px}
+details summary{cursor:pointer;font-weight:800;padding:8px 0;display:flex;align-items:center;gap:8px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary .ic{width:18px;height:18px;color:var(--mute)}
+details>*:not(summary){margin-top:8px}
+.credit{font-size:10.5px;color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;background:var(--surface2)}
+.pill .ic{width:14px;height:14px}
+
+/* timeline */
+.tl{display:flex;flex-direction:column}
+.tlrow{display:grid;grid-template-columns:50px 22px 1fr auto;gap:8px;align-items:start}
+.tlrow .time{font-variant-numeric:tabular-nums;font-weight:800;padding-top:3px}
+.rail{position:relative;align-self:stretch;display:flex;justify-content:center}
+.rail:before{content:"";position:absolute;top:0;bottom:0;width:2px;background:var(--line2)}
+.rail i{position:relative;margin-top:2px;width:22px;height:22px;border-radius:8px;background:var(--c,var(--surface2));color:#FFFBF4;display:grid;place-items:center}
+.rail i .ic{width:14px;height:14px;stroke-width:2.4}
+.tlrow.drive .rail i{width:8px;height:8px;border-radius:50%;background:var(--line2);margin-top:8px}
+.tlbody{padding-bottom:14px;min-width:0}
+.tlrow.drive .tlbody{font-size:12.5px;color:var(--mute);padding-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tlrow.drive .tlbody .ic{width:15px;height:15px}
+.tlbody .nm{font-weight:800;border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:15px}
+.tlbody .sub{font-size:12.5px;color:var(--mute)}
+.tlbody a{color:var(--accent2);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.tlbody .stay{display:flex;width:max-content;align-items:center;gap:2px;margin-top:4px;font-size:12.5px;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums}
+.tlbody .stay span{min-width:44px;text-align:center}
+.tlbody .stay button{width:42px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:800 17px/1 var(--sans);cursor:pointer;display:grid;place-items:center}
+.tledit{display:flex;gap:4px}
+.tledit button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--mute)}
+.tledit .ic{width:17px;height:17px}
+.toast{position:fixed;left:50%;bottom:calc(92px + var(--safe-b));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 16px;border-radius:14px;z-index:2000;font-weight:800;font-size:14px;max-width:90%;text-align:center;display:flex;align-items:center;gap:8px}
+.toast .ic{width:18px;height:18px}
+.list{display:flex;flex-direction:column}
+.listrow{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.listrow:first-child{border-top:0}
+.checkrow{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.checkrow:first-child{border-top:0;padding-top:0}
+.checkrow b{display:flex;align-items:center;gap:8px}
+.sheet:focus{outline:none}
+.daybtn{min-height:54px;font-size:16px;border-radius:16px}
+.daybtn .ic{width:21px;height:21px}
+.typepick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.typepick button{border:1px solid var(--line);background:var(--surface);border-radius:14px;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:800;color:var(--mute);cursor:pointer}
+.typepick button .ic{width:22px;height:22px;color:var(--c)}
+.typepick button[aria-pressed="true"]{background:var(--c);color:#FFFBF4}
+.typepick button[aria-pressed="true"] .ic{color:#FFFBF4}
+</style>
+</head>
+<body>
+<div class="mapwrap">
+  <div id="map" role="application" aria-label="Karte"></div>
+  <div class="mapshade"></div>
+  <div class="mapui top">
+    <button class="gbtn" id="reiseBtn" aria-label="Reise und Etappen"></button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="glass offline" id="offline" hidden>offline</span>
+      <button class="gbtn" id="menuBtn" aria-label="Menü"></button>
+    </div>
+  </div>
+  <div class="mapui right">
+    <button class="gbtn" id="homeBtn" aria-label="Zur Unterkunft oder ganze Karte"></button>
+    <button class="gbtn" id="locBtn" aria-label="Mein Standort"></button>
+  </div>
+  <div class="mapui bottom"><div class="glass tfbar" id="typefilter" role="group" aria-label="Kategorien filtern"></div></div>
+  <div class="attrib" id="attrib"></div>
+</div>
+
+<div class="panel" id="panel"><div class="grip" id="grip" role="button" tabindex="0" aria-label="Menü ausblenden"></div><div class="wrap" id="wrap">
+  <div id="morning"></div>
+  <div id="planpin"></div>
+  <section aria-labelledby="spotsH">
+    <div class="rowhead"><h2 id="spotsH">Unsere Spots</h2><button class="helpbtn" id="helpBtn" aria-label="Kurz erklärt">?</button></div>
+    <div class="scards" id="spotlist"></div>
+  </section>
+</div></div>
+
+<div class="bottombar"><div class="in">
+  <button class="primary" id="planBtn"></button>
+  <button class="round" id="ideaBtn" aria-label="Neue Idee"></button>
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const ICONS = {
+  // Ortstypen
+  strand: '<path d="M7.5 10a4.5 4.5 0 0 1 9 0"/><path d="M12 3v1.5M5.2 5.7l1 1M18.8 5.7l-1 1"/><path d="M2 14.5c1.7 0 1.7-1.5 3.3-1.5s1.7 1.5 3.4 1.5 1.6-1.5 3.3-1.5 1.7 1.5 3.3 1.5 1.7-1.5 3.4-1.5 1.6 1.5 3.3 1.5"/><path d="M2 19c1.7 0 1.7-1.5 3.3-1.5S7 19 8.7 19s1.6-1.5 3.3-1.5 1.7 1.5 3.3 1.5 1.7-1.5 3.4-1.5S20.3 19 22 19"/>',
+  ort: '<path d="M3 21V11.5L8 7.5l5 4V21"/><path d="M13 21V8.5L17 5l4 3.5V21"/><path d="M2 21h20"/><path d="M6.5 21v-4h3v4"/><path d="M16 11h2M16 14.5h2"/>',
+  essen: '<path d="M6 3v6a2.5 2.5 0 0 0 5 0V3"/><path d="M8.5 3v18"/><path d="M17.5 21V3c-2.2 1.3-3.2 4-3.2 7 0 1.8.9 3 3.2 3"/>',
+  cafe: '<path d="M4 9.5h12v4.5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c-.8.9.8 1.7 0 2.8M12 3.5c-.8.9.8 1.7 0 2.8"/><path d="M3 21.5h14"/>',
+  aussicht: '<path d="M2 20 9 9l4 5.5 2.8-3.8L22 20z"/><circle cx="17" cy="5.5" r="2"/>',
+  erlebnis: '<path d="M12 2.8l2.1 5.9 5.9 2.1-5.9 2.1L12 18.8l-2.1-5.9L4 10.8l5.9-2.1z"/><path d="M19 16.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+  // Stimmung
+  energie0: '<rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/><path d="M11 9.5l-2 3h3l-2 3"/>',
+  energie1: '<rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/><path d="M6 10v4" stroke-width="3"/>',
+  energie2: '<rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/><path d="M6 10v4M10 10v4" stroke-width="3"/>',
+  energie3: '<rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/><path d="M6 10v4M10 10v4M14 10v4M16 10v4" stroke-width="3"/>',
+  auto: '<path d="M5 11l1.7-4.3A2 2 0 0 1 8.6 5.5h6.8a2 2 0 0 1 1.9 1.2L19 11"/><rect x="3" y="11" width="18" height="6.5" rx="2.2"/><path d="M6 17.5v2M18 17.5v2"/><circle cx="7.3" cy="14.2" r="1.1"/><circle cx="16.7" cy="14.2" r="1.1"/><path d="M10.5 14.2h3"/>',
+  sonne: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  wechselhaft: '<path d="M9 4.5v1.2M4.2 9H3M5.6 5.6l.9.9M13.4 5.6l-.9.9"/><path d="M6.2 11a3.2 3.2 0 0 1 6-1.6"/><path d="M7.5 20h10a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.4A2.8 2.8 0 0 0 7.5 20z"/>',
+  regen: '<path d="M7 15h10a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.4A2.8 2.8 0 0 0 7 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>',
+  wind: '<path d="M3 8.5h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12.5h16a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16.5h8"/>',
+  wetter: '<path d="M9 4.5v1.2M4.2 9H3M5.6 5.6l.9.9M13.4 5.6l-.9.9"/><path d="M6.2 11a3.2 3.2 0 0 1 6-1.6"/><path d="M7.5 20h10a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.4A2.8 2.8 0 0 0 7.5 20z"/>',
+  hotel: '<path d="M3 19V7"/><path d="M3 15h18v4"/><path d="M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="2"/>',
+  wein: '<path d="M7.5 3h9l-.6 5.5a3.9 3.9 0 0 1-7.8 0z"/><path d="M12 12.5V20M8 21h8"/><path d="M8 7h8"/>',
+  offen: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.7-2.5 2.2-2.5 3.6"/><path d="M12 17.2h.01" stroke-width="2.6"/>',
+  mond: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+  meer: '<path d="M2 9c1.7 0 1.7-1.5 3.3-1.5S7 9 8.7 9s1.6-1.5 3.3-1.5S13.7 9 15.3 9s1.7-1.5 3.4-1.5S20.3 9 22 9"/><path d="M2 14c1.7 0 1.7-1.5 3.3-1.5S7 14 8.7 14s1.6-1.5 3.3-1.5 1.7 1.5 3.3 1.5 1.7-1.5 3.4-1.5S20.3 14 22 14"/><path d="M2 19c1.7 0 1.7-1.5 3.3-1.5S7 19 8.7 19s1.6-1.5 3.3-1.5 1.7 1.5 3.3 1.5 1.7-1.5 3.4-1.5S20.3 19 22 19"/>',
+  fernglas: '<circle cx="6.5" cy="15.5" r="4"/><circle cx="17.5" cy="15.5" r="4"/><path d="M10.5 15.5h3"/><path d="M4 12l2.5-7h2.5l1.5 6.5M20 12l-2.5-7H15l-1.5 6.5"/>',
+  ruhe: '<path d="M12 20.5c-4.4 0-8-3.4-8-8.5 4.2 0 8 3.3 8 8.5z"/><path d="M12 20.5c4.4 0 8-3.4 8-8.5-4.2 0-8 3.3-8 8.5z"/><path d="M12 20.5c-2.3-2.6-2.3-8.4 0-12 2.3 3.6 2.3 9.4 0 12z"/>',
+  herz: '<path d="M12 20.5s-8.5-5-8.5-11A4.8 4.8 0 0 1 12 6.8a4.8 4.8 0 0 1 8.5 2.7c0 6-8.5 11-8.5 11z"/>',
+  // Aktionen und UI
+  stern: '<path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-3-5.4 3 1.1-6-4.5-4.2 6.1-.8z"/>',
+  route: '<path d="M3.5 11 20.5 3.5 13 20.5l-2-7.5z"/>',
+  haken: '<circle cx="12" cy="12" r="9"/><path d="M7.8 12.3l2.8 2.8 5.6-5.8"/>',
+  ausblenden: '<path d="M3 3l18 18"/><path d="M10.6 5.1A9.7 9.7 0 0 1 12 5c5 0 8.5 4.5 9.5 7a13 13 0 0 1-2.6 3.7M6.4 6.4C4.3 7.8 3 10 2.5 12c1 2.5 4.5 7 9.5 7a9.4 9.4 0 0 0 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+  auge: '<path d="M2.5 12c1-2.5 4.5-7 9.5-7s8.5 4.5 9.5 7c-1 2.5-4.5 7-9.5 7s-8.5-4.5-9.5-7z"/><circle cx="12" cy="12" r="3"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6h.01" stroke-width="2.4"/>',
+  kamera: '<path d="M3.5 8.5h3.2L8.5 6h7l1.8 2.5h3.2v11h-17z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  link: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  uhr: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.3 2"/>',
+  euro: '<path d="M17.5 6.4A7 7 0 1 0 17.5 17.6"/><path d="M4 10.2h9M4 13.8h9"/>',
+  blatt: '<path d="M5 19C5 10 10 5 20 4c-.5 10-5.5 15-14.5 15z"/><path d="M5 19l7-7"/>',
+  gehen1: '<circle cx="12" cy="4.5" r="2"/><path d="M12 7.5v6M9 21l3-7.5 3 7.5M8.5 11h7"/>',
+  gehen2: '<circle cx="13" cy="4.5" r="2"/><path d="M12.5 7.5 11 13l3 3 1 5M11 13l-3 8M9 9.5l3.5-2 2.5 3 3 1"/>',
+  gehen3: '<circle cx="14" cy="4" r="2"/><path d="M12.5 7 10 13l3.5 2.5-1 5.5M10 13l-4 7M8 9l4.5-2 2 3.5 4 .5"/><path d="M19 21l-2-9"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  kalender: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3v3H8z"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  insel: '<path d="M4.5 13.5c-1.8-2.5.2-6.2 3.6-6.5 1.8-2.6 6-3 8 .2 3.4.5 4.6 4.5 2.1 6.8.6 3-2.4 5.3-5.3 4.3-2 1.8-5.4 1.2-6.2-1.3-1.5-.2-2.6-1.8-2.2-3.5z"/>',
+  standort: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
+  funke: '<path d="M12 3c.6 4.6 3.4 7.4 8 8-4.6.6-7.4 3.4-8 8-.6-4.6-3.4-7.4-8-8 4.6-.6 7.4-3.4 8-8z"/>',
+  daumen: '<path d="M7 10.5V20H4v-9.5z"/><path d="M7 10.5 11 3.5a2 2 0 0 1 3.2 2.1L13.3 9.5H19a2 2 0 0 1 2 2.4l-1.4 6.5A2 2 0 0 1 17.6 20H7"/>',
+  neutral: '<circle cx="12" cy="12" r="9"/><path d="M8.5 15h7"/><path d="M9 9.8h.01M15 9.8h.01" stroke-width="2.8"/>',
+  tauschen: '<path d="M4 9h13l-3.5-3.5"/><path d="M20 15H7l3.5 3.5"/>',
+  muell: '<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>',
+  pfeilzurueck: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  sonnenuntergang: '<path d="M7 16a5 5 0 0 1 10 0"/><path d="M2.5 16h19M5 20h14"/><path d="M12 4v5M9.5 6.5 12 4l2.5 2.5"/><path d="M4.3 10.3l1.4 1.4M19.7 10.3l-1.4 1.4"/>',
+  teilen: '<path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V12"/>',
+  hoch: '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/>',
+  herunter: '<path d="M12 3v12"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19.5h14"/>',
+  lernen: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.7 10.7c.5.4.7 1 .7 1.6V16h6v-.7c0-.6.2-1.2.7-1.6A6 6 0 0 0 12 3z"/>',
+  instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.8"/><path d="M17 7h.01" stroke-width="2.6"/>',
+  ebenen: '<path d="M12 3 2.5 8 12 13l9.5-5z"/><path d="M2.5 12.5 12 17.5l9.5-5"/><path d="M2.5 16.5 12 21.5l9.5-5"/>',
+  reise: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/>',
+  flug: '<path d="M10.5 3.5h3l1 7 6.5 3v2l-6.5-1.5-.5 4.5 2 1.5v1.5l-3.5-1-3.5 1V20l2-1.5-.5-4.5L3 15.5v-2l6.5-3z"/>',
+  zug: '<rect x="5.5" y="3" width="13" height="14" rx="3"/><path d="M5.5 11h13M9 14.5h.01M15 14.5h.01"/><path d="M8 21l2-4M16 21l-2-4"/>',
+  bus: '<rect x="4" y="4" width="16" height="13" rx="2.5"/><path d="M4 11h16M8 4v7M16 4v7"/><path d="M7 17v2.5M17 17v2.5"/>',
+  faehre: '<path d="M3 15h18l-2.5 4.5h-13z"/><path d="M6 15v-5h12v5"/><path d="M10 10V6.5h4V10"/>',
+  suche: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>',
+};
+const ic = (name, cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]||ICONS.info}</svg>`;
+
+</script>
+<script>
+"use strict";
+const DATA = {"places":[],"labels":[],"shots":{},"routes":{}};
+// Reisezeitraum und Unterkünfte stehen nicht im öffentlichen Code, sondern lokal in S.meta (siehe tripRange).
+const TZ = "Asia/Bangkok";
+// Drei Kategorien auf der Karte: Farbe und Symbol kommen immer von der Kategorie, nicht vom Detailtyp
+const TYPES = {strand:["Bucht","--t-strand"], ort:["Ort","--t-aussicht"], essen:["Essen","--t-essen"], cafe:["Café","--t-essen"], aussicht:["Natur","--t-aussicht"], erlebnis:["Erlebnis","--t-aussicht"]};
+const GROUPS = {beach:["Beach","strand","--t-strand",["strand"]], food:["Food","essen","--t-essen",["essen","cafe"]], spots:["Spots","aussicht","--t-aussicht",["ort","aussicht","erlebnis"]]};
+const GOF = {}; Object.entries(GROUPS).forEach(([g,v]) => v[3].forEach(ty => GOF[ty] = g));
+const TIC = typ => GROUPS[GOF[typ] || "spots"][1];
+const TYPELONG = {strand:"Strand & Bucht", ort:"Ort & Dorf", essen:"Essen", cafe:"Café", aussicht:"Aussicht & Natur", erlebnis:"Erlebnis"};
+const EMO = [["herz","herz","Top"],["gut","daumen","Gut"],["okay","neutral","Okay"],["nein","daumen","Nee"]];
+const SCORE = {herz:2, gut:1, okay:0, nein:-2};
+const WD = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+const WDL = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const WICON = {sonne:"sonne",wechselhaft:"wechselhaft",regen:"regen",wind:"wind"};
+const TOWNNAMES = new Set(); // Ortsnamen der Karte, damit ein Spot mit gleichem Namen nicht doppelt beschriftet wird
+const MAJOR = new Set(DATA.labels.filter(l => l[3]).map(l => l[2])); // große Orte: viertes Feld in labels
+
+/* ---------- utilities ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function nowParts(){
+  const f = new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
+  const p = Object.fromEntries(f.formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return {date:`${p.year}-${p.month}-${p.day}`, hh:+p.hour, mm:+p.minute, min:+p.hour*60 + +p.minute};
+}
+const addDays = (iso,n) => { const d = new Date(iso+"T12:00:00Z"); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+const weekday = iso => new Date(iso+"T12:00:00Z").getUTCDay();
+const dayDiff = (a,b) => Math.round((new Date(a+"T12:00:00Z")-new Date(b+"T12:00:00Z"))/864e5);
+const fmtDate = iso => `${WD[weekday(iso)]} ${iso.slice(8,10)}.${iso.slice(5,7)}.`;
+const toMin = t => { const [h,m] = String(t).split(":").map(Number); return h*60+(m||0); };
+const toHHMM = m => { m = Math.round(m); m = ((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"); };
+const durTxt = m => m >= 60 ? (Math.round(m/30)/2).toString().replace(".",",")+" h" : m+"′";
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+function toast(msg, icon="haken", ms=2400){ document.querySelectorAll(".toast").forEach(x=>x.remove()); const t=document.createElement("div"); t.className="toast"; t.innerHTML=ic(icon)+`<span>${esc(msg)}</span>`; document.body.appendChild(t); setTimeout(()=>t.remove(),ms); }
+const LS = { get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } } };
+
+/* ---------- Orte ---------- */
+function nearestTown({lat,lng}){ let best=null,bd=1e9; DATA.labels.forEach(([a,b,n]) => { const dd=(a-lat)**2+((b-lng)*Math.cos(lat*Math.PI/180))**2; if(dd<bd){bd=dd;best=n;} }); return best; }
+// Luftlinie in km, nur für die Reihenfolge, wenn eine Route fehlt. Wird nie als Fahrzeit angezeigt.
+const airKm = (a,b) => { const k = Math.PI/180, x = (b.lng-a.lng)*k*Math.cos((a.lat+b.lat)/2*k), y = (b.lat-a.lat)*k; return Math.hypot(x,y)*6371; };
+
+/* ---------- Straßenrouten (OpenStreetMap über OSRM) ----------
+   Vorab berechnete Routen stehen in DATA.routes (routen.js).
+   Für neue eigene Spots werden sie bei Netz nachgeladen und im Browser gemerkt. */
+const ROUTE_FACTOR = 1.15; // Puffer für Ortsdurchfahrten, Parkplatzsuche, Verkehr
+const RCACHE = LS.get("thailand2027-routes") || {};
+const rid = x => (x && x.id) || null;
+const rkey = (a,b) => [a,b].sort().join("|");
+/* Verkehrsmittel eines Tagesplans. Autozeiten gelten nie für andere Verkehrsmittel:
+   auto  Straßenrouten über router.project-osrm.org (der Dienst rechnet nur Auto, auch wenn man "foot" anfragt)
+   fuss  Fußrouten über routing.openstreetmap.de (FOSSGIS, Profil routed-foot), ohne Puffer
+   frei  Boot, Bus, Bahn: keine Berechnung, nur von euch eingetragene Zeiten je Abschnitt */
+const LMODES = {auto:{l:"Auto, Taxi", icon:"auto", gm:"driving", wort:"Fahrt"}, fuss:{l:"Zu Fuß", icon:"gehen1", gm:"walking", wort:"zu Fuß"}, frei:{l:"Boot, Bus, Bahn", icon:"faehre", gm:"transit", wort:"unterwegs"}};
+const modeOf = plan => LMODES[plan?.modus] ? plan.modus : "auto";
+const mkey = (k, mode) => mode === "fuss" ? "fuss:" + k : k;
+function routeFor(a,b,mode="auto"){ if(mode === "frei") return null; const ka = rid(a), kb = rid(b); if(!ka || !kb) return null; if(ka===kb) return [0,0,""]; const k = rkey(ka,kb); return (mode === "auto" ? DATA.routes?.[k] : null) || RCACHE[mkey(k, mode)] || null; }
+function travel(a,b,mode="auto"){ const r = routeFor(a,b,mode); return r ? Math.round(r[0]*(mode === "auto" ? ROUTE_FACTOR : 1)) : null; } // null = noch keine Zeit
+// Fahrzeit ab der Unterkunft des gerade geplanten Tages, nur für Spots im Umkreis (sonst null)
+const hotelMin = p => { const b = baseFor(editDay()); if(!b || airKm(b, p) > NEAR_KM) return null; const m = travel(b, p); return m === null ? null : Math.max(5, Math.round(m/5)*5); };
+const legTxt = m => m >= 60 ? Math.floor(m/60) + " h" + (m%60 ? " " + m%60 + " min" : "") : m + "′";
+const minTxt = m => m === null ? "–" : m + "′";
+async function osrm(a,b,mode="auto"){
+  const A = a, B = b, host = mode === "fuss" ? "https://routing.openstreetmap.de/routed-foot" : "https://router.project-osrm.org";
+  const js = await fetch(`${host}/route/v1/driving/${A.lng},${A.lat};${B.lng},${B.lat}?overview=full&geometries=polyline`).then(r => r.json());
+  if(js.code !== "Ok") throw new Error(js.code);
+  const r = js.routes[0]; return [Math.round(r.duration/6)/10, Math.round(r.distance/100)/10, r.geometry];
+}
+const rPending = new Set();
+function ensureRoutes(pairs, mode="auto"){
+  if(navigator.onLine === false || mode === "frei") return;
+  const key = ([a,b]) => mkey(rkey(rid(a),rid(b)), mode);
+  // zu Fuß nur bis 25 km Luftlinie, darüber ist eine Gehzeit keine Planungsgrundlage
+  const todo = pairs.filter(([a,b]) => rid(a) && rid(b) && rid(a)!==rid(b) && !routeFor(a,b,mode) && !rPending.has(key([a,b])) && (mode !== "fuss" || airKm(a,b) <= 25));
+  if(!todo.length) return;
+  todo.forEach(p => rPending.add(key(p)));
+  (async () => {
+    let got = 0;
+    for(const [a,b] of todo){ const k = key([a,b]); try{ RCACHE[k] = await osrm(a,b,mode); got++; }catch(e){} rPending.delete(k); await new Promise(r => setTimeout(r, 300)); }
+    if(got){ LS.set("thailand2027-routes", RCACHE); reorderEditDay(); renderAll(); window._dpRefresh?.(); }
+  })();
+}
+// Neue Zeiten können eine bessere Reihenfolge ergeben. Die Reihenfolge ist berechnet, kein Nutzereintrag, daher kein neuer Zeitstempel.
+function reorderEditDay(){ const pl = dayPlanFor(editDay()); if(!pl || modeOf(pl.plan) === "frei") return; const vor = pl.plan.stationen.map(x => x.placeId).join(); optimizeOrder(pl.plan); if(pl.plan.stationen.map(x => x.placeId).join() !== vor) persist(); }
+const polyCache = {};
+function decodePoly(str){
+  if(polyCache[str]) return polyCache[str];
+  let i = 0, lat = 0, lng = 0; const out = [];
+  while(i < str.length){ for(const k of [0,1]){ let b, sh = 0, r = 0; do{ b = str.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; }while(b >= 32); const d = r & 1 ? ~(r >> 1) : r >> 1; if(k) lng += d; else lat += d; } out.push([lat/1e5, lng/1e5]); }
+  return polyCache[str] = out;
+}
+
+/* ---------- state (lokal im Browser) ---------- */
+const KEY = "thailand2027-v1";
+const S = Object.assign({over:{}, ratings:{}, days:{}, plans:{}, meta:{}, etappen:{}, unterkuenfte:{}}, LS.get(KEY) || {});
+S.filter = new Set(Object.keys(GROUPS));
+let saveFailed = false;
+function persist(){ _placesCache = null; const ok = LS.set(KEY, {over:S.over, ratings:S.ratings, days:S.days, plans:S.plans, meta:S.meta, etappen:S.etappen, unterkuenfte:S.unterkuenfte, savedAt:Date.now()}); if(!ok && !saveFailed){ saveFailed = true; toast("Speichern im Browser nicht möglich", "info", 4000); } }
+function write(col, id, data){ S[{places:"over"}[col]||col][id] = data; persist(); renderAll(); }
+let _placesCache = null;
+const places = () => {
+  if(_placesCache) return _placesCache;
+  const out = {}; DATA.places.forEach(p=>out[p.id]=p);
+  for(const [id,o] of Object.entries(S.over)){ const m = {...(out[id]||{}), ...o, id}; if(m.name && Number.isFinite(m.lat) && TYPES[m.typ]) out[id] = m; }
+  return _placesCache = out;
+};
+const shortName = p => String(p.name).replace(/\s*\(.*\)\s*$/,"");
+const isFoodP = p => p.typ==="essen" || p.typ==="cafe";
+const P = id => places()[id];
+const rating = id => S.ratings[id]?.emoji ? S.ratings[id] : null; // {emoji:null} = gelöscht, bleibt für den Abgleich stehen
+const today = () => nowParts().date;
+const setOver = (id, patch) => { S.over[id] = {...(S.over[id]||{}), ...patch, at:Date.now()}; };
+const setPlace = (id, patch) => write("places", id, {...(S.over[id]||{}), ...patch, at:Date.now()});
+const setDay = (d, patch) => write("days", d, {...(S.days[d]||{}), ...patch, at:Date.now()});
+const touchDay = (d, patch) => { S.days[d] = {...(S.days[d]||{}), ...patch, at:Date.now()}; };
+
+/* ---------- Hilfe ---------- */
+function openHelp(){
+  const rows = (items) => items.map(([icon,title,text]) => `<div class="helprow"><span class="hi">${ic(icon)}</span><div><b>${title}</b><span>${text}</span></div></div>`).join("");
+  openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--accent2)">${ic("info")}</span><div><div class="eyebrow">Kurz erklärt</div><h2>So funktioniert die App</h2></div></div>${closeBtn}</div>
+    <div><div class="eyebrow">Eure Spots auf der Karte</div>
+    ${rows([["strand","Beach","Buchten, Strände und Badestellen"],["essen","Food","Restaurants, Bars und Cafés"],["aussicht","Spots","Orte, Aussichtspunkte, Natur und alles Besondere"]])}
+    <p class="small muted" style="margin-top:10px">Antippen blendet eine Kategorie auf der Karte aus oder ein. Mit + legt ihr neue eigene Spots an.</p></div>
+    <div><div class="eyebrow">Tagesplan</div>
+    ${rows([["haken","Wo wart ihr schon","Spot öffnen, „Waren da“ antippen. Gesehene Spots sind auf der Karte hell mit farbigem Rand, offene voll ausgefüllt. Nochmal antippen macht es rückgängig."],["suche","Spot suchen","Im Tagesplan oben euren Spot eintippen und antippen."],["plus","Von der Karte","Spot auf der Karte öffnen und „Zum Tagesplan hinzufügen“."],["route","Reihenfolge","Die App ordnet nur eure Auswahl nach kürzester Fahrt, ab eurer Unterkunft des Tages und zurück. Fahrzeiten kommen aus dem echten Straßennetz. Fehlt eine Route, steht dort ein Strich statt einer Schätzung."]])}</div>
+    <p class="small muted">Das weiße Menü lässt sich nach unten wegwischen, dann habt ihr die ganze Karte. Am Griff wieder hochziehen.</p>`);
+}
+/* ---------- Karte ---------- */
+let map, markerLayer, routeLayer, poiLabelLayer, meLayer, placingCb = null;
+const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+// Vorgeladen werden nur die Landesübersicht (Zoom 5 bis 8) und die Umgebung jeder Unterkunft (6 km, Zoom 10 bis 14),
+// zusammen etwa 150 plus 70 Kacheln je Unterkunft. Alles andere hält der Service Worker vor, sobald es einmal angesehen wurde.
+const VIEW = {center:[13.0, 101.0], bounds:[[4.5, 96.5], [21.5, 106.5]]};
+function tileUrls(sw, ne, z0, z1){
+  const out = [];
+  for(let z = z0; z <= z1; z++){ const a = map.project([ne[0], sw[1]], z).divideBy(256).floor(), b = map.project([sw[0], ne[1]], z).divideBy(256).floor();
+    for(let x = a.x; x <= b.x; x++) for(let y = a.y; y <= b.y; y++) out.push(TILE_URL.replace("{z}", z).replace("{y}", y).replace("{x}", x)); }
+  return out;
+}
+const tileJobKey = u => "uk:" + u.lat.toFixed(3) + "," + u.lng.toFixed(3);
+let prefetching = false;
+async function prefetchTiles(){
+  const con = navigator.connection;
+  if(prefetching || !map || navigator.onLine === false || con?.saveData || !navigator.serviceWorker?.controller) return;
+  const done = new Set(LS.get("thailand2027-tiles") || []), jobs = [];
+  if(!done.has("land")) jobs.push(["land", tileUrls(VIEW.bounds[0], VIEW.bounds[1], 5, 8)]);
+  ukList().forEach(u => { const k = tileJobKey(u); if(done.has(k)) return; const dy = 6/111, dx = dy/Math.cos(u.lat*Math.PI/180); jobs.push([k, tileUrls([u.lat-dy, u.lng-dx], [u.lat+dy, u.lng+dx], 10, 14)]); });
+  if(!jobs.length) return;
+  prefetching = true;
+  try{
+    for(const [k, urls] of jobs){
+      let ok = 0;
+      for(let i = 0; i < urls.length; i += 4){
+        if(navigator.onLine === false) return;
+        const r = await Promise.all(urls.slice(i, i+4).map(u => fetch(u, {mode:"cors"}).then(x => x.ok).catch(() => false)));
+        ok += r.filter(Boolean).length; await new Promise(res => setTimeout(res, 120));
+      }
+      if(ok >= urls.length * 0.9){ done.add(k); LS.set("thailand2027-tiles", [...done]); }
+    }
+  } finally { prefetching = false; }
+}
+// Offline-Stand fürs Menü: was liegt auf diesem Gerät
+function offlineInfo(){
+  const done = new Set(LS.get("thailand2027-tiles") || []), uks = ukList();
+  const ukOk = uks.filter(u => done.has(tileJobKey(u))).length;
+  const legs = Object.values(S.plans).filter(pl => pl.datum >= today() && pl.plan.stationen.length).flatMap(pl => planLegs(pl.plan).map(l => ({pl, l})));
+  const fehlt = legs.filter(({pl, l}) => modeOf(pl.plan) !== "frei" && legTime(pl.plan, l[0], l[1]).min === null).length;
+  return [["Karte, Landesübersicht", done.has("land") ? "gespeichert" : "noch nicht"],
+    ["Karte rund um Unterkünfte", uks.length ? ukOk + " von " + uks.length : "keine Unterkünfte"],
+    ["Fahr- und Gehzeiten geplanter Tage", legs.length ? (fehlt ? fehlt + " fehlen" : "alle da") : "nichts geplant"]];
+}
+function initMap(){
+  if(!window.L){ $("#map").innerHTML = '<p style="padding:90px 20px;color:#fff">Karte konnte nicht geladen werden. Alles andere funktioniert.</p>'; return; }
+  map = L.map("map",{zoomControl:false, attributionControl:false, zoomSnap:1, zoomDelta:1, wheelPxPerZoomLevel:120, minZoom:5, maxZoom:17, maxBounds:VIEW.bounds, maxBoundsViscosity:0.6, fadeAnimation:true, zoomAnimationThreshold:4, tap:true});
+  map.setView(VIEW.center, 6);
+  window._map = map;
+  window.focusOn = (ll, z, dur) => { z = Math.round(z); const pt = map.project(L.latLng(ll), z).add([0, window.panelPx()/2]); map.flyTo(map.unproject(pt, z), z, {duration:dur||.7}); };
+  window.fitIsland = () => { const z = map.getSize().x > 560 ? 6 : 5; const pt = map.project(L.latLng(VIEW.center), z).add([0, window.panelPx()/2 + 16]); map.setView(map.unproject(pt, z), z, {animate:false}); };
+  // Grobe Kacheln (bis Zoom 10) liegen immer darunter: beim Zoomen sieht man ein unscharfes Bild statt leerer Flächen
+  L.tileLayer(TILE_URL, {maxNativeZoom:10, maxZoom:17, minZoom:5, zIndex:1, keepBuffer:2, updateWhenZooming:false, updateWhenIdle:true, crossOrigin:true}).addTo(map);
+  L.tileLayer(TILE_URL, {maxNativeZoom:17, maxZoom:17, minZoom:5, zIndex:2, keepBuffer:4, updateWhenZooming:false, updateWhenIdle:false, crossOrigin:true}).addTo(map);
+  $("#attrib").textContent = "Bilder © Esri, Maxar, Earthstar Geographics";
+  const townMajor = L.layerGroup().addTo(map), townMinor = L.layerGroup();
+  DATA.labels.forEach(([la,ln,name]) => { TOWNNAMES.add(name); const major = MAJOR.has(name); L.marker([la,ln],{interactive:false,keyboard:false,icon:L.divIcon({className:"",html:`<span class="lbl town ${major?"major":""}">${esc(name)}</span>`,iconSize:null,iconAnchor:major?[20,-14]:[16,-12]})}).addTo(major?townMajor:townMinor); });
+  map.on("zoomend", () => { if(map.getZoom() >= 11) townMinor.addTo(map); else townMinor.remove(); });
+  routeLayer = L.layerGroup().addTo(map);
+  poiLabelLayer = L.layerGroup().addTo(map);
+  meLayer = L.layerGroup().addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+  map.on("zoomend", () => { if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); });
+  map.on("click", e => { if(placingCb){ const cb = placingCb; placingCb = null; document.body.classList.remove("crosshair"); $("#placing")?.remove(); cb(e.latlng); } });
+  const tf = $("#typefilter");
+  Object.entries(GROUPS).forEach(([k,[label,icon,colorVar]]) => {
+    const b = document.createElement("button"); b.className = "tfil on"; b.style.setProperty("--c", `var(${colorVar})`);
+    b.setAttribute("aria-pressed","true"); b.setAttribute("aria-label", label); b.title = label; b.innerHTML = ic(icon) + `<span class="tfl">${label}</span>`;
+    b.onclick = () => { if(S.filter.has(k)) S.filter.delete(k); else S.filter.add(k); b.classList.toggle("on", S.filter.has(k)); b.setAttribute("aria-pressed", S.filter.has(k)); renderMarkers(); };
+    tf.appendChild(b);
+  });
+  $("#homeBtn").onclick = () => { map.stop(); const b = baseFor(editDay()); b ? window.focusOn([b.lat, b.lng], 12, .8) : window.fitIsland(); };
+  $("#locBtn").onclick = centerMe;
+  renderMarkers();
+  setTimeout(prefetchTiles, 5000);
+}
+function planStationIds(d=editDay()){ const pl = dayPlanFor(d); return new Set((pl?.plan?.stationen||[]).map(s=>s.placeId).filter(Boolean)); }
+// Marker zeigen nur das Kategorie-Symbol. Neu gezeichnet wird nur, wenn sich Daten oder die Zoomstufe (klein/groß, mit/ohne Namen) ändern.
+const zoomBucket = z => z < 11 ? 0 : z < 12 ? 1 : 2;
+let lastBucket = -1;
+function renderMarkers(){
+  if(!map) return; markerLayer.clearLayers(); routeLayer.clearLayers(); poiLabelLayer.clearLayers();
+  const bucket = lastBucket = zoomBucket(map.getZoom());
+  const size = bucket === 0 ? 24 : 30;
+  ukList().forEach(u => L.marker([u.lat,u.lng],{zIndexOffset:3000, title:u.name, icon:L.divIcon({className:"", html:`<div class="hotelpin">${ic("hotel")}</div>`, iconSize:[38,38], iconAnchor:[19,19]})}).addTo(markerLayer).on("click", () => openUnterkunft(u.id)));
+  Object.values(places()).forEach(p => {
+    if(!S.filter.has(GOF[p.typ] || "spots") || p.status==="abgelehnt") return;
+    const done = p.status === "besucht";
+    const html = `<div class="mpin${done?" done":""}" style="--c:var(${TYPES[p.typ][1]});width:${size}px;height:${size}px">${ic(TIC(p.typ))}</div>`;
+    L.marker([p.lat,p.lng],{keyboard:true, zIndexOffset: done ? -300 : 0, title: done ? p.name + ", schon gesehen" : p.name, icon:L.divIcon({className:"", html, iconSize:[size,size], iconAnchor:[size/2,size/2]})})
+      .addTo(markerLayer).on("click",()=>openPlace(p.id));
+    if(bucket === 2 && !TOWNNAMES.has(p.name)) L.marker([p.lat,p.lng],{interactive:false,keyboard:false,zIndexOffset:-500,icon:L.divIcon({className:"",html:`<span class="lbl poi${done?" done":""}">${esc(p.name)}</span>`,iconSize:null,iconAnchor:[-size/2-4, 10]})}).addTo(poiLabelLayer);
+  });
+  const pl = dayPlanFor(editDay());
+  if(pl && pl.plan.stationen.some(s=>s.placeId && P(s.placeId))){
+    const legs = planLegs(pl.plan), mode = modeOf(pl.plan);
+    ensureRoutes(legs, mode);
+    legs.forEach(([a,b]) => {
+      const r = routeFor(a,b,mode), lt = legTime(pl.plan, a, b);
+      const pts = r && r[2] ? decodePoly(r[2]) : [[a.lat,a.lng],[b.lat,b.lng]];
+      const dash = r ? null : "2 10"; // ohne berechnete Route nur eine gestrichelte Verbindung, keine Straßenlinie
+      L.polyline(pts,{color:"#2A1E14",opacity:.5,weight:8,lineCap:"round",lineJoin:"round",dashArray:dash,interactive:false}).addTo(routeLayer);
+      L.polyline(pts,{color:"#EAD9B8",opacity:1,weight:4.5,lineCap:"round",lineJoin:"round",dashArray:dash,interactive:false}).addTo(routeLayer);
+      const min = lt.min;
+      if(min !== null && min >= (bucket === 0 ? 20 : 3)) L.marker(midOf(pts),{interactive:false,keyboard:false,zIndexOffset:-800,icon:L.divIcon({className:"",html:`<span class="rtlbl">${lt.src === "eigen" ? "" : "ca. "}${min} Min${mode === "fuss" ? " zu Fuß" : ""}</span>`,iconSize:null,iconAnchor:[0,0]})}).addTo(routeLayer);
+    });
+  }
+}
+// Punkt auf halber Strecke einer Linie, für das Fahrzeit-Schild
+function midOf(pts){
+  const d = pts.slice(1).map((p,i) => Math.hypot(p[0]-pts[i][0], (p[1]-pts[i][1])*.77));
+  let half = d.reduce((a,b) => a+b, 0)/2;
+  for(let i = 0; i < d.length; i++){ if(half <= d[i]){ const f = d[i] ? half/d[i] : 0; return [pts[i][0]+(pts[i+1][0]-pts[i][0])*f, pts[i][1]+(pts[i+1][1]-pts[i][1])*f]; } half -= d[i]; }
+  return pts[0];
+}
+function focusPlace(id){
+  const p = P(id); if(!p) return;
+  if(map) window.focusOn([p.lat,p.lng], Math.max(map.getZoom(), 12), .6);
+  setTimeout(()=>openPlace(id), map ? 420 : 0);
+}
+
+/* ---------- Karten unten ---------- */
+function shotFor(p){ return (p.bilder||[]).find(b=>DATA.shots?.[b]); }
+function renderSpots(){
+  const box = $("#spotlist"); const inPlan = planStationIds();
+  const list = Object.values(places()).filter(p => S.filter.has(GOF[p.typ] || "spots") && p.status!=="abgelehnt").sort((a,b) => (hotelMin(a) ?? 1e9)-(hotelMin(b) ?? 1e9) || a.name.localeCompare(b.name,"de"));
+  const base = baseFor(editDay()); if(base) ensureRoutes(list.filter(p => airKm(base, p) <= NEAR_KM).map(p => [base, p]));
+  if(!list.length){ box.innerHTML = '<p class="muted small" style="padding:8px 16px">Keine Spots in den gewählten Kategorien.</p>'; return; }
+  box.innerHTML = "";
+  list.forEach(p => {
+    const shot = shotFor(p); const img = shot ? DATA.shots[shot] : null;
+    const b = document.createElement("button"); b.className = "scard" + (p.status==="besucht" ? " done" : ""); b.style.setProperty("--c", `var(${TYPES[p.typ][1]})`);
+    b.innerHTML = `<span class="sc-top">${img?`<img src="${img}" alt="" loading="lazy">`:""}${img?`<span class="tchip">${ic(TIC(p.typ))}</span>`:ic(TIC(p.typ))}${p.status==="besucht"?`<span class="sc-plan done">${ic("haken")}gesehen</span>`:inPlan.has(p.id)?`<span class="sc-plan">${ic("haken")}Tagesplan</span>`:""}</span>
+      <span class="sc-body"><span class="sc-name">${esc(p.name)}</span><span class="meta">${hotelMin(p) !== null ? `<span>${ic("auto")}${hotelMin(p)}′</span>` : ""}<span>${ic("uhr")}${durTxt(p.dauerMin)}</span></span><span class="sc-why">${esc([GROUPS[GOF[p.typ]||"spots"][0], p.region].filter(Boolean).join(" · "))}</span></span>`;
+    b.onclick = () => focusPlace(p.id);
+    box.appendChild(b);
+  });
+}
+const dayLabel = d => d===today() ? "heute" : d===addDays(today(),1) ? "morgen" : fmtDate(d);
+function renderPlanPin(){
+  const box = $("#planpin"); const d = editDay(); const pl = dayPlanFor(d);
+  if(!pl || !pl.plan.stationen.some(s=>s.placeId && P(s.placeId))){ box.innerHTML = ""; return; }
+  const rows = timeline(pl.plan);
+  const next = (d===today() && rows.find(r => r.kind==="stop" && r.time >= nowParts().min - 20 && r.place)) || rows.find(r=>r.place);
+  box.innerHTML = `<section class="card hi"><div class="cardhead"><h2>${esc(pl.plan.titel)}</h2><span class="pill">${ic("kalender")}${dayLabel(d)}</span></div>
+    <div class="meta">${pl.plan.stationen.filter(s=>s.placeId && P(s.placeId)).map(s=>`<span style="color:var(${TYPES[P(s.placeId).typ][1]})">${ic(TIC(P(s.placeId).typ))}</span>`).join("")}${next?`<span style="margin-left:auto">als Nächstes: ${esc(next.name)} · ${toHHMM(next.time)}</span>`:""}</div>
+    <div class="btnrow"><button class="btn plan" id="openPinned">${ic("kalender")}Tagesplan</button>${next?.place?`<a class="btn" href="${mapsDir(next.place)}" target="_blank" rel="noopener">${ic("route")}Los</a>`:""}</div></section>`;
+  $("#openPinned").onclick = () => openDayPlan(d);
+}
+function renderMorning(){
+  const box = $("#morning"); const d = today(); const y = addDays(d,-1); const yd = S.days[y];
+  if(!yd || S.days[d]?.morningDone){ box.innerHTML = ""; return; }
+  const pending = [...planStationIds(y)].filter(id => P(id)?.status==="geplant");
+  if(!pending.length){ box.innerHTML = ""; return; }
+  box.innerHTML = `<section class="card hi"><div class="cardhead"><h2>Guten Morgen</h2><button class="iconlink" id="mSkip" aria-label="Ausblenden">${ic("x")}</button></div>
+    <div><div class="eyebrow">Wart ihr gestern hier?</div><div class="list">${pending.map(id=>`<div class="listrow"><span>${esc(P(id).name)}</span><span class="btnrow" style="flex:none"><button class="btn" data-yes="${id}" aria-label="Ja">${ic("haken")}</button><button class="btn" data-no="${id}" aria-label="Nein">${ic("x")}</button></span></div>`).join("")}</div></div>
+  </section>`;
+  box.querySelectorAll("[data-yes]").forEach(b => b.onclick = () => { const id=b.dataset.yes; setOver(id, {status:"besucht"}); touchDay(y, {besucht:[...new Set([...(S.days[y]?.besucht||[]), id])]}); persist(); renderAll(); });
+  box.querySelectorAll("[data-no]").forEach(b => b.onclick = () => setPlace(b.dataset.no,{status:"offen"}));
+  $("#mSkip").onclick = () => setDay(d, {morningDone:true});
+}
+function renderAll(){
+  renderMorning(); renderPlanPin(); renderSpots(); renderMarkers();
+  $("#offline").hidden = navigator.onLine !== false;
+}
+
+/* ---------- Sheets ---------- */
+let sheetEl = null, sheetReturn = null;
+function openSheet(html, onMount){
+  const back = sheetEl ? sheetReturn : document.activeElement;
+  closeSheet(); sheetReturn = back;
+  const ov = document.createElement("div"); ov.className = "overlay";
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
+  ov.addEventListener("click", e => { if(e.target===ov) closeSheet(); });
+  document.body.appendChild(ov); sheetEl = ov; fitSheet();
+  const sh = ov.querySelector(".sheet");
+  sh.querySelectorAll("[data-close]").forEach(b => b.onclick = closeSheet);
+  onMount && onMount(sh);
+  sh.tabIndex = -1; sh.focus({preventScroll:true});
+  return sh;
+}
+function fitSheet(){ const vv = window.visualViewport; if(!sheetEl || !vv) return; sheetEl.style.top = vv.offsetTop + "px"; sheetEl.style.height = vv.height + "px"; sheetEl.style.bottom = "auto"; }
+window.visualViewport?.addEventListener("resize", fitSheet); window.visualViewport?.addEventListener("scroll", fitSheet);
+function closeSheet(){ if(sheetEl){ sheetEl.remove(); sheetEl = null; if(sheetReturn?.isConnected) sheetReturn.focus({preventScroll:true}); sheetReturn = null; } }
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeSheet(); });
+const closeBtn = `<button class="closebtn" data-close aria-label="Schließen">${ic("x")}</button>`;
+const mapsDir = p => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.mapsQuery || `${p.lat},${p.lng}`)}`;
+const rateButtons = cur => `<div class="rates">${EMO.map(([k,icon,l])=>`<button class="rate r-${k} ${k==="nein"?"down":""}" data-k="${k}" aria-pressed="${cur===k}" aria-label="${l}">${ic(icon)}<span>${l}</span></button>`).join("")}</div>`;
+const AKTIV = ["","gehen1","gehen2","gehen3"], AKTIVT = ["","entspannt","Bewegung","aktiv"];
+
+function openPlace(id){
+  const p = P(id); if(!p) return;
+  const r = rating(id); const [label,colorVar] = TYPES[p.typ];
+  const html = `
+    <div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(${colorVar})">${ic(TIC(p.typ))}</span><div><div class="eyebrow">${esc([GROUPS[GOF[p.typ]||"spots"][0], p.region].filter(Boolean).join(" · "))}</div><h2>${esc(p.name)}</h2></div></div>${closeBtn}</div>
+    <div class="facts">
+      ${hotelMin(p) !== null ? `<div class="fact" title="Fahrzeit ab Unterkunft">${ic("hotel")}${hotelMin(p)}′</div>` : ""}
+      ${ME?.inArea ? `<div class="fact" title="Fahrzeit ab deinem Standort">${ic("standort")}<span id="meMin">${minTxt(travel(ME, p))}</span></div>` : ""}
+      <div class="fact">${ic("uhr")}${durTxt(p.dauerMin)}</div>
+      <div class="fact">${ic(AKTIV[p.aktivitaet]||"gehen1")}${AKTIVT[p.aktivitaet]}</div>
+      <div class="fact"><span class="wx">${(p.wetter||[]).map(w=>ic(WICON[w])).join("")}</span>Wetter</div>
+      <div class="fact">${ic("euro")}${esc(p.preis==="gratis"?"gratis":p.preis||"–")}</div>
+      ${p.vegetarischGut?`<div class="fact">${ic("blatt")}${esc(p.vegetarischGut)}</div>`:""}
+    </div>
+    <p class="why">${esc(p.warumFuerUns||"")}</p>
+    ${p.wunschtag?`<p><span class="pill">${ic("kalender")}${esc(p.wunschtag)}</span></p>`:""}
+    ${dayBtnHTML(id)}
+    <div class="actions">
+      <button class="act ${p.status==="gemerkt"?"on":""}" id="pStar">${ic("stern")}${p.status==="gemerkt"?"Gemerkt":"Merken"}</button>
+      <a class="act" href="${mapsDir(p)}" target="_blank" rel="noopener">${ic("route")}Route</a>
+      <button class="act ${p.status==="besucht"?"on":""}" id="pBeen">${ic("haken")}${p.status==="besucht"?"Gesehen":"Waren da"}</button>
+      <button class="act" id="pHide">${ic(p.status==="abgelehnt"?"auge":"ausblenden")}${p.status==="abgelehnt"?"Zeigen":"Nicht für uns"}</button>
+    </div>
+    <div class="card" id="rateBox" ${r || p.status==="besucht" ? "" : "hidden"}>
+      <div class="eyebrow">Wie war's?</div>
+      ${rateButtons(r?.emoji)}
+    </div>
+    <details><summary>${ic("info")}Details und Hinweise</summary>
+      <p>${esc(p.kurzbeschreibung||"")}</p>
+      ${p.hinweise?`<p class="note">${esc(p.hinweise)}</p>`:""}
+      ${p.ideeText?`<p class="note">${esc(p.ideeText)}</p>`:""}
+    </details>`;
+  openSheet(html, sh => {
+    sh.querySelectorAll("[data-open]").forEach(b => b.onclick = () => focusPlace(b.dataset.open));
+    const bindDay = () => sh.querySelector("#pDay").onclick = e => {
+      if(e.currentTarget.dataset.in) return openDayPlan();
+      if(addToPlan(id)){ e.currentTarget.outerHTML = dayBtnHTML(id); bindDay(); toast(`Im Tagesplan ${dayLabel(editDay())}`, "kalender"); }
+    };
+    bindDay();
+    if(ME?.inArea && navigator.onLine !== false) osrm(ME, p).then(r => { const el = sh.querySelector("#meMin"); if(el) el.textContent = Math.round(r[0]*ROUTE_FACTOR) + "′"; }).catch(() => {});
+    sh.querySelector("#pStar").onclick = () => { setPlace(id, {status: p.status==="gemerkt" ? "offen" : "gemerkt"}); openPlace(id); };
+    sh.querySelector("#pBeen").onclick = () => {
+      const d = today(), war = p.status === "besucht";
+      setOver(id, {status: war ? "offen" : "besucht"});
+      const tag = new Set(S.days[d]?.besucht || []);
+      war ? tag.delete(id) : tag.add(id);
+      touchDay(d, {besucht:[...tag]});
+      persist(); renderAll(); toast(war ? "Wieder offen" : "Als gesehen markiert", war ? "auge" : "haken");
+      openPlace(id);
+      if(!war) sheetEl?.querySelector("#rateBox")?.scrollIntoView({behavior:"smooth", block:"nearest"});
+    };
+    sh.querySelectorAll("#rateBox .rate").forEach(b => b.onclick = () => {
+      const d = today(), k = b.dataset.k, weg = rating(id)?.emoji === k;
+      S.ratings[id] = {emoji: weg ? null : k, datum:d, at:Date.now()};
+      if(!weg){ setOver(id, {status:"besucht"}); touchDay(d, {besucht:[...new Set([...(S.days[d]?.besucht||[]), id])]}); }
+      sh.querySelectorAll("#rateBox .rate").forEach(x => x.setAttribute("aria-pressed", !weg && x.dataset.k===k));
+      persist(); renderAll(); toast(weg ? "Bewertung weg" : "Gespeichert", weg ? "x" : k==="herz" ? "herz" : "haken");
+    });
+    sh.querySelector("#pHide").onclick = () => { const wasHidden = p.status==="abgelehnt"; setPlace(id, {status: wasHidden ? "offen" : "abgelehnt"}); closeSheet(); toast(wasHidden?"Wieder sichtbar":"Ausgeblendet", wasHidden?"auge":"ausblenden"); };
+  });
+}
+
+/* ---------- Neue Idee ---------- */
+const KEYWORDS = [
+  ["essen", /restaur|essen|tapas|bar\b|beach ?club|pizza|paella|fisch|grill|bistro|lunch|dinner|abend ?essen|mittag/i],
+  ["cafe", /caf[eé]|coffee|kaffee|bäcker|backer|brunch|frühstück|eis|gelat|kuchen|ensa[iï]mad/i],
+  ["strand", /strand|cala|platja|playa|bucht|beach|baden|caló/i],
+  ["aussicht", /mirador|aussicht|view|wander|natur|leuchtturm|far\b|berg|puig|park|see/i],
+  ["erlebnis", /höhle|cueva|cova|museum|kathedral|boot|kajak|tour|weingut|bodega|markt|burg|castell|zug|tren/i],
+  ["ort", /dorf|stadt|altstadt|ort|port\b|hafen|village/i],
+];
+function guessType(t){ for(const [k,re] of KEYWORDS) if(re.test(t)) return k; return "aussicht"; }
+function openIdea(){
+  const days = tripDays().filter(d => d >= today()).slice(0, 21);
+  const state = {typ:null, wunschtag:null, latlng:null};
+  const html = `<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--accent)">${ic("plus")}</span><div><div class="eyebrow">Neue Idee</div><h2>Was habt ihr entdeckt?</h2></div></div>${closeBtn}</div>
+    <input type="text" id="iName" placeholder="Name des Spots" autocomplete="off">
+    <textarea id="iNote" placeholder="Notiz, optional (Tipp von wem, was bestellen …)"></textarea>
+    <div><div class="eyebrow">Art</div><div class="typepick" id="iType" style="margin-top:8px">${Object.entries(GROUPS).map(([k,[l,icon,c,ts]])=>`<button data-t="${ts[0]}" style="--c:var(${c})" aria-pressed="false">${ic(icon)}${l}</button>`).join("")}</div></div>
+    <div><div class="eyebrow">Wann, optional</div><div class="chiprow" id="iDay" style="margin-top:8px">${days.map(d=>`<button class="chip" data-d="${d}" aria-pressed="false">${fmtDate(d)}</button>`).join("")}</div></div>
+    <div><div class="eyebrow">Wo</div><div class="btnrow" style="margin-top:8px"><button class="btn" id="iMap">${ic("insel")}Auf Karte tippen</button><button class="btn" id="iHere">${ic("standort")}Ich bin hier</button></div><p class="small muted" id="iWhere" style="margin-top:6px">Noch kein Ort gesetzt</p></div>
+    <button class="btn solid" id="iSave" disabled>${ic("haken")}Speichern</button>`;
+  const mount = sh => {
+    const name = sh.querySelector("#iName"), note = sh.querySelector("#iNote");
+    const setType = t => { state.typ = t; sh.querySelectorAll("#iType button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.t===t)); check(); };
+    const check = () => { sh.querySelector("#iSave").disabled = !(name.value.trim() && state.latlng); };
+    name.oninput = () => { if(!state.manualType) setType(guessType(name.value+" "+note.value)); check(); };
+    sh.querySelectorAll("#iType button").forEach(b => b.onclick = () => { state.manualType = true; setType(b.dataset.t); });
+    sh.querySelectorAll("#iDay button").forEach(b => b.onclick = () => { state.wunschtag = state.wunschtag===b.dataset.d ? null : b.dataset.d; sh.querySelectorAll("#iDay button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.d===state.wunschtag)); });
+    const setWhere = ll => { state.latlng = ll; sh.querySelector("#iWhere").textContent = nearestTown(ll) ? `Gesetzt bei ${nearestTown(ll)}` : `Gesetzt: ${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`; check(); };
+    if(state.latlng) setWhere(state.latlng);
+    sh.querySelector("#iMap").onclick = () => {
+      const snapshot = {name:name.value, note:note.value};
+      closeSheet(); document.body.classList.add("crosshair"); window.scrollTo({top:0,behavior:"smooth"});
+      const bar = document.createElement("div"); bar.id="placing"; bar.className="glass placing"; bar.innerHTML = `${ic("standort")}<span style="flex:1">Tippe auf die Karte, wo der Ort liegt</span><button class="closebtn" aria-label="Abbrechen">${ic("x")}</button>`;
+      document.querySelector(".mapwrap").appendChild(bar);
+      bar.querySelector("button").onclick = () => { placingCb = null; bar.remove(); document.body.classList.remove("crosshair"); };
+      placingCb = ll => { state.latlng = ll; const sh2 = openSheet(html, mount); sh2.querySelector("#iName").value = snapshot.name; sh2.querySelector("#iNote").value = snapshot.note; if(state.typ) sh2.querySelector(`#iType [data-t="${state.typ}"]`)?.setAttribute("aria-pressed","true"); if(state.wunschtag) sh2.querySelector(`#iDay [data-d="${state.wunschtag}"]`)?.setAttribute("aria-pressed","true"); setWhereFor(sh2, ll); };
+    };
+    sh.querySelector("#iHere").onclick = () => ME && Date.now()-ME.at < 60000 ? setWhere({lat:ME.lat, lng:ME.lng}) : navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => setWhere({lat:pos.coords.latitude,lng:pos.coords.longitude}), () => toast("Standort nicht freigegeben","info"), {enableHighAccuracy:true,timeout:8000}) : toast("Standort nicht verfügbar","info");
+    sh.querySelector("#iSave").onclick = () => {
+      const nm = name.value.trim(); const typ = state.typ || guessType(nm);
+      const {lat,lng} = state.latlng;
+      const pid = uid("idee-");
+      const o = {id:pid, name:nm.slice(0,80), typ, tags:[], lat, lng, region:nearestTown({lat,lng}) || "", dauerMin: typ==="cafe"?45: typ==="essen"?90: typ==="strand"?150: 75, aktivitaet:1, wetter: typ==="strand"?["sonne"]:["sonne","wechselhaft"], preis: typ==="essen"?"€€":"€", vegetarischGut:null, kurzbeschreibung:note.value.trim(), warumFuerUns:"Eure eigene Idee.", hinweise: typ==="essen"||typ==="cafe" ? "Öffnungszeiten vorher prüfen." : null, mapsQuery:null, quelle:"idee", status:"gemerkt", wunschtag:state.wunschtag, ideeText:note.value.trim(), createdAt:Date.now(), at:Date.now()};
+      write("places", pid, o); const base = baseFor(editDay()); if(base && airKm(base, o) <= NEAR_KM) ensureRoutes([[base, o]]); closeSheet(); toast("Idee gespeichert","stern"); focusPlace(pid);
+    };
+  };
+  function setWhereFor(sh, ll){ state.latlng = ll; sh.querySelector("#iWhere").textContent = nearestTown(ll) ? `Gesetzt bei ${nearestTown(ll)}` : `Gesetzt: ${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`; sh.querySelector("#iSave").disabled = !sh.querySelector("#iName").value.trim(); }
+  openSheet(html, mount);
+}
+
+/* ---------- Tagesplan ----------
+   Ihr wählt die Spots, die App bestimmt nur die Reihenfolge mit der kürzesten Fahrt (Unterkunft → Spots → Unterkunft,
+   solange keine Unterkunft gesetzt ist: erster bis letzter Stopp).
+   Es werden nie Spots hinzugefügt, die ihr nicht selbst ausgewählt habt. */
+// Reisezeitraum lokal in S.meta.reise {start,end}. Solange er fehlt, zeigt die Tagesauswahl einfach die nächsten Kalendertage.
+const tripRange = () => { const r = S.meta.reise; return r?.start && r?.end && r.end >= r.start ? r : null; };
+const tripDays = () => { const r = tripRange(); const a = r ? r.start : today(), n = r ? dayDiff(r.end, r.start) + 1 : 7; return Array.from({length:n}, (_, i) => addDays(a, i)); };
+function defaultDay(){
+  const d = today(), r = tripRange();
+  if(r && d < r.start) return r.start;
+  return (!r || d < r.end) && nowParts().hh >= 17 ? addDays(d, 1) : d;
+}
+// Der Tag, der gerade bearbeitet wird: gilt für Suche, Karte und Plan-Karte gleichermaßen
+function editDay(){ const e = S.meta.editDay; return e && e >= today() ? e : defaultDay(); }
+const dayPlanFor = date => { const pid = S.days[date]?.planId; return (pid && S.plans[pid]) || null; };
+function dayStartMin(date){
+  let m = 9*60 + 30;
+  if(date === today()) m = Math.max(m, Math.ceil((nowParts().min + 20)/15)*15);
+  return m;
+}
+const stationFor = p => ({placeId:p.id, name:p.name, art:"station", dauerMin:Math.max(30, Math.round((p.dauerMin||60)/15)*15), notiz:null});
+function ensureDayPlan(date){
+  let pid = S.days[date]?.planId, pl = pid && S.plans[pid];
+  if(pl && pl.eigen) return pid;
+  // ältere, automatisch erzeugte Pläne: nur die Spots übernehmen, Pausen und Einschübe fallen weg
+  const stationen = pl ? pl.plan.stationen.filter(x => x.placeId && P(x.placeId)).map(x => stationFor(P(x.placeId))) : [];
+  if(!pl){ // feste ID je Tag: legen beide Geräte denselben Tag an, ist es derselbe Plan
+    pid = "plan-" + date;
+    if(S.plans[pid]?.eigen){ touchDay(date, {planId:pid}); return pid; }
+  }
+  const now = Date.now();
+  S.plans[pid] = {datum:date, erzeugtUm:now, at:now, status:"übernommen", eigen:true, plan:{titel:"", start:toHHMM(dayStartMin(date)), stationen, datum:date, log:Object.fromEntries(stationen.map(x => [x.placeId, {in:true, at:now}]))}};
+  touchDay(date, {planId:pid});
+  retitle(S.plans[pid].plan);
+  return pid;
+}
+function retitle(plan){ const regions = [...new Set(plan.stationen.map(x => P(x.placeId)?.region).filter(Boolean))]; plan.titel = WDL[weekday(plan.datum)] + (regions.length ? " · " + regions.slice(0,2).join(" & ") : ""); }
+const planOrigin = plan => dayStart(plan.datum), planEnd = plan => dayEnd(plan.datum);
+function planLegs(plan){ const pts = [planOrigin(plan), ...plan.stationen.map(x => x.placeId && P(x.placeId)).filter(Boolean), planEnd(plan)].filter(Boolean); return pts.slice(1).map((b,i) => [pts[i], b]); }
+// Zeit eines Abschnitts im Verkehrsmittel des Tages: berechnet (route), selbst eingetragen (eigen) oder unbekannt (min null)
+function legTime(plan, a, b){
+  const mode = modeOf(plan);
+  if(mode === "frei"){ const e = rid(a) && rid(b) ? plan.leg?.[rkey(rid(a), rid(b))] : null; return {min: e && Number.isFinite(e.min) ? e.min : null, km:null, src: e ? "eigen" : null, mode}; }
+  const min = travel(a, b, mode); return {min, km: routeFor(a, b, mode)?.[1] ?? null, src: min === null ? null : "route", mode};
+}
+// Kosten einer Reihenfolge. Fehlt eine Zeit, zählt die Luftlinie (Auto 1,5, zu Fuß 12, Boot/Bus/Bahn 2 Minuten je km), nur zum Sortieren.
+const AIRMIN = {auto:1.5, fuss:12, frei:2};
+const legCost = (plan, a, b) => legTime(plan, a, b).min ?? airKm(a,b)*AIRMIN[modeOf(plan)];
+function planDrive(plan, order=plan.stationen){ let t = 0, prev = planOrigin(plan); for(const x of order){ const p = P(x.placeId); if(!p) continue; if(prev) t += legCost(plan, prev, p); prev = p; } const end = planEnd(plan); return t + (prev && end ? legCost(plan, prev, end) : 0); }
+function setMode(date, mode){
+  const pl = dayPlanFor(date); if(!pl || modeOf(pl.plan) === mode) return;
+  pl.plan.modus = mode; pl.plan.modusAt = pl.at = Date.now();
+  optimizeOrder(pl.plan); ensureRoutes(planLegs(pl.plan), mode); persist(); renderAll();
+}
+// eigene Zeit für einen Abschnitt (Boot, Bus, Bahn), in 5-Minuten-Schritten, erster Tipp setzt 15 Minuten
+function setLeg(date, key, delta){
+  const pl = dayPlanFor(date); if(!pl) return;
+  const cur = pl.plan.leg?.[key]?.min;
+  const min = Number.isFinite(cur) ? Math.min(12*60, Math.max(0, cur + delta)) : delta > 0 ? 15 : null;
+  if(min === null) return;
+  pl.plan.leg = {...(pl.plan.leg || {}), [key]:{min, at:Date.now()}}; pl.at = Date.now(); persist(); renderAll();
+}
+function optimizeOrder(plan){
+  const st = plan.stationen.filter(x => x.placeId && P(x.placeId));
+  let best = st, bc = planDrive(plan, st);
+  if(st.length <= 8){ // alle Reihenfolgen durchprobieren
+    const perm = (rest, pre) => { if(!rest.length){ const c = planDrive(plan, pre); if(c < bc - .01){ bc = c; best = pre; } return; } rest.forEach((x,i) => perm([...rest.slice(0,i), ...rest.slice(i+1)], [...pre, x])); };
+    perm(st, []);
+  } else { // viele Stopps: Abschnitte umdrehen, solange es kürzer wird (2-opt)
+    let better = true;
+    while(better){ better = false;
+      for(let i = 0; i < best.length-1; i++) for(let j = i+1; j < best.length; j++){ const cand = [...best.slice(0,i), ...best.slice(i,j+1).reverse(), ...best.slice(j+1)]; const c = planDrive(plan, cand); if(c < bc - .01){ best = cand; bc = c; better = true; } } }
+  }
+  plan.stationen = best;
+}
+function addToPlan(id, date=editDay()){
+  const p = P(id); if(!p) return false;
+  const pl = S.plans[ensureDayPlan(date)];
+  if(pl.plan.stationen.some(x => x.placeId===id)) return false;
+  logStop(pl, id, true);
+  pl.plan.stationen.push(stationFor(p));
+  optimizeOrder(pl.plan); retitle(pl.plan); pl.at = Date.now();
+  syncPlanStatus(pl); renderAll();
+  return true;
+}
+function removeFromPlan(date, idx){
+  const pl = dayPlanFor(date); if(!pl) return;
+  const gone = pl.plan.stationen[idx]; if(!gone) return;
+  if(gone.placeId) logStop(pl, gone.placeId, false);
+  pl.plan.stationen.splice(idx, 1);
+  if(gone.placeId && P(gone.placeId)?.status==="geplant") setOver(gone.placeId, {status:"offen"});
+  retitle(pl.plan); pl.at = Date.now(); persist(); renderAll();
+}
+function setStay(date, idx, delta){
+  const pl = dayPlanFor(date); const x = pl?.plan.stationen[idx]; if(!x) return;
+  x.dauerMin = Math.min(8*60, Math.max(15, x.dauerMin + delta)); x.dAt = pl.at = Date.now(); persist(); renderAll();
+}
+/* Abgleich auf Ebene der Stopps: plan.log hält je Spot, ob er zuletzt hinzugefügt (in:true) oder entfernt wurde, mit Zeitstempel.
+   Ältere Pläne ohne log: alle Stopps gelten als zum Zeitpunkt pl.at hinzugefügt. */
+const logOf = pl => pl.plan.log || Object.fromEntries(pl.plan.stationen.filter(x => x.placeId).map(x => [x.placeId, {in:true, at:pl.at || pl.erzeugtUm || 0}]));
+function logStop(pl, id, inn){ pl.plan.log = {...logOf(pl), [id]:{in:inn, at:Date.now()}}; }
+// Zwei Stände desselben Tages zusammenführen: pro Spot gilt die neuere Aktion, pro Stopp die neuere Aufenthaltsdauer.
+// Die Reihenfolge wird neu optimiert (sie ist ohnehin nur berechnet), Eingabe sortiert, damit beide Geräte dasselbe Ergebnis bekommen.
+function mergePlans(a, b){
+  const la = logOf(a), lb = logOf(b), log = {};
+  for(const id of [...new Set([...Object.keys(la), ...Object.keys(lb)])].sort()) log[id] = !la[id] || (lb[id] && lb[id].at > la[id].at) ? lb[id] : la[id];
+  const st = {};
+  [...a.plan.stationen, ...b.plan.stationen].forEach(x => { if(x.placeId && (!st[x.placeId] || (x.dAt || 0) > (st[x.placeId].dAt || 0))) st[x.placeId] = x; });
+  const base = (b.at || 0) > (a.at || 0) ? b : a;
+  const mb = (b.plan.modusAt || 0) > (a.plan.modusAt || 0) ? b.plan : a.plan;
+  const leg = {}; for(const k of [...new Set([...Object.keys(a.plan.leg || {}), ...Object.keys(b.plan.leg || {})])].sort()){ const x = a.plan.leg?.[k], y = b.plan.leg?.[k]; leg[k] = !x || (y && y.at > x.at) ? y : x; }
+  const out = {...base, at:Math.max(a.at || 0, b.at || 0), plan:{...base.plan, log, modus:mb.modus || "auto", modusAt:mb.modusAt || 0, leg,
+    stationen:Object.keys(log).filter(id => log[id].in && st[id]).sort().map(id => st[id])}};
+  optimizeOrder(out.plan); retitle(out.plan);
+  return out;
+}
+function syncPlanStatus(pl){ pl.plan.stationen.forEach(x => { if(x.placeId && P(x.placeId) && P(x.placeId).status!=="besucht") setOver(x.placeId, {status:"geplant"}); }); persist(); }
+function timeline(plan){
+  const rows = []; let t = toMin(plan.start), prev = planOrigin(plan);
+  if(prev) rows.push({kind:"stop", time:t, name:"Ab " + prev.name, icon:"hotel"});
+  plan.stationen.forEach((x,i) => {
+    const place = x.placeId ? P(x.placeId) : null;
+    if(!place) return;
+    const lt = prev ? legTime(plan, prev, place) : null;
+    if(lt && (lt.min === null || lt.min >= 1 || lt.src === "eigen")){ rows.push({kind:"drive", time:t, ...lt, from:prev, to:place}); t += lt.min ?? 0; }
+    prev = place;
+    rows.push({kind:"stop", time:t, name:place.name, place, dauer:x.dauerMin, index:i});
+    t += x.dauerMin;
+  });
+  const fin = planEnd(plan);
+  if(fin && prev && prev.id !== fin.id){ const lt = legTime(plan, prev, fin); rows.push({kind:"drive", time:t, ...lt, from:prev, to:fin}); t += lt.min ?? 0; rows.push({kind:"stop", time:t, name:(fin.id === planOrigin(plan)?.id ? "Zurück: " : "Ankunft: ") + fin.name, icon:"hotel", end:true}); }
+  else rows.push({kind:"end", time:t});
+  return rows;
+}
+const mapsLeg = (from, to, mode="auto") => `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${encodeURIComponent(to.mapsQuery || `${to.lat},${to.lng}`)}&travelmode=${LMODES[mode].gm}`;
+function dayBodyHTML(date, added){
+  const pl = dayPlanFor(date);
+  const has = pl && pl.plan.stationen.some(x => x.placeId && P(x.placeId));
+  if(!has) return `<div class="dpempty">${ic("insel")}<span>Noch keine Spots für ${fmtDate(date)}<br>Oben suchen oder auf der Karte einen Spot öffnen und „Zum Tagesplan hinzufügen“.</span></div>`;
+  const plan = pl.plan, rows = timeline(plan), end = rows[rows.length-1].time, mode = modeOf(plan), M = LMODES[mode];
+  const drive = rows.filter(r => r.kind==="drive").reduce((a,r) => a + (r.min||0), 0), missing = rows.filter(r => r.kind==="drive" && r.min===null).length;
+  const shown = rows.filter(r => r.kind!=="end");
+  const km = rows.filter(r => r.kind==="drive").reduce((a,r) => a + (r.km||0), 0);
+  const link = r => `<a href="${mapsLeg(r.from, r.to, mode)}" target="_blank" rel="noopener">${ic("route")}Route</a>`;
+  const tl = shown.map(r => {
+    if(r.kind==="drive" && mode==="frei"){ const k = rkey(rid(r.from), rid(r.to));
+      return `<div class="tlrow drive"><span class="time"></span><span class="rail"><i></i></span><div class="tlbody">${ic(M.icon)}${r.min===null ? "Zeit offen" : legTxt(r.min) + " eigene Angabe"} <span class="sub stay"><button data-leg="${k}" data-d="-5" aria-label="5 Minuten weniger">−</button><button data-leg="${k}" data-d="5" aria-label="5 Minuten mehr">+</button></span> ${link(r)}</div><span></span></div>`; }
+    if(r.kind==="drive" && r.min===null) return `<div class="tlrow drive"><span class="time"></span><span class="rail"><i></i></span><div class="tlbody">${ic(M.icon)}${mode==="fuss" && airKm(r.from, r.to) > 25 ? "Zu weit zum Gehen, keine Gehzeit" : (mode==="fuss" ? "Gehzeit" : "Fahrzeit") + " noch nicht berechnet"} ${link(r)}</div><span></span></div>`;
+    if(r.kind==="drive") return `<div class="tlrow drive"><span class="time"></span><span class="rail"><i></i></span><div class="tlbody">${ic(M.icon)}ca. ${legTxt(r.min)}${mode==="fuss" ? " zu Fuß" : ""}${r.km>=1?` · ${Math.round(r.km)} km`:""}${mode==="fuss" && r.min > 60 ? " · weiter Fußweg" : ""} ${link(r)}</div><span></span></div>`;
+    const colorVar = r.place ? TYPES[r.place.typ][1] : "--surface2";
+    const icon = r.icon || TIC(r.place.typ);
+    const edit = r.index !== undefined ? `<div class="tledit"><button data-del="${r.index}" aria-label="${esc(r.name)} entfernen">${ic("muell")}</button></div>` : "<span></span>";
+    const stay = r.index !== undefined ? `<div class="sub stay"><button data-stay="${r.index}" data-d="-15" aria-label="Kürzer bleiben">−</button><span>${durTxt(r.dauer)}</span><button data-stay="${r.index}" data-d="15" aria-label="Länger bleiben">+</button></div>` : "";
+    return `<div class="tlrow${added && r.place?.id===added ? " added" : ""}"><span class="time">${toHHMM(r.time)}</span><span class="rail"><i style="--c:var(${colorVar})">${ic(icon)}</i></span><div class="tlbody">${r.place?`<button class="nm" data-open="${r.place.id}">${esc(r.name)}</button>`:`<span class="nm">${esc(r.name)}</span>`}${stay}</div>${edit}</div>`;
+  }).join("");
+  return `<div class="chiprow" id="dpMode" role="group" aria-label="Unterwegs mit">${Object.entries(LMODES).map(([k,v]) => `<button class="chip" data-mode="${k}" aria-pressed="${k===mode}">${ic(v.icon)}${v.l}</button>`).join("")}</div>
+    <div class="dpsum"><span>${ic("insel")}${plan.stationen.length} ${plan.stationen.length===1?"Spot":"Spots"}</span>${!drive&&missing?`<span>${ic(M.icon)}Zeiten offen</span>`:""}${drive?`<span>${ic(M.icon)}${mode==="frei"?"":"ca. "}${durTxt(drive)} ${M.wort}${km?` · ${Math.round(km)} km`:""}${missing?", unvollständig":""}</span>`:""}<span>${ic(planEnd(plan)?"hotel":"uhr")}${planEnd(plan)?"zurück":"Ende"} ${toHHMM(end)}</span></div>
+    ${isTravelDay(plan.datum)?`<p class="note">Reisetag: Start bei ${esc(dayStart(plan.datum).name)}, der Plan endet beim letzten Stopp. Die Weiterreise zu ${esc(ukNight(plan.datum).name)} steht in den Etappen.</p>`:""}
+    ${missing?`<p class="note">${missing===1?"Eine Zeit fehlt":missing+" Zeiten fehlen"}. Die Uhrzeiten danach sind deshalb zu früh. ${mode==="frei" ? "Für Boot, Bus und Bahn rechnet die App nichts, tragt die Zeiten mit + selbst ein." : "Mit Netz werden fehlende Routen nachgeladen."}</p>`:""}
+    <div class="tl">${tl}</div>
+    <p class="credit">${({auto:"Reihenfolge nach kürzester Fahrt. Fahrzeiten aus dem Straßennetz (OpenStreetMap) mit etwas Puffer, ohne Verkehr.", fuss:"Reihenfolge nach kürzestem Fußweg. Gehzeiten aus dem Fußwegnetz (OpenStreetMap, FOSSGIS), ohne Pausen.", frei:"Für Boot, Bus und Bahn gibt es keine berechneten Zeiten. Reihenfolge nach euren eingetragenen Zeiten, wo sie fehlen nach Luftlinie."})[mode]}</p>
+    <button class="btn" id="dpClear">${ic("x")}Tag leeren</button>`;
+}
+const norm = x => String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function searchSpots(q){
+  const n = norm(q.trim()); if(!n) return [];
+  const words = n.split(/\s+/);
+  return Object.values(places()).filter(p => p.status!=="abgelehnt").map(p => {
+    const name = norm(p.name), hay = name + " " + norm(p.region) + " " + norm(GROUPS[GOF[p.typ]||"spots"][0]);
+    if(!words.every(w => hay.includes(w))) return null;
+    const rank = name.startsWith(n) ? 0 : name.split(/[\s(']+/).some(w => w.startsWith(words[0])) ? 1 : name.includes(words[0]) ? 2 : 3;
+    return {p, rank};
+  }).filter(Boolean).sort((a,b) => a.rank-b.rank || a.p.name.localeCompare(b.p.name, "de")).slice(0, 8).map(x => x.p);
+}
+function markHit(name, q){ const n = norm(name), w = norm(q.trim()).split(/\s+/)[0]; const i = w ? n.indexOf(w) : -1; return i < 0 ? esc(name) : esc(name.slice(0,i)) + "<mark>" + esc(name.slice(i, i+w.length)) + "</mark>" + esc(name.slice(i+w.length)); }
+function openDayPlan(date=editDay()){
+  if(S.meta.editDay !== date){ S.meta.editDay = date; persist(); renderAll(); }
+  const days = [...new Set([...tripDays().filter(d => d >= today() || dayPlanFor(d)), date])].sort();
+  const html = `<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--plan)">${ic("kalender")}</span><div><div class="eyebrow" id="dpEyebrow"></div><h2 id="dpTitle"></h2></div></div>${closeBtn}</div>
+    <div class="chiprow dayrow" id="dpDays" role="group" aria-label="Tag wählen">${days.map(d=>`<button class="chip" data-day="${d}" aria-pressed="${d===date}">${fmtDate(d)}</button>`).join("")}</div>
+    <div class="spotsearch">${ic("suche")}<input type="search" id="spotQ" placeholder="Spot hinzufügen …" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Spot hinzufügen" aria-controls="spotRes"></div>
+    <div class="sres" id="spotRes" role="listbox" aria-label="Gefundene Spots"></div>
+    <p class="addmsg" id="addMsg" aria-live="polite"></p>
+    <div id="dpBody" style="display:flex;flex-direction:column;gap:12px"></div>`;
+  openSheet(html, sh => {
+    sh.classList.add("tall");
+    let cur = date, added = null;
+    const q = sh.querySelector("#spotQ"), res = sh.querySelector("#spotRes"), msg = sh.querySelector("#addMsg"), body = sh.querySelector("#dpBody");
+    const head = () => { const pl = dayPlanFor(cur); sh.querySelector("#dpEyebrow").textContent = `Tagesplan · ${fmtDate(cur)}`; sh.querySelector("#dpTitle").textContent = pl?.plan.titel || WDL[weekday(cur)]; };
+    const draw = () => {
+      head(); body.innerHTML = etappenAm(cur) + dayBodyHTML(cur, added); added = null;
+      body.querySelectorAll("[data-et]").forEach(b => b.onclick = () => openEtappe(b.dataset.et));
+      body.querySelectorAll("[data-open]").forEach(b => b.onclick = () => focusPlace(b.dataset.open));
+      body.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { removeFromPlan(cur, +b.dataset.del); draw(); search(); });
+      body.querySelectorAll("[data-stay]").forEach(b => b.onclick = () => { setStay(cur, +b.dataset.stay, +b.dataset.d); draw(); });
+      body.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { setMode(cur, b.dataset.mode); draw(); });
+      body.querySelectorAll("[data-leg]").forEach(b => b.onclick = () => { setLeg(cur, b.dataset.leg, +b.dataset.d); draw(); });
+      const clr = body.querySelector("#dpClear");
+      if(clr) clr.onclick = () => { const pl = dayPlanFor(cur); if(!pl) return; while(pl.plan.stationen.length) removeFromPlan(cur, 0); draw(); search(); toast("Tag geleert", "x"); };
+      const bl = body.querySelector(".tlrow.added"); if(bl && document.activeElement !== q) bl.scrollIntoView({block:"nearest"});
+    };
+    window._dpRefresh = () => { if(sh.isConnected) draw(); };
+    const search = () => {
+      const inPlan = new Set((dayPlanFor(cur)?.plan.stationen||[]).map(x => x.placeId));
+      if(!q.value.trim()){ res.innerHTML = ""; return; }
+      const hits = searchSpots(q.value);
+      res.innerHTML = hits.length ? hits.map(p => { const on = inPlan.has(p.id); return `<button class="sritem" role="option" data-pick="${p.id}" ${on?`disabled aria-disabled="true"`:""}><span class="tchip" style="--c:var(${TYPES[p.typ][1]})">${ic(TIC(p.typ))}</span><span class="srtxt"><b>${markHit(p.name, q.value)}</b><span>${on ? "schon im Tagesplan" : esc([GROUPS[GOF[p.typ]||"spots"][0], p.region, hotelMin(p) !== null ? hotelMin(p)+"′ ab Unterkunft" : ""].filter(Boolean).join(" · "))}</span></span><span class="sradd">${ic(on ? "haken" : "plus")}</span></button>`; }).join("")
+        : `<p class="srnone">Kein Spot gefunden. Neue Spots legt ihr mit + auf der Karte an.</p>`;
+    };
+    const pick = id => {
+      const p = P(id); if(!p || !addToPlan(id, cur)) return;
+      added = id; q.value = ""; search();
+      msg.innerHTML = ic("haken") + `<span>${esc(p.name)} ist im Tagesplan</span>`; msg.classList.remove("show"); void msg.offsetWidth; msg.classList.add("show");
+      draw();
+    };
+    q.addEventListener("input", search);
+    q.addEventListener("keydown", e => { if(e.key === "Enter" || e.keyCode === 13){ e.preventDefault(); const first = res.querySelector("[data-pick]:not([disabled])"); if(first) pick(first.dataset.pick); } });
+    // Tippen auf einen Treffer soll die Tastatur offen lassen, damit man direkt weitersuchen kann
+    res.addEventListener("pointerdown", e => { if(e.target.closest("[data-pick]") && document.activeElement === q) e.preventDefault(); });
+    res.addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if(b && !b.disabled) pick(b.dataset.pick); });
+    sh.querySelectorAll("[data-day]").forEach(b => b.onclick = () => {
+      cur = b.dataset.day; S.meta.editDay = cur; persist(); renderAll();
+      sh.querySelectorAll("[data-day]").forEach(x => x.setAttribute("aria-pressed", x.dataset.day===cur));
+      msg.innerHTML = ""; draw(); search();
+    });
+    const plNow = dayPlanFor(cur); if(plNow && !plNow.eigen){ ensureDayPlan(cur); persist(); }
+    if(plNow) ensureRoutes(planLegs(dayPlanFor(cur).plan), modeOf(dayPlanFor(cur).plan));
+    draw();
+  });
+}
+function dayBtnHTML(id){
+  const d = editDay(), inPlan = !!dayPlanFor(d)?.plan.stationen.some(x => x.placeId===id);
+  return inPlan
+    ? `<button class="btn daybtn" id="pDay" data-in="1">${ic("haken")}Im Tagesplan ${esc(dayLabel(d))} · ansehen</button>`
+    : `<button class="btn plan daybtn" id="pDay">${ic("plus")}Zum Tagesplan hinzufügen</button>`;
+}
+
+/* ---------- Reise und Etappen ----------
+   Ebene A: Abschnitte zwischen Orten oder Unterkünften, auch die Flüge. Alles hier ist privat: es liegt nur lokal (S.etappen,
+   S.meta.reise) und geht nur über den Abgleich ans andere Gerät, nie in die öffentlichen Dateien.
+   Die App berechnet und ergänzt hier nichts. Zeiten, Dauer und Anbieter tragt ihr selbst ein; eine Dauer gilt als geschätzt,
+   bis ihr sie als bestätigt markiert. Löschen hinterlässt {weg:true, at} für den Abgleich. */
+const MODES = {flug:["Flug","flug"], zug:["Zug","zug"], bus:["Bus","bus"], faehre:["Fähre","faehre"], auto:["Auto/Taxi","auto"], sonst:["Sonstiges","reise"]};
+const LSTATUS = {idee:"Idee", geplant:"Geplant", gebucht:"Gebucht"};
+const etappen = () => Object.entries(S.etappen).filter(([,e]) => !e.weg).map(([id,e]) => ({...e, id}))
+  .sort((a,b) => (a.datum||"9999").localeCompare(b.datum||"9999") || (a.ab||"99").localeCompare(b.ab||"99") || (a.createdAt||0)-(b.createdAt||0));
+const hm = m => Math.floor(m/60) + " h" + (m%60 ? " " + m%60 + " min" : "");
+const dauerTxt = e => e.dauerMin ? (e.dauerOk ? hm(e.dauerMin) : "ca. " + hm(e.dauerMin) + ", geschätzt") : "";
+const zeitTxt = e => [e.datum ? fmtDate(e.datum) : "ohne Datum", e.ab && e.an ? e.ab + "–" + e.an + (e.anDatum && e.anDatum !== e.datum ? " (" + fmtDate(e.anDatum) + ")" : "") : e.ab ? "ab " + e.ab : e.an ? "an " + e.an : ""].filter(Boolean).join(" ");
+const etappeRow = e => `<button class="etrow" data-et="${e.id}"><span class="tchip">${ic(MODES[e.art]?.[1] || "reise")}</span><span style="min-width:0"><b>${esc(e.von)} → ${esc(e.nach)}</b><span class="sub">${esc([MODES[e.art]?.[0], zeitTxt(e), dauerTxt(e), e.anbieter].filter(Boolean).join(" · "))}</span></span><span class="etst ${e.status||"idee"}">${LSTATUS[e.status||"idee"]}</span></button>`;
+// Hinweis im Tagesplan, wenn an dem Tag eine Etappe abfährt oder ankommt
+const etappenAm = d => etappen().filter(e => e.datum === d || e.anDatum === d).map(e => `<button class="etnote" data-et="${e.id}">${ic(MODES[e.art]?.[1] || "reise")}<span><b>${esc(e.von)} → ${esc(e.nach)}</b><br><span class="muted">${esc([MODES[e.art]?.[0], zeitTxt(e), dauerTxt(e)].filter(Boolean).join(" · "))}</span></span></button>`).join("");
+function openReise(){
+  const r = S.meta.reise || {}, list = etappen(), uks = ukList(true), frei = openNights();
+  openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--plan)">${ic("reise")}</span><div><div class="eyebrow">Eure Reise</div><h2>Unterkünfte und Etappen</h2></div></div>${closeBtn}</div>
+    <div class="card"><div class="eyebrow">Reisezeitraum</div>
+      <div class="formgrid"><label>Von<input type="date" id="rStart" value="${esc(r.start||"")}"></label><label>Bis<input type="date" id="rEnd" value="${esc(r.end||"")}"></label></div>
+      <button class="btn" id="rSave">${ic("haken")}Zeitraum speichern</button></div>
+    <div class="eyebrow">Unterkünfte</div>
+    ${frei.length ? `<p class="note">${frei.length === 1 ? "Eine Nacht" : frei.length + " Nächte"} im Reisezeitraum ohne Unterkunft: ${esc(frei.slice(0,4).map(fmtDate).join(", "))}${frei.length > 4 ? " …" : ""}</p>` : ""}
+    <div>${uks.length ? `<div class="list">${uks.map(ukRow).join("")}</div>` : '<p class="note">Noch keine Unterkünfte. Mit Ort und Datum wird eine Unterkunft zum Start- und Endpunkt eurer Tagespläne.</p>'}</div>
+    <button class="btn plan" id="ukNew">${ic("plus")}Unterkunft hinzufügen</button>
+    <div class="eyebrow">Etappen</div>
+    <div>${list.length ? `<div class="list">${list.map(etappeRow).join("")}</div>` : '<p class="note">Noch keine Etappen. Flüge, Züge, Busse und Fähren tragt ihr hier selbst ein, auch wenn erst die Idee steht.</p>'}</div>
+    <button class="btn plan" id="etNew">${ic("plus")}Etappe hinzufügen</button>
+    <p class="small muted">Die App rechnet hier nichts aus und ergänzt nichts. Zeiten und Dauer kommen von euch, eine geschätzte Dauer ist als solche markiert. Die Etappen bleiben auf euren Handys und gehen nur über den Abgleich ans andere.</p>`, sh => {
+    sh.querySelector("#rSave").onclick = () => {
+      const start = sh.querySelector("#rStart").value, end = sh.querySelector("#rEnd").value;
+      if(start && end && end < start) return toast("Ende liegt vor dem Beginn", "info");
+      S.meta.reise = start || end ? {start, end} : null; S.meta.at = Date.now(); persist(); renderAll(); toast("Zeitraum gespeichert", "kalender");
+    };
+    sh.querySelectorAll("[data-et]").forEach(b => b.onclick = () => openEtappe(b.dataset.et));
+    sh.querySelector("#etNew").onclick = () => openEtappe(null);
+    sh.querySelectorAll("[data-uk]").forEach(b => b.onclick = () => openUnterkunft(b.dataset.uk));
+    sh.querySelector("#ukNew").onclick = () => openUnterkunft(null);
+  });
+}
+
+/* ---------- Unterkünfte ----------
+   Privat wie die Etappen: nur lokal (S.unterkuenfte) und über den Abgleich. Fahrzeiten ab einer Unterkunft werden nie
+   vorab berechnet oder veröffentlicht, sondern auf dem Gerät über OSRM nachgeladen und dort gespeichert (braucht einmal Netz).
+   Eine Unterkunft gilt für die Nächte von "von" bis vor "bis" (Abreisetag). Morgens startet der Tag dort, wo ihr geschlafen habt,
+   abends endet er dort, wo ihr schlaft. Wechselt die Unterkunft (Reisetag), endet der Plan beim letzten Stopp,
+   denn die Weiterreise ist eine Etappe und kein Autoabschnitt des Tagesplans. */
+const NEAR_KM = 80;
+const ukList = (alle) => Object.entries(S.unterkuenfte).filter(([,u]) => !u.weg && (alle || (Number.isFinite(u.lat) && u.von && u.bis))).map(([id,u]) => ({...u, id}))
+  .sort((a,b) => (a.von||"9999").localeCompare(b.von||"9999") || a.name.localeCompare(b.name, "de"));
+const ukNight = d => ukList().find(u => u.von <= d && d < u.bis) || null; // Nacht von d auf den nächsten Tag
+const isTravelDay = d => { const a = ukNight(addDays(d,-1)), b = ukNight(d); return !!(a && b && a.id !== b.id); };
+const dayStart = d => ukNight(addDays(d,-1)) || ukNight(d);
+const dayEnd = d => isTravelDay(d) ? null : ukNight(d);
+const baseFor = d => ukNight(d) || ukNight(addDays(d,-1));
+function openNights(){ const r = tripRange(); if(!r) return []; const out = []; for(let d = r.start; d < r.end; d = addDays(d,1)) if(!ukNight(d)) out.push(d); return out; }
+const nights = u => u.von && u.bis ? dayDiff(u.bis, u.von) : 0;
+const ukRow = u => `<button class="etrow" data-uk="${u.id}"><span class="tchip">${ic("hotel")}</span><span style="min-width:0"><b>${esc(u.name)}</b><span class="sub">${esc([u.von && u.bis ? fmtDate(u.von) + " – " + fmtDate(u.bis) + " · " + nights(u) + (nights(u) === 1 ? " Nacht" : " Nächte") : "ohne Datum, noch kein Startpunkt", Number.isFinite(u.lat) ? "" : "Ort fehlt"].filter(Boolean).join(" · "))}</span></span><span class="etst ${u.status||"idee"}">${LSTATUS[u.status||"idee"]}</span></button>`;
+// Prüft, wie weit der gesetzte Punkt von der nächsten Straße liegt (ein Punkt auf einer internen Zufahrt verfälscht Fahrzeiten)
+async function roadGap(lat, lng){ const js = await fetch(`https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}?number=1`).then(r => r.json()); if(js.code !== "Ok") throw new Error(js.code); return Math.round(js.waypoints[0].distance); }
+function openUnterkunft(id, draft){
+  const u = draft || (id ? {...S.unterkuenfte[id]} : {status:"idee"});
+  openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--plan)">${ic("hotel")}</span><div><div class="eyebrow">${id ? "Unterkunft bearbeiten" : "Neue Unterkunft"}</div><h2>${id && u.name ? esc(u.name) : "Wo schlaft ihr?"}</h2></div></div>${closeBtn}</div>
+    <div class="formgrid">
+      <label class="wide">Name<input type="text" id="uName" value="${esc(u.name||"")}" placeholder="Name der Unterkunft" autocomplete="off"></label>
+      <label>Anreise<input type="date" id="uVon" value="${esc(u.von||"")}"></label>
+      <label>Abreise<input type="date" id="uBis" value="${esc(u.bis||"")}"></label>
+    </div>
+    <div><div class="eyebrow">Ort</div><div class="btnrow" style="margin-top:8px"><button class="btn" id="uMap">${ic("insel")}Auf Karte tippen</button><button class="btn" id="uHere">${ic("standort")}Ich bin hier</button></div>
+      <p class="small muted" id="uWhere" style="margin-top:6px">${Number.isFinite(u.lat) ? `Gesetzt: ${u.lat.toFixed(5)}, ${u.lng.toFixed(5)}` : "Noch kein Ort gesetzt"}</p>
+      <p class="small" id="uGap"></p>
+      <p class="small muted">Setzt den Punkt auf die Einfahrt an der Straße, nicht mitten aufs Gelände. Sonst stimmen die Fahrzeiten nicht.</p></div>
+    <div class="chiprow" id="uSt" role="group" aria-label="Stand">${Object.entries(LSTATUS).map(([k,l]) => `<button type="button" class="chip" data-s="${k}" aria-pressed="${(u.status||"idee")===k}">${l}</button>`).join("")}</div>
+    <textarea id="uNotiz" placeholder="Notiz, optional">${esc(u.notiz||"")}</textarea>
+    <div class="btnrow"><button class="btn solid" id="uSave">${ic("haken")}Speichern</button>${id ? `<button class="btn" id="uDel">${ic("muell")}Löschen</button>` : ""}</div>`, sh => {
+    const v = q => sh.querySelector(q).value.trim();
+    const grab = () => { u.name = v("#uName"); u.von = v("#uVon"); u.bis = v("#uBis"); u.notiz = v("#uNotiz"); };
+    const check = () => { sh.querySelector("#uSave").disabled = !(v("#uName") && Number.isFinite(u.lat)); };
+    sh.querySelector("#uName").oninput = check; check();
+    sh.querySelectorAll("#uSt button").forEach(b => b.onclick = () => { u.status = b.dataset.s; sh.querySelectorAll("#uSt button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+    const showGap = () => {
+      const el = sh.querySelector("#uGap"); if(!Number.isFinite(u.lat) || navigator.onLine === false) return;
+      roadGap(u.lat, u.lng).then(m => { if(!el.isConnected) return; el.textContent = m > 150 ? `Achtung: ${m} m bis zur nächsten Straße. Liegt der Punkt an der Einfahrt?` : `Nächste Straße ${m} m entfernt.`; el.style.color = m > 150 ? "var(--warn)" : "var(--mute)"; }).catch(() => {});
+    };
+    const setLL = ll => { u.lat = +ll.lat.toFixed(6); u.lng = +ll.lng.toFixed(6); sh.querySelector("#uWhere").textContent = `Gesetzt: ${u.lat.toFixed(5)}, ${u.lng.toFixed(5)}`; check(); showGap(); };
+    showGap();
+    sh.querySelector("#uMap").onclick = () => {
+      grab(); closeSheet(); document.body.classList.add("crosshair");
+      const bar = document.createElement("div"); bar.id = "placing"; bar.className = "glass placing"; bar.innerHTML = `${ic("standort")}<span style="flex:1">Tippe auf die Einfahrt der Unterkunft</span><button class="closebtn" aria-label="Abbrechen">${ic("x")}</button>`;
+      document.querySelector(".mapwrap").appendChild(bar);
+      bar.querySelector("button").onclick = () => { placingCb = null; bar.remove(); document.body.classList.remove("crosshair"); openUnterkunft(id, u); };
+      placingCb = ll => { u.lat = +ll.lat.toFixed(6); u.lng = +ll.lng.toFixed(6); openUnterkunft(id, u); };
+    };
+    sh.querySelector("#uHere").onclick = () => ME && Date.now()-ME.at < 60000 ? setLL(ME) : navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => setLL({lat:pos.coords.latitude, lng:pos.coords.longitude}), () => toast("Standort nicht freigegeben","info"), {enableHighAccuracy:true, timeout:8000}) : toast("Standort nicht verfügbar","info");
+    sh.querySelector("#uSave").onclick = () => {
+      grab();
+      if((u.von && !u.bis) || (!u.von && u.bis)) return toast("Anreise und Abreise beide eintragen oder beide leer lassen", "info", 3500);
+      if(u.von && u.bis <= u.von) return toast("Abreise muss nach der Anreise liegen", "info");
+      const clash = u.von && ukList().find(o => o.id !== id && o.von < u.bis && u.von < o.bis);
+      if(clash) return toast(`Überschneidet sich mit ${clash.name}`, "info", 3500);
+      const out = {name:u.name.slice(0,80), lat:u.lat, lng:u.lng, von:u.von || null, bis:u.bis || null, status:u.status || "idee", notiz:(u.notiz||"").slice(0,1000) || null, createdAt:u.createdAt || Date.now(), at:Date.now()};
+      S.unterkuenfte[id || uid("uk-")] = out; persist(); renderAll(); toast("Unterkunft gespeichert", "hotel"); openReise(); prefetchTiles();
+    };
+    const del = sh.querySelector("#uDel");
+    if(del) del.onclick = () => {
+      if(!del.dataset.sure){ del.dataset.sure = "1"; del.innerHTML = ic("muell") + "Wirklich löschen?"; return; }
+      S.unterkuenfte[id] = {weg:true, at:Date.now()}; persist(); renderAll(); toast("Unterkunft gelöscht", "muell"); openReise();
+    };
+  });
+}
+function openEtappe(id){
+  const e = id ? {...S.etappen[id]} : {art:null, status:"idee", dauerOk:false};
+  const h = e.dauerMin ? Math.floor(e.dauerMin/60) : "", m = e.dauerMin ? e.dauerMin%60 : "";
+  openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--plan)">${ic("reise")}</span><div><div class="eyebrow">${id ? "Etappe bearbeiten" : "Neue Etappe"}</div><h2>${id ? esc(e.von) + " → " + esc(e.nach) : "Von wo nach wo?"}</h2></div></div>${closeBtn}</div>
+    <div class="typepick" id="eArt">${Object.entries(MODES).map(([k,[l,icon]]) => `<button type="button" data-a="${k}" style="--c:var(--plan)" aria-pressed="${e.art===k}">${ic(icon)}${l}</button>`).join("")}</div>
+    <div class="formgrid">
+      <label>Von<input type="text" id="eVon" value="${esc(e.von||"")}" placeholder="Ort oder Unterkunft" autocomplete="off"></label>
+      <label>Nach<input type="text" id="eNach" value="${esc(e.nach||"")}" placeholder="Ort oder Unterkunft" autocomplete="off"></label>
+      <label>Datum<input type="date" id="eDatum" value="${esc(e.datum||"")}"></label>
+      <label>Ankunft am<input type="date" id="eAnDatum" value="${esc(e.anDatum||"")}"></label>
+      <label>Abfahrt<input type="time" id="eAb" value="${esc(e.ab||"")}"></label>
+      <label>Ankunft<input type="time" id="eAn" value="${esc(e.an||"")}"></label>
+      <label>Dauer Stunden<input type="number" id="eH" min="0" max="72" inputmode="numeric" value="${h}"></label>
+      <label>Minuten<input type="number" id="eM" min="0" max="59" step="5" inputmode="numeric" value="${m}"></label>
+    </div>
+    <div class="chiprow" id="eOk" role="group" aria-label="Dauer"><button type="button" class="chip" data-ok="0" aria-pressed="${!e.dauerOk}">Dauer geschätzt</button><button type="button" class="chip" data-ok="1" aria-pressed="${!!e.dauerOk}">laut Fahrplan oder Buchung</button></div>
+    <div class="formgrid">
+      <label class="wide">Anbieter oder Verbindung<input type="text" id="eAnb" value="${esc(e.anbieter||"")}" autocomplete="off"></label>
+      <label class="wide">Kosten<input type="text" id="eKost" value="${esc(e.kosten||"")}" autocomplete="off"></label>
+    </div>
+    <div class="chiprow" id="eSt" role="group" aria-label="Stand">${Object.entries(LSTATUS).map(([k,l]) => `<button type="button" class="chip" data-s="${k}" aria-pressed="${(e.status||"idee")===k}">${l}</button>`).join("")}</div>
+    <textarea id="eNotiz" placeholder="Notiz, optional">${esc(e.notiz||"")}</textarea>
+    <p class="small muted">Datum, Uhrzeiten und Dauer nur eintragen, wenn ihr sie kennt. Uhrzeiten sind Ortszeit.</p>
+    <div class="btnrow"><button class="btn solid" id="eSave">${ic("haken")}Speichern</button>${id ? `<button class="btn" id="eDel">${ic("muell")}Löschen</button>` : ""}</div>`, sh => {
+    const pick = (sel, attr, key) => sh.querySelectorAll(sel + " button").forEach(b => b.onclick = () => { e[key] = attr === "ok" ? b.dataset.ok === "1" : b.dataset[attr]; sh.querySelectorAll(sel + " button").forEach(x => x.setAttribute("aria-pressed", x === b)); check(); });
+    const v = q => sh.querySelector(q).value.trim();
+    const check = () => { sh.querySelector("#eSave").disabled = !(e.art && v("#eVon") && v("#eNach")); };
+    pick("#eArt", "a", "art"); pick("#eOk", "ok", "dauerOk"); pick("#eSt", "s", "status");
+    sh.querySelectorAll("#eVon,#eNach").forEach(x => x.oninput = check); check();
+    sh.querySelector("#eSave").onclick = () => {
+      const datum = v("#eDatum"), anDatum = v("#eAnDatum");
+      if(datum && anDatum && anDatum < datum) return toast("Ankunft liegt vor der Abfahrt", "info");
+      const dauer = (Math.max(0, +v("#eH") || 0)) * 60 + Math.max(0, Math.min(59, +v("#eM") || 0));
+      const out = {art:e.art, von:v("#eVon").slice(0,80), nach:v("#eNach").slice(0,80), datum:datum || null, anDatum:anDatum && anDatum !== datum ? anDatum : null,
+        ab:v("#eAb") || null, an:v("#eAn") || null, dauerMin:dauer || null, dauerOk:!!(dauer && e.dauerOk), anbieter:v("#eAnb").slice(0,120) || null,
+        kosten:v("#eKost").slice(0,60) || null, status:e.status || "idee", notiz:v("#eNotiz").slice(0,1000) || null, createdAt:e.createdAt || Date.now(), at:Date.now()};
+      S.etappen[id || uid("et-")] = out; persist(); toast("Etappe gespeichert", "reise"); openReise();
+    };
+    const del = sh.querySelector("#eDel");
+    if(del) del.onclick = () => {
+      if(!del.dataset.sure){ del.dataset.sure = "1"; del.innerHTML = ic("muell") + "Wirklich löschen?"; return; }
+      S.etappen[id] = {weg:true, at:Date.now()}; persist(); toast("Etappe gelöscht", "muell"); openReise();
+    };
+  });
+}
+
+/* ---------- Abgleich zwischen zwei Handys ----------
+   Jeder schickt seinen Stand als Link. Beim Öffnen wird zusammengeführt statt überschrieben:
+   pro Eintrag gewinnt der neuere Zeitstempel. Gelöschte Bewertungen bleiben als {emoji:null, at} stehen,
+   damit das Löschen beim anderen Gerät ankommt. Besucht-Listen der Tage werden vereinigt und danach
+   auf Spots gekürzt, deren (per Zeitstempel entschiedener) Status noch „besucht“ ist.
+   Geräteeigene Ansicht (editDay) wird nicht übertragen. */
+const SYNC_KEY = "thailand2027";
+const LOCAL_META = ["editDay"];
+const sharedMeta = () => Object.fromEntries(Object.entries(S.meta).filter(([k]) => !LOCAL_META.includes(k)));
+function snapshot(){ return {app:SYNC_KEY, t:Date.now(), over:S.over, ratings:S.ratings, days:S.days, plans:S.plans, meta:sharedMeta(), etappen:S.etappen, unterkuenfte:S.unterkuenfte}; }
+function mergeState(js){
+  let n = 0;
+  const neuer = (a, b) => !a ? !!b : (b?.at || b?.erzeugtUm || 0) > (a?.at || a?.erzeugtUm || 0);
+  for(const [k, v] of Object.entries(js.over || {})) if(neuer(S.over[k], v)){ if(JSON.stringify(S.over[k]) !== JSON.stringify(v)) n++; S.over[k] = v; }
+  for(const [k, v] of Object.entries(js.unterkuenfte || {})) if(neuer(S.unterkuenfte[k], v)){ if(JSON.stringify(S.unterkuenfte[k]) !== JSON.stringify(v)) n++; S.unterkuenfte[k] = v; }
+  for(const [k, v] of Object.entries(js.etappen || {})) if(neuer(S.etappen[k], v)){ if(JSON.stringify(S.etappen[k]) !== JSON.stringify(v)) n++; S.etappen[k] = v; }
+  for(const [k, v] of Object.entries(js.ratings || {})) if(neuer(S.ratings[k], v)){ if((S.ratings[k]?.emoji || null) !== (v.emoji || null)) n++; S.ratings[k] = v; }
+  _placesCache = null; // ab hier Spots und Status aus dem eben zusammengeführten over lesen
+  const samePlan = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+  for(const [k, v] of Object.entries(js.plans || {})){
+    const a = S.plans[k];
+    const m = !a ? v : v.eigen && a.eigen ? mergePlans(a, v) : neuer(a, v) ? v : a;
+    if(!samePlan(a, m)) n++;
+    S.plans[k] = m;
+  }
+  const visited = id => P(id)?.status === "besucht";
+  for(const [k, v] of Object.entries(js.days || {})){
+    const a = S.days[k] || {};
+    const d = neuer(a, v) ? {...a, ...v} : {...v, ...a};
+    // beide Geräte haben für den Tag einen eigenen Plan angelegt: zusammenführen, die kleinere ID gilt auf beiden Seiten
+    if(a.planId && v.planId && a.planId !== v.planId && S.plans[a.planId]?.eigen && S.plans[v.planId]?.eigen){
+      const [keep, drop] = [a.planId, v.planId].sort();
+      S.plans[keep] = mergePlans(S.plans[keep], S.plans[drop]);
+      d.planId = keep;
+    }
+    d.besucht = [...new Set([...(a.besucht || []), ...(v.besucht || [])])].filter(visited);
+    d.at = Math.max(a.at || 0, v.at || 0);
+    if(JSON.stringify(d) !== JSON.stringify(a)) n++;
+    S.days[k] = d;
+  }
+  // auch lokale Tage kürzen, falls ein Spot nur durch den empfangenen Status wieder offen ist
+  for(const [k, a] of Object.entries(S.days)) if(a.besucht?.some(id => !visited(id))) S.days[k] = {...a, besucht:a.besucht.filter(visited)};
+  if((js.meta?.at || 0) > (S.meta.at || 0) && JSON.stringify(js.meta) !== JSON.stringify(sharedMeta())) n++;
+  if((js.meta?.at || 0) > (S.meta.at || 0)) S.meta = {...S.meta, ...js.meta, ...Object.fromEntries(LOCAL_META.map(k => [k, S.meta[k]]))};
+  return n;
+}
+const b64 = buf => { let out = ""; for(const c of new Uint8Array(buf)) out += String.fromCharCode(c); return btoa(out).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64 = str => { const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/")); const u = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+async function packState(){
+  const js = JSON.stringify(snapshot());
+  if(window.CompressionStream){
+    try{ return "z" + b64(await new Response(new Blob([js]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); }catch(e){}
+  }
+  return "p" + b64(new TextEncoder().encode(js));
+}
+async function unpackState(code){
+  const art = code[0], daten = unb64(code.slice(1));
+  if(art === "z") return JSON.parse(await new Response(new Blob([daten]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
+  return JSON.parse(new TextDecoder().decode(daten));
+}
+async function shareState(){
+  let url;
+  try{ url = location.origin + location.pathname + "#sync=" + await packState(); }
+  catch(e){ return toast("Stand lässt sich nicht packen", "info"); }
+  if(url.length > 60000) return toast("Stand zu groß für einen Link, nehmt die Datei unten", "info", 4500);
+  const text = "Mein Thailand-Stand, tipp drauf: " + url;
+  if(navigator.share){ try{ await navigator.share({title:"Thailand-Stand", text}); return; }catch(e){ if(e.name === "AbortError") return; } }
+  try{ await navigator.clipboard.writeText(url); toast("Link kopiert", "teilen"); }
+  catch(e){ prompt("Diesen Link schicken:", url); }
+}
+async function applyCode(code, quelle = "Link"){
+  let js;
+  try{ js = await unpackState(code.trim().replace(/^.*#sync=/, "")); if(js.app !== SYNC_KEY) throw 0; }
+  catch(e){ return toast(`Der ${quelle} passt nicht zur App`, "info", 3500); }
+  const n = mergeState(js);
+  persist(); renderAll();
+  openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--plan)">${ic("teilen")}</span><div><div class="eyebrow">Abgleich</div><h2>${n ? n + (n === 1 ? " Änderung" : " Änderungen") + " übernommen" : "Ihr wart schon gleichauf"}</h2></div></div>${closeBtn}</div>
+    <p class="small muted">Zusammengeführt, nichts überschrieben: bei jedem Eintrag gilt die neuere Änderung, besuchte Spots von beiden Seiten bleiben erhalten.</p>
+    <button class="btn plan daybtn" id="syncBack">${ic("teilen")}Meinen Stand zurückschicken</button>
+    <p class="small muted">Erst danach hat die andere Seite auch euren Stand.</p>`,
+    sh => sh.querySelector("#syncBack").onclick = () => { closeSheet(); shareState(); });
+}
+function syncFromLink(){
+  const m = location.hash.match(/^#sync=(.+)$/);
+  if(!m) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  applyCode(m[1]);
+}
+// Code in die Zwischenablage, für den Weg über die installierte App
+async function copyCode(){
+  try{
+    const code = await packState();
+    await navigator.clipboard.writeText(code);
+    toast("Code kopiert, im anderen Handy einfügen", "teilen", 3500);
+  }catch(e){ toast("Kopieren hat nicht geklappt", "info"); }
+}
+
+/* ---------- Gelernt (lokal) ---------- */
+const TAGTEXT = {"ruhig":"Ruhige Orte","Baden":"Baden","romantisch":"Romantische Orte","Sonnenuntergang":"Sonnenuntergänge","Foto-Spot":"Fotospots","Markt":"Märkte","Schlechtwetter":"Indoor-Ziele","kurzer Spaziergang":"Kurze Spaziergänge"};
+function insights(){
+  const rs = Object.entries(S.ratings).filter(([,r]) => r.emoji).map(([id,r]) => [P(id), SCORE[r.emoji]]).filter(x=>x[0]);
+  const agg = {};
+  const add = (k, label, v) => { (agg[k] ||= {label, n:0, sum:0}); agg[k].n++; agg[k].sum += v; };
+  rs.forEach(([p,v]) => { add("typ:"+p.typ, TYPELONG[p.typ], v); p.tags.forEach(t => TAGTEXT[t] && add("tag:"+t, TAGTEXT[t], v)); add("akt:"+p.aktivitaet, ["","Entspannte Orte","Orte mit etwas Bewegung","Aktive Ausflüge"][p.aktivitaet], v); add("reg:"+p.region, "Region "+p.region, v); });
+  const out = [];
+  Object.values(agg).forEach(a => { const avg = a.sum/a.n; if(a.n>=2 && avg>=1.25) out.push({good:true, text:`${a.label} gefallen euch`, beleg:`${a.n} Bewertungen, Schnitt ${avg.toFixed(1)}`}); if(a.n>=2 && avg<=-0.75) out.push({good:false, text:`${a.label} eher nicht euer Ding`, beleg:`${a.n} Bewertungen`}); });
+  return out.sort((a,b)=>b.good-a.good).slice(0,8);
+}
+
+/* ---------- Menü ---------- */
+function openMenu(){
+  const hidden = Object.values(places()).filter(p=>p.status==="abgelehnt");
+  const ins = insights();
+  const days = Object.keys(S.days).sort().filter(d => (S.days[d].besucht||[]).length || S.days[d].planId);
+  const html = `<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--accent2)">${ic("insel")}</span><div><div class="eyebrow">Menü</div><h2>Eure Reise</h2></div></div>${closeBtn}</div>
+    <details open><summary>${ic("kalender")}Reiseverlauf</summary>${days.length ? days.map(d => { const day=S.days[d]; const pl=day.planId&&S.plans[day.planId];
+      return `<div class="checkrow"><b>${fmtDate(d)}${pl?` · ${esc(pl.plan.titel)}`:""}</b><div class="chiprow">${(day.besucht||[]).map(id=>{const p=P(id);const r=rating(id);return p?`<button class="chip" data-open="${id}"><span style="color:var(${TYPES[p.typ][1]})">${ic(TIC(p.typ))}</span>${esc(p.name)}${r?` ${ic(({herz:"herz",gut:"daumen",okay:"neutral",nein:"daumen"})[r.emoji])}`:""}</button>`:""}).join("")}</div>${pl?`<button class="iconlink plan" data-plan="${d}">${ic("kalender")}Tagesplan ansehen</button>`:""}</div>`; }).join("") : '<p class="small muted">Noch keine Tage erfasst.</p>'}</details>
+    <details><summary>${ic("lernen")}Was die App gelernt hat</summary>${ins.length ? ins.map(x=>`<div class="listrow"><span>${esc(x.text)}<br><span class="small muted">${esc(x.beleg)}</span></span><span style="color:${x.good?"var(--good)":"var(--bad)"}">${ic(x.good?"herz":"ausblenden")}</span></div>`).join("") : '<p class="small muted">Nach ein paar Bewertungen steht hier, was euch gefällt.</p>'}</details>
+    <details><summary>${ic("ausblenden")}Ausgeblendet (${hidden.length})</summary>${hidden.map(p=>`<div class="listrow"><span>${esc(p.name)}</span><button class="btn" data-unhide="${p.id}" aria-label="Einblenden">${ic("auge")}</button></div>`).join("") || '<p class="small muted">Nichts ausgeblendet.</p>'}</details>
+    <details><summary>${ic("herunter")}Offline auf diesem Gerät</summary>${offlineInfo().map(([a,b]) => `<div class="listrow"><span>${esc(a)}</span><span class="small muted">${esc(b)}</span></div>`).join("")}
+      <p class="small muted">Spots, Pläne, Etappen und Unterkünfte liegen immer auf dem Gerät. Karte und Zeiten werden bei Netz nachgeladen und dann gespeichert. Installierte App und Safari speichern getrennt.</p></details>
+    <details open><summary>${ic("teilen")}Mit dem anderen Handy abgleichen</summary>
+      <p class="small muted">Eure Daten liegen nur auf dem eigenen Handy. Schickt euren Stand als Link, zum Beispiel über WhatsApp oder AirDrop. Wer ihn antippt, bekommt alles Neue dazu, nichts geht verloren. Danach einmal zurückschicken, dann sind beide gleich.</p>
+      <div class="btnrow"><button class="btn plan" id="shareState">${ic("teilen")}Stand teilen</button><button class="btn" id="copyCode">${ic("link")}Code kopieren</button></div>
+      <p class="small muted">Ist die App auf dem Home-Bildschirm installiert, öffnet ein angetippter Link nur Safari und nicht die App. Dann „Code kopieren“ nehmen, dem anderen schicken und dort unten einfügen.</p>
+      <textarea id="syncIn" placeholder="Code von der anderen Seite hier einfügen" style="min-height:64px"></textarea>
+      <button class="btn" id="syncApply">${ic("haken")}Code übernehmen</button>
+    </details>
+    <details><summary>${ic("herunter")}Sichern als Datei</summary>
+      <p class="small muted">Für ein Backup oder wenn der Link zu groß wird.</p>
+      <div class="btnrow"><button class="btn" id="exp">${ic("herunter")}Sichern</button><label class="btn" for="imp">${ic("teilen")}Laden</label><input type="file" id="imp" accept="application/json,.json" hidden></div>
+    </details>
+`;
+  openSheet(html, sh => {
+    sh.querySelectorAll("[data-open]").forEach(b => b.onclick = () => focusPlace(b.dataset.open));
+    sh.querySelectorAll("[data-plan]").forEach(b => b.onclick = () => openDayPlan(b.dataset.plan));
+    sh.querySelectorAll("[data-unhide]").forEach(b => b.onclick = () => { setPlace(b.dataset.unhide,{status:"offen"}); openMenu(); });
+    sh.querySelector("#shareState").onclick = shareState;
+    sh.querySelector("#copyCode").onclick = copyCode;
+    sh.querySelector("#syncApply").onclick = () => { const v = sh.querySelector("#syncIn").value.trim(); if(!v) return toast("Kein Code eingefügt", "info"); closeSheet(); applyCode(v, "Code"); };
+    sh.querySelector("#exp").onclick = async () => {
+      const data = JSON.stringify({app:SYNC_KEY, exportiertAm:new Date().toISOString(), over:S.over, ratings:S.ratings, days:S.days, plans:S.plans, meta:S.meta, etappen:S.etappen, unterkuenfte:S.unterkuenfte}, null, 1);
+      const file = new File([data], `thailand-${today()}.json`, {type:"application/json"});
+      if(navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file], title:"Thailand Backup"}); return; }catch(e){ if(e.name==="AbortError") return; } }
+      const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();}, 1000);
+    };
+    sh.querySelector("#imp").onchange = async e => {
+      const f = e.target.files[0]; if(!f) return;
+      try{
+        const js = JSON.parse(await f.text()); if(js.app!==SYNC_KEY) throw 0;
+        const n = mergeState(js);
+        persist(); renderAll(); closeSheet(); toast(n ? n + (n===1?" Änderung":" Änderungen") + " übernommen" : "Ihr wart schon gleichauf", "teilen");
+      }catch(err){ toast("Datei passt nicht","info"); }
+    };
+  });
+}
+
+/* ---------- Start ---------- */
+$("#menuBtn").innerHTML = ic("menu"); $("#homeBtn").innerHTML = ic("insel"); $("#planBtn").innerHTML = ic("kalender") + "<span>Tagesplan</span>";
+$("#ideaBtn").innerHTML = ic("plus"); $("#locBtn").innerHTML = ic("standort");
+$("#planBtn").onclick = () => openDayPlan(); $("#helpBtn").onclick = openHelp; $("#ideaBtn").onclick = openIdea; $("#menuBtn").onclick = openMenu;
+$("#reiseBtn").innerHTML = ic("reise"); $("#reiseBtn").onclick = openReise;
+(function panelSwipe(){
+  const panel = $("#panel"), grip = $("#grip"), wrap = $("#wrap"), bar = $(".bottombar");
+  const relayout = () => { if(map) setTimeout(() => map.invalidateSize({pan:false}), 360); };
+  const isFull = () => document.body.classList.contains("mapfull");
+  window.panelPx = () => isFull() ? bar.offsetHeight + 30 : panel.offsetHeight;
+  const setFull = on => {
+    if(isFull() === on) return;
+    const h = (isFull() ? (window._panelH || Math.round(innerHeight * 0.52)) : (window._panelH = panel.offsetHeight)) - (bar.offsetHeight + 30);
+    document.body.classList.toggle("mapfull", on);
+    grip.setAttribute("aria-label", on ? "Menü einblenden" : "Menü ausblenden");
+    try{ localStorage.setItem("thailand2027-mapfull", on ? "1" : "0"); }catch(e){}
+    if(map) map.panBy([0, on ? -h/2 : h/2], {animate:true, duration:.34});
+    relayout();
+  };
+  window.setMapFull = setFull;
+  grip.onclick = () => setFull(!isFull());
+  grip.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); setFull(!isFull()); } };
+  let y0 = 0, dy = 0, armed = false, dragging = false;
+  const start = e => { y0 = e.touches ? e.touches[0].clientY : e.clientY; dy = 0; armed = true; dragging = false; };
+  const move = e => {
+    if(!armed) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY, d = y - y0;
+    if(isFull()){ if(d < -25){ armed = false; setFull(false); } return; } // eingeklappt: hochwischen holt das Menü zurück
+    if(!dragging){
+      if(d < 6){ if(d < -4) armed = false; return; }
+      dragging = true; panel.style.transition = "none";
+    }
+    dy = Math.max(0, d);
+    panel.style.transform = `translateY(${dy}px)`;
+    if(e.cancelable) e.preventDefault();
+  };
+  const end = () => { armed = false; if(!dragging) return; dragging = false; panel.style.transition = ""; panel.style.transform = ""; if(dy > 70) setFull(true); };
+  [grip, panel, bar].forEach(el => {
+    el.addEventListener("touchstart", e => { if(el === bar && !isFull()) return; if(el === panel && e.target.closest(".wrap") && wrap.scrollTop > 2) return; start(e); }, {passive:true});
+    el.addEventListener("touchmove", move, {passive:false});
+    el.addEventListener("touchend", end); el.addEventListener("touchcancel", end);
+  });
+  grip.addEventListener("mousedown", e => { start(e); const mm = ev => move(ev), mu = () => { end(); removeEventListener("mousemove", mm); removeEventListener("mouseup", mu); }; addEventListener("mousemove", mm); addEventListener("mouseup", mu); });
+  try{ if(localStorage.getItem("thailand2027-mapfull") === "1"){ document.body.classList.add("mapfull"); grip.setAttribute("aria-label", "Menü einblenden"); } }catch(e){}
+  requestAnimationFrame(() => window.fitIsland && window.fitIsland());
+  addEventListener("resize", () => map && map.invalidateSize({pan:false}));
+})();
+addEventListener("online", () => { renderAll(); prefetchTiles(); }); addEventListener("offline", renderAll);
+/* ---------- Eigener Standort ---------- */
+let ME = null, meWatch = null, meError = null, meFollow = false;
+const IN_AREA = (lat,lng) => lat > VIEW.bounds[0][0] && lat < VIEW.bounds[1][0] && lng > VIEW.bounds[0][1] && lng < VIEW.bounds[1][1];
+function drawMe(){
+  if(!map || !meLayer) return; meLayer.clearLayers(); if(!ME) return;
+  const stale = Date.now() - ME.at > 120000;
+  if(ME.acc < 1500) L.circle([ME.lat, ME.lng], {radius:ME.acc, color:"#1E7BFF", weight:1, opacity:.5, fillOpacity:.1, interactive:false}).addTo(meLayer);
+  L.marker([ME.lat, ME.lng], {zIndexOffset:4000, keyboard:false, title:"Du bist hier", icon:L.divIcon({className:"", html:`<div class="mepin${stale?" stale":""}"></div>`, iconSize:[20,20], iconAnchor:[10,10]})})
+    .addTo(meLayer).on("click", () => toast("Du bist hier", "standort"));
+}
+function centerMe(){
+  if(ME && ME.inArea) return window.focusOn([ME.lat, ME.lng], Math.max(map.getZoom(), 13), .7);
+  if(ME) return toast("Du bist gerade nicht in Thailand", "standort");
+  if(meError === 1) return toast("Standort nicht freigegeben. In den Einstellungen für diese Seite erlauben.", "info", 4000);
+  if(!navigator.geolocation) return toast("Standort nicht verfügbar", "info");
+  meFollow = true; startLocate(); toast("Standort wird gesucht", "standort");
+}
+function startLocate(){
+  if(!navigator.geolocation || meWatch !== null) return;
+  meWatch = navigator.geolocation.watchPosition(pos => {
+    const {latitude:lat, longitude:lng, accuracy} = pos.coords;
+    const first = !ME; meError = null;
+    ME = {lat, lng, acc:accuracy, at:Date.now(), inArea:IN_AREA(lat,lng)};
+    drawMe();
+    if(meFollow){ meFollow = false; centerMe(); }
+    $("#locBtn").classList.toggle("on", ME.inArea);
+    if(first && ME.inArea) renderAll();
+  }, err => { meError = err.code; if(err.code === 1){ stopLocate(); ME = null; drawMe(); $("#locBtn").classList.remove("on"); } },
+  {enableHighAccuracy:true, maximumAge:15000, timeout:30000});
+}
+function stopLocate(){ if(meWatch !== null){ navigator.geolocation.clearWatch(meWatch); meWatch = null; } }
+// Akku schonen: nur orten, solange die App sichtbar ist
+document.addEventListener("visibilitychange", () => { if(document.hidden) stopLocate(); else if(meError !== 1) startLocate(); });
+setInterval(drawMe, 60000);
+
+initMap(); renderAll(); startLocate(); syncFromLink();
+addEventListener("hashchange", syncFromLink);
+setInterval(renderAll, 5*60*1000);
+if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){ const hadCtrl = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if(hadCtrl && !window._reloaded){ window._reloaded = true; location.reload(); } }); navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(()=>{}); }
+</script>
+</body>
+</html>
