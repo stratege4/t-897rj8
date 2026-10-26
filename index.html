@@ -1324,7 +1324,9 @@ function snapshot(){ return {app:SYNC_KEY, t:Date.now(), over:S.over, ratings:S.
 function mergeState(js){
   let n = 0;
   const neuer = (a, b) => !a ? !!b : (b?.at || b?.erzeugtUm || 0) > (a?.at || a?.erzeugtUm || 0);
-  for(const [k, v] of Object.entries(js.over || {})){ const m = mergeOver(S.over[k], v); if(JSON.stringify(m) !== JSON.stringify(S.over[k])) n++; S.over[k] = m; }
+  // Vergleich unabhängig von der Reihenfolge der Felder, sonst zählt ein bloß umsortierter Eintrag als Änderung
+  const canon = x => JSON.stringify(x, (k, v) => v && typeof v === "object" && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(f => [f, v[f]])) : v);
+  for(const [k, v] of Object.entries(js.over || {})){ const m = mergeOver(S.over[k], v); if(canon(m) !== canon(S.over[k])) n++; S.over[k] = m; }
   for(const [k, v] of Object.entries(js.unterkuenfte || {})) if(neuer(S.unterkuenfte[k], v)){ if(JSON.stringify(S.unterkuenfte[k]) !== JSON.stringify(v)) n++; S.unterkuenfte[k] = v; }
   for(const [k, v] of Object.entries(js.etappen || {})) if(neuer(S.etappen[k], v)){ if(JSON.stringify(S.etappen[k]) !== JSON.stringify(v)) n++; S.etappen[k] = v; }
   for(const [k, v] of Object.entries(js.ratings || {})) if(neuer(S.ratings[k], v)){ if((S.ratings[k]?.emoji || null) !== (v.emoji || null)) n++; S.ratings[k] = v; }
