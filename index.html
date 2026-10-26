@@ -63,6 +63,7 @@ p{margin:0}
 .tfil{height:42px;padding:0 14px;border-radius:12px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;gap:7px;color:var(--mute);opacity:.5;font-size:12.5px;font-weight:800;letter-spacing:.01em}
 .tfl{white-space:nowrap}
 .tfil .ic{width:22px;height:22px}
+@media (max-width:400px){.tfil{padding:0 9px;gap:5px}.tfil .ic{width:20px;height:20px}}
 .tfil.on{opacity:1;color:var(--c);background:rgba(74,52,32,.06)}
 .offline{display:flex;align-items:center;gap:6px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--bad)}
 .attrib{position:absolute;right:8px;bottom:calc(var(--panelh) + 2px);z-index:460;font-size:9px;color:rgba(255,255,255,.62);text-shadow:0 1px 2px rgba(0,0,0,.45);pointer-events:none;transition:bottom .34s cubic-bezier(.32,.72,0,1)}
@@ -394,6 +395,8 @@ const ICONS = {
   bus: '<rect x="4" y="4" width="16" height="13" rx="2.5"/><path d="M4 11h16M8 4v7M16 4v7"/><path d="M7 17v2.5M17 17v2.5"/>',
   faehre: '<path d="M3 15h18l-2.5 4.5h-13z"/><path d="M6 15v-5h12v5"/><path d="M10 10V6.5h4V10"/>',
   stift: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  tempel: '<path d="M12 2.5v2.5"/><path d="M7 9l5-4 5 4z"/><path d="M5 14l7-4 7 4z"/><path d="M7 14v6M17 14v6M3.5 20.5h17"/><path d="M10.5 20.5v-3h3v3"/>',
+  markt: '<path d="M3.5 9 5 4.5h14L20.5 9"/><path d="M3.5 9a2.4 2.4 0 0 0 4.8 0 2.5 2.5 0 0 0 5 0 2.4 2.4 0 0 0 4.8 0 1.7 1.7 0 0 0 2.4 0"/><path d="M5 11.5V20h14v-8.5"/><path d="M10 20v-4.5h4V20"/>',
   suche: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>',
 };
 const ic = (name, cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]||ICONS.info}</svg>`;
@@ -404,12 +407,15 @@ const ic = (name, cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="n
 const DATA = {"places":[],"labels":[],"shots":{},"routes":{}};
 // Reisezeitraum und Unterkünfte stehen nicht im öffentlichen Code, sondern lokal in S.meta (siehe tripRange).
 const TZ = "Asia/Bangkok";
-// Drei Kategorien auf der Karte: Farbe und Symbol kommen immer von der Kategorie, nicht vom Detailtyp
-const TYPES = {strand:["Bucht","--t-strand"], ort:["Ort","--t-aussicht"], essen:["Essen","--t-essen"], cafe:["Café","--t-essen"], aussicht:["Natur","--t-aussicht"], erlebnis:["Erlebnis","--t-aussicht"]};
-const GROUPS = {beach:["Beach","strand","--t-strand",["strand"]], food:["Food","essen","--t-essen",["essen","cafe"]], spots:["Spots","aussicht","--t-aussicht",["ort","aussicht","erlebnis"]]};
+// Vier Kategorien auf der Karte. Farbe und Symbol kommen immer von der Gruppe, nie vom internen Typ.
+// Wer etwas ändert, fasst TYPES, GROUPS, TYPELONG, KEYWORDS und DEF_DAUER zusammen an, sonst laufen Karte und Filterleiste auseinander.
+// TYPES: interner Typ -> [kurzer Name, Farbe]. GROUPS: Gruppe -> [Name, Symbol, Farbe, interne Typen (der erste ist Standard)].
+const TYPES = {strand:["Strand","--t-strand"], essen:["Essen","--t-essen"], cafe:["Café","--t-essen"], markt:["Markt","--t-essen"], tempel:["Tempel","--t-erlebnis"], ort:["Ort","--t-erlebnis"], erlebnis:["Erlebnis","--t-erlebnis"], aussicht:["Natur","--t-aussicht"]};
+const GROUPS = {beach:["Beach","strand","--t-strand",["strand"]], food:["Food","essen","--t-essen",["essen","cafe","markt"]], kultur:["Kultur","tempel","--t-erlebnis",["tempel","ort","erlebnis"]], natur:["Natur","aussicht","--t-aussicht",["aussicht"]]};
 const GOF = {}; Object.entries(GROUPS).forEach(([g,v]) => v[3].forEach(ty => GOF[ty] = g));
-const TIC = typ => GROUPS[GOF[typ] || "spots"][1];
-const TYPELONG = {strand:"Strand & Bucht", ort:"Ort & Dorf", essen:"Essen", cafe:"Café", aussicht:"Aussicht & Natur", erlebnis:"Erlebnis"};
+const TIC = typ => GROUPS[GOF[typ] || "kultur"][1];
+const TYPELONG = {strand:"Strand, Bucht, Insel", essen:"Essen", cafe:"Café", markt:"Markt", tempel:"Tempel", ort:"Ort & Altstadt", erlebnis:"Erlebnis", aussicht:"Natur & Aussicht"};
+const DEF_DAUER = {strand:150, essen:90, cafe:45, markt:90, tempel:60, ort:90, erlebnis:120, aussicht:90}; // nur Startwert, änderbar
 const EMO = [["herz","herz","Top"],["gut","daumen","Gut"],["okay","neutral","Okay"],["nein","daumen","Nee"]];
 const SCORE = {herz:2, gut:1, okay:0, nein:-2};
 const WD = ["So","Mo","Di","Mi","Do","Fr","Sa"];
@@ -509,7 +515,7 @@ const places = () => {
   return _placesCache = out;
 };
 const shortName = p => String(p.name).replace(/\s*\(.*\)\s*$/,"");
-const isFoodP = p => p.typ==="essen" || p.typ==="cafe";
+const isFoodP = p => GOF[p.typ] === "food";
 const P = id => places()[id];
 const rating = id => S.ratings[id]?.emoji ? S.ratings[id] : null; // {emoji:null} = gelöscht, bleibt für den Abgleich stehen
 const today = () => nowParts().date;
@@ -536,7 +542,7 @@ function openHelp(){
   const rows = (items) => items.map(([icon,title,text]) => `<div class="helprow"><span class="hi">${ic(icon)}</span><div><b>${title}</b><span>${text}</span></div></div>`).join("");
   openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--accent2)">${ic("info")}</span><div><div class="eyebrow">Kurz erklärt</div><h2>So funktioniert die App</h2></div></div>${closeBtn}</div>
     <div><div class="eyebrow">Eure Spots auf der Karte</div>
-    ${rows([["strand","Beach","Buchten, Strände und Badestellen"],["essen","Food","Restaurants, Bars und Cafés"],["aussicht","Spots","Orte, Aussichtspunkte, Natur und alles Besondere"]])}
+    ${rows([["strand","Beach","Strände, Buchten, Inseln, Schnorchelplätze"],["essen","Food","Restaurants, Cafés, Märkte und Streetfood"],["tempel","Kultur","Tempel, Altstädte, Museen und Erlebnisse"],["aussicht","Natur","Aussichtspunkte, Wasserfälle, Höhlen, Nationalparks"]])}
     <p class="small muted" style="margin-top:10px">Antippen blendet eine Kategorie auf der Karte aus oder ein. Mit + legt ihr neue eigene Spots an.</p></div>
     <div><div class="eyebrow">Tagesplan</div>
     ${rows([["haken","Wo wart ihr schon","Spot öffnen, „Waren da“ antippen. Gesehene Spots sind auf der Karte hell mit farbigem Rand, offene voll ausgefüllt. Nochmal antippen macht es rückgängig."],["suche","Spot suchen","Im Tagesplan oben euren Spot eintippen und antippen."],["plus","Von der Karte","Spot auf der Karte öffnen und „Zum Tagesplan hinzufügen“."],["route","Reihenfolge","Die App ordnet nur eure Auswahl nach kürzester Fahrt, ab eurer Unterkunft des Tages und zurück. Fahrzeiten kommen aus dem echten Straßennetz. Fehlt eine Route, steht dort ein Strich statt einer Schätzung."]])}</div>
@@ -628,7 +634,7 @@ function renderMarkers(){
   const size = bucket === 0 ? 24 : 30;
   ukList().forEach(u => L.marker([u.lat,u.lng],{zIndexOffset:3000, title:u.name, icon:L.divIcon({className:"", html:`<div class="hotelpin">${ic("hotel")}</div>`, iconSize:[38,38], iconAnchor:[19,19]})}).addTo(markerLayer).on("click", () => openUnterkunft(u.id)));
   Object.values(places()).forEach(p => {
-    if(!S.filter.has(GOF[p.typ] || "spots") || p.status==="abgelehnt") return;
+    if(!S.filter.has(GOF[p.typ] || "kultur") || p.status==="abgelehnt") return;
     const done = p.status === "besucht";
     const html = `<div class="mpin${done?" done":""}" style="--c:var(${TYPES[p.typ][1]});width:${size}px;height:${size}px">${ic(TIC(p.typ))}</div>`;
     L.marker([p.lat,p.lng],{keyboard:true, zIndexOffset: done ? -300 : 0, title: done ? p.name + ", schon gesehen" : p.name, icon:L.divIcon({className:"", html, iconSize:[size,size], iconAnchor:[size/2,size/2]})})
@@ -667,7 +673,7 @@ function focusPlace(id){
 function shotFor(p){ return (p.bilder||[]).find(b=>DATA.shots?.[b]); }
 function renderSpots(){
   const box = $("#spotlist"); const inPlan = planStationIds();
-  const list = Object.values(places()).filter(p => S.filter.has(GOF[p.typ] || "spots") && p.status!=="abgelehnt").sort((a,b) => (hotelMin(a) ?? 1e9)-(hotelMin(b) ?? 1e9) || a.name.localeCompare(b.name,"de"));
+  const list = Object.values(places()).filter(p => S.filter.has(GOF[p.typ] || "kultur") && p.status!=="abgelehnt").sort((a,b) => (hotelMin(a) ?? 1e9)-(hotelMin(b) ?? 1e9) || a.name.localeCompare(b.name,"de"));
   const base = baseFor(editDay()); if(base) ensureRoutes(list.filter(p => airKm(base, p) <= NEAR_KM).map(p => [base, p]));
   if(!list.length){ box.innerHTML = '<p class="muted small" style="padding:8px 16px">Keine Spots in den gewählten Kategorien.</p>'; return; }
   box.innerHTML = "";
@@ -675,7 +681,7 @@ function renderSpots(){
     const shot = shotFor(p); const img = shot ? DATA.shots[shot] : null;
     const b = document.createElement("button"); b.className = "scard" + (p.status==="besucht" ? " done" : ""); b.style.setProperty("--c", `var(${TYPES[p.typ][1]})`);
     b.innerHTML = `<span class="sc-top">${img?`<img src="${img}" alt="" loading="lazy">`:""}${img?`<span class="tchip">${ic(TIC(p.typ))}</span>`:ic(TIC(p.typ))}${p.status==="besucht"?`<span class="sc-plan done">${ic("haken")}gesehen</span>`:inPlan.has(p.id)?`<span class="sc-plan">${ic("haken")}Tagesplan</span>`:""}</span>
-      <span class="sc-body"><span class="sc-name">${esc(p.name)}</span><span class="meta">${hotelMin(p) !== null ? `<span>${ic("auto")}${hotelMin(p)}′</span>` : ""}<span>${ic("uhr")}${durTxt(p.dauerMin)}</span></span><span class="sc-why">${esc([GROUPS[GOF[p.typ]||"spots"][0], p.region].filter(Boolean).join(" · "))}</span></span>`;
+      <span class="sc-body"><span class="sc-name">${esc(p.name)}</span><span class="meta">${hotelMin(p) !== null ? `<span>${ic("auto")}${hotelMin(p)}′</span>` : ""}<span>${ic("uhr")}${durTxt(p.dauerMin)}</span></span><span class="sc-why">${esc([GROUPS[GOF[p.typ]||"kultur"][0], p.region].filter(Boolean).join(" · "))}</span></span>`;
     b.onclick = () => focusPlace(p.id);
     box.appendChild(b);
   });
@@ -736,7 +742,7 @@ function openPlace(id){
   const p = P(id); if(!p) return;
   const r = rating(id); const [label,colorVar] = TYPES[p.typ];
   const html = `
-    <div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(${colorVar})">${ic(TIC(p.typ))}</span><div><div class="eyebrow">${esc([GROUPS[GOF[p.typ]||"spots"][0], p.region].filter(Boolean).join(" · "))}</div><h2>${esc(p.name)}</h2></div></div>${closeBtn}</div>
+    <div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(${colorVar})">${ic(TIC(p.typ))}</span><div><div class="eyebrow">${esc([GROUPS[GOF[p.typ]||"kultur"][0], p.region].filter(Boolean).join(" · "))}</div><h2>${esc(p.name)}</h2></div></div>${closeBtn}</div>
     <div class="facts">
       ${hotelMin(p) !== null ? `<div class="fact" title="Fahrzeit ab Unterkunft">${ic("hotel")}${hotelMin(p)}′</div>` : ""}
       ${ME?.inArea ? `<div class="fact" title="Fahrzeit ab deinem Standort">${ic("standort")}<span id="meMin">${minTxt(travel(ME, p))}</span></div>` : ""}
@@ -805,13 +811,14 @@ function openEditPlace(id, draft){
   const p = P(id); if(!p) return;
   const e = draft || {name:p.name, typ:p.typ, region:p.region || "", dauerMin:p.dauerMin || 60, aktivitaet:p.aktivitaet || null, preis:p.preis || null,
     kurzbeschreibung:p.kurzbeschreibung || "", hinweise:p.hinweise || "", mapsQuery:p.mapsQuery || "", lat:p.lat, lng:p.lng};
-  const g = GOF[e.typ] || "spots";
+  const g = GOF[e.typ] || "kultur";
   openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(${TYPES[e.typ][1]})">${ic("stift")}</span><div><div class="eyebrow">Spot bearbeiten</div><h2>${esc(p.name)}</h2></div></div>${closeBtn}</div>
     <div class="formgrid">
       <label class="wide">Name<input type="text" id="sName" value="${esc(e.name)}" autocomplete="off"></label>
       <label class="wide">Region oder Ort<input type="text" id="sRegion" value="${esc(e.region)}" placeholder="z. B. Insel oder Stadtteil" autocomplete="off"></label>
     </div>
     <div class="typepick" id="sGroup">${Object.entries(GROUPS).map(([k,[l,icon,c]]) => `<button type="button" data-g="${k}" style="--c:var(${c})" aria-pressed="${k===g}">${ic(icon)}${l}</button>`).join("")}</div>
+    <div class="chiprow" id="sTyp" role="group" aria-label="Art"></div>
     <div><div class="eyebrow">Aufenthalt</div><div class="sub stay" style="margin-top:8px"><button type="button" id="sDm" aria-label="Kürzer">−</button><span id="sDur">${durTxt(e.dauerMin)}</span><button type="button" id="sDp" aria-label="Länger">+</button></div></div>
     <div><div class="eyebrow">Aktivität</div><div class="chiprow" id="sAkt" style="margin-top:8px">${[1,2,3].map(n => `<button type="button" class="chip" data-a="${n}" aria-pressed="${e.aktivitaet===n}">${ic(AKTIV[n])}${AKTIVT[n]}</button>`).join("")}</div></div>
     <div><div class="eyebrow">Kosten</div><div class="chiprow" id="sPreis" style="margin-top:8px">${PREISE.map(x => `<button type="button" class="chip" data-p="${x}" aria-pressed="${e.preis===x}">${x}</button>`).join("")}</div></div>
@@ -823,7 +830,12 @@ function openEditPlace(id, draft){
     const v = q => sh.querySelector(q).value.trim();
     const grab = () => { e.name = v("#sName"); e.region = v("#sRegion"); e.kurzbeschreibung = v("#sBeschr"); e.hinweise = v("#sHinw"); e.mapsQuery = v("#sMaps"); };
     const one = (sel, attr, set) => sh.querySelectorAll(sel + " button").forEach(b => b.onclick = () => { const val = set(b.dataset[attr]); sh.querySelectorAll(sel + " button").forEach(x => x.setAttribute("aria-pressed", x === b && val !== null)); });
-    one("#sGroup", "g", k => { if(GOF[e.typ] !== k) e.typ = GROUPS[k][3][0]; sh.querySelector(".tbig").style.setProperty("--c", `var(${TYPES[e.typ][1]})`); return k; });
+    // genaue Art nur zeigen, wenn die Gruppe mehrere hat
+    const drawTyp = () => { const ts = GROUPS[GOF[e.typ]][3], box = sh.querySelector("#sTyp"); box.hidden = ts.length < 2;
+      box.innerHTML = ts.map(t => `<button type="button" class="chip" data-t="${t}" aria-pressed="${t===e.typ}">${TYPELONG[t]}</button>`).join("");
+      box.querySelectorAll("button").forEach(b => b.onclick = () => { e.typ = b.dataset.t; drawTyp(); }); };
+    drawTyp();
+    one("#sGroup", "g", k => { if(GOF[e.typ] !== k) e.typ = GROUPS[k][3][0]; sh.querySelector(".tbig").style.setProperty("--c", `var(${TYPES[e.typ][1]})`); drawTyp(); return k; });
     one("#sAkt", "a", n => e.aktivitaet = e.aktivitaet === +n ? null : +n);
     one("#sPreis", "p", x => e.preis = e.preis === x ? null : x);
     const dur = d => { e.dauerMin = Math.min(8*60, Math.max(15, e.dauerMin + d)); sh.querySelector("#sDur").textContent = durTxt(e.dauerMin); };
@@ -856,30 +868,32 @@ function openEditPlace(id, draft){
 
 /* ---------- Neue Idee ---------- */
 const KEYWORDS = [
-  ["essen", /restaur|essen|tapas|bar\b|beach ?club|pizza|paella|fisch|grill|bistro|lunch|dinner|abend ?essen|mittag/i],
-  ["cafe", /caf[eé]|coffee|kaffee|bäcker|backer|brunch|frühstück|eis|gelat|kuchen|ensa[iï]mad/i],
-  ["strand", /strand|cala|platja|playa|bucht|beach|baden|caló/i],
-  ["aussicht", /mirador|aussicht|view|wander|natur|leuchtturm|far\b|berg|puig|park|see/i],
-  ["erlebnis", /höhle|cueva|cova|museum|kathedral|boot|kajak|tour|weingut|bodega|markt|burg|castell|zug|tren/i],
-  ["ort", /dorf|stadt|altstadt|ort|port\b|hafen|village/i],
+  ["markt", /markt|market|talat|basar|bazar/i],
+  ["tempel", /tempel|temple|\bwat\b|pagode|pagoda|stupa|chedi|schrein|shrine|buddha/i],
+  ["cafe", /caf[eé]|coffee|kaffee|bäcker|bakery|brunch|frühstück|gelat|kuchen|smoothie/i],
+  ["essen", /restaur|essen|streetfood|street food|bar\b|beach ?club|pizza|fisch|seafood|grill|bistro|lunch|dinner|abend ?essen|mittag|noodle|nudel|curry|garküche/i],
+  ["strand", /strand|beach|bucht|\bbay\b|\bao\b|\bkoh\b|\bko\b|insel|island|lagune|lagoon|schnorchel|snorkel|baden/i],
+  ["aussicht", /aussicht|viewpoint|view|wasserfall|waterfall|nam ?tok|nationalpark|national park|\bdoi\b|höhle|cave|\btham\b|dschungel|jungle|wander|natur|berg|see\b|park/i],
+  ["erlebnis", /museum|kochkurs|cooking|elefant|elephant|massage|muay|show|kajak|kayak|tour|boot|boat|tauchen|dive/i],
+  ["ort", /dorf|stadt|altstadt|old town|chinatown|village|viertel/i],
 ];
-function guessType(t){ for(const [k,re] of KEYWORDS) if(re.test(t)) return k; return "aussicht"; }
+function guessType(t){ for(const [k,re] of KEYWORDS) if(re.test(t)) return k; return "erlebnis"; }
 function openIdea(){
   const days = tripDays().filter(d => d >= today()).slice(0, 21);
   const state = {typ:null, wunschtag:null, latlng:null};
   const html = `<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(--accent)">${ic("plus")}</span><div><div class="eyebrow">Neue Idee</div><h2>Was habt ihr entdeckt?</h2></div></div>${closeBtn}</div>
     <input type="text" id="iName" placeholder="Name des Spots" autocomplete="off">
     <textarea id="iNote" placeholder="Notiz, optional (Tipp von wem, was bestellen …)"></textarea>
-    <div><div class="eyebrow">Art</div><div class="typepick" id="iType" style="margin-top:8px">${Object.entries(GROUPS).map(([k,[l,icon,c,ts]])=>`<button data-t="${ts[0]}" style="--c:var(${c})" aria-pressed="false">${ic(icon)}${l}</button>`).join("")}</div></div>
+    <div><div class="eyebrow">Art</div><div class="typepick" id="iType" style="margin-top:8px">${Object.entries(GROUPS).map(([k,[l,icon,c,ts]])=>`<button data-g="${k}" style="--c:var(${c})" aria-pressed="false">${ic(icon)}${l}</button>`).join("")}</div></div>
     <div><div class="eyebrow">Wann, optional</div><div class="chiprow" id="iDay" style="margin-top:8px">${days.map(d=>`<button class="chip" data-d="${d}" aria-pressed="false">${fmtDate(d)}</button>`).join("")}</div></div>
     <div><div class="eyebrow">Wo</div><div class="btnrow" style="margin-top:8px"><button class="btn" id="iMap">${ic("insel")}Auf Karte tippen</button><button class="btn" id="iHere">${ic("standort")}Ich bin hier</button></div><p class="small muted" id="iWhere" style="margin-top:6px">Noch kein Ort gesetzt</p></div>
     <button class="btn solid" id="iSave" disabled>${ic("haken")}Speichern</button>`;
   const mount = sh => {
     const name = sh.querySelector("#iName"), note = sh.querySelector("#iNote");
-    const setType = t => { state.typ = t; sh.querySelectorAll("#iType button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.t===t)); check(); };
+    const setType = t => { state.typ = t; sh.querySelectorAll("#iType button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.g===GOF[t])); check(); };
     const check = () => { sh.querySelector("#iSave").disabled = !(name.value.trim() && state.latlng); };
     name.oninput = () => { if(!state.manualType) setType(guessType(name.value+" "+note.value)); check(); };
-    sh.querySelectorAll("#iType button").forEach(b => b.onclick = () => { state.manualType = true; setType(b.dataset.t); });
+    sh.querySelectorAll("#iType button").forEach(b => b.onclick = () => { state.manualType = true; const g = b.dataset.g, gt = guessType(name.value+" "+note.value); setType(GOF[gt] === g ? gt : GROUPS[g][3][0]); });
     sh.querySelectorAll("#iDay button").forEach(b => b.onclick = () => { state.wunschtag = state.wunschtag===b.dataset.d ? null : b.dataset.d; sh.querySelectorAll("#iDay button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.d===state.wunschtag)); });
     const setWhere = ll => { state.latlng = ll; sh.querySelector("#iWhere").textContent = nearestTown(ll) ? `Gesetzt bei ${nearestTown(ll)}` : `Gesetzt: ${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`; check(); };
     if(state.latlng) setWhere(state.latlng);
@@ -889,14 +903,14 @@ function openIdea(){
       const bar = document.createElement("div"); bar.id="placing"; bar.className="glass placing"; bar.innerHTML = `${ic("standort")}<span style="flex:1">Tippe auf die Karte, wo der Ort liegt</span><button class="closebtn" aria-label="Abbrechen">${ic("x")}</button>`;
       document.querySelector(".mapwrap").appendChild(bar);
       bar.querySelector("button").onclick = () => { placingCb = null; bar.remove(); document.body.classList.remove("crosshair"); };
-      placingCb = ll => { state.latlng = ll; const sh2 = openSheet(html, mount); sh2.querySelector("#iName").value = snapshot.name; sh2.querySelector("#iNote").value = snapshot.note; if(state.typ) sh2.querySelector(`#iType [data-t="${state.typ}"]`)?.setAttribute("aria-pressed","true"); if(state.wunschtag) sh2.querySelector(`#iDay [data-d="${state.wunschtag}"]`)?.setAttribute("aria-pressed","true"); setWhereFor(sh2, ll); };
+      placingCb = ll => { state.latlng = ll; const sh2 = openSheet(html, mount); sh2.querySelector("#iName").value = snapshot.name; sh2.querySelector("#iNote").value = snapshot.note; if(state.typ) sh2.querySelector(`#iType [data-g="${GOF[state.typ]}"]`)?.setAttribute("aria-pressed","true"); if(state.wunschtag) sh2.querySelector(`#iDay [data-d="${state.wunschtag}"]`)?.setAttribute("aria-pressed","true"); setWhereFor(sh2, ll); };
     };
     sh.querySelector("#iHere").onclick = () => ME && Date.now()-ME.at < 60000 ? setWhere({lat:ME.lat, lng:ME.lng}) : navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => setWhere({lat:pos.coords.latitude,lng:pos.coords.longitude}), () => toast("Standort nicht freigegeben","info"), {enableHighAccuracy:true,timeout:8000}) : toast("Standort nicht verfügbar","info");
     sh.querySelector("#iSave").onclick = () => {
       const nm = name.value.trim(); const typ = state.typ || guessType(nm);
       const {lat,lng} = state.latlng;
       const pid = uid("idee-");
-      const o = {id:pid, name:nm.slice(0,80), typ, tags:[], lat, lng, region:nearestTown({lat,lng}) || "", dauerMin: typ==="cafe"?45: typ==="essen"?90: typ==="strand"?150: 75, aktivitaet:null, wetter:[], preis:null, vegetarischGut:null, kurzbeschreibung:note.value.trim(), warumFuerUns:"", hinweise:null, mapsQuery:null, quelle:"idee", status:"gemerkt", wunschtag:state.wunschtag, ideeText:null, createdAt:Date.now()};
+      const o = {id:pid, name:nm.slice(0,80), typ, tags:[], lat, lng, region:nearestTown({lat,lng}) || "", dauerMin: DEF_DAUER[typ] || 75, aktivitaet:null, wetter:[], preis:null, vegetarischGut:null, kurzbeschreibung:note.value.trim(), warumFuerUns:"", hinweise:null, mapsQuery:null, quelle:"idee", status:"gemerkt", wunschtag:state.wunschtag, ideeText:null, createdAt:Date.now()};
       setPlace(pid, o); const base = baseFor(editDay()); if(base && airKm(base, o) <= NEAR_KM) ensureRoutes([[base, o]]); closeSheet(); toast("Idee gespeichert","stern"); focusPlace(pid);
     };
   };
@@ -1072,7 +1086,7 @@ function searchSpots(q){
   const n = norm(q.trim()); if(!n) return [];
   const words = n.split(/\s+/);
   return Object.values(places()).filter(p => p.status!=="abgelehnt").map(p => {
-    const name = norm(p.name), hay = name + " " + norm(p.region) + " " + norm(GROUPS[GOF[p.typ]||"spots"][0]);
+    const name = norm(p.name), hay = name + " " + norm(p.region) + " " + norm(GROUPS[GOF[p.typ]||"kultur"][0]);
     if(!words.every(w => hay.includes(w))) return null;
     const rank = name.startsWith(n) ? 0 : name.split(/[\s(']+/).some(w => w.startsWith(words[0])) ? 1 : name.includes(words[0]) ? 2 : 3;
     return {p, rank};
@@ -1110,7 +1124,7 @@ function openDayPlan(date=editDay()){
       const inPlan = new Set((dayPlanFor(cur)?.plan.stationen||[]).map(x => x.placeId));
       if(!q.value.trim()){ res.innerHTML = ""; return; }
       const hits = searchSpots(q.value);
-      res.innerHTML = hits.length ? hits.map(p => { const on = inPlan.has(p.id); return `<button class="sritem" role="option" data-pick="${p.id}" ${on?`disabled aria-disabled="true"`:""}><span class="tchip" style="--c:var(${TYPES[p.typ][1]})">${ic(TIC(p.typ))}</span><span class="srtxt"><b>${markHit(p.name, q.value)}</b><span>${on ? "schon im Tagesplan" : esc([GROUPS[GOF[p.typ]||"spots"][0], p.region, hotelMin(p) !== null ? hotelMin(p)+"′ ab Unterkunft" : ""].filter(Boolean).join(" · "))}</span></span><span class="sradd">${ic(on ? "haken" : "plus")}</span></button>`; }).join("")
+      res.innerHTML = hits.length ? hits.map(p => { const on = inPlan.has(p.id); return `<button class="sritem" role="option" data-pick="${p.id}" ${on?`disabled aria-disabled="true"`:""}><span class="tchip" style="--c:var(${TYPES[p.typ][1]})">${ic(TIC(p.typ))}</span><span class="srtxt"><b>${markHit(p.name, q.value)}</b><span>${on ? "schon im Tagesplan" : esc([GROUPS[GOF[p.typ]||"kultur"][0], p.region, hotelMin(p) !== null ? hotelMin(p)+"′ ab Unterkunft" : ""].filter(Boolean).join(" · "))}</span></span><span class="sradd">${ic(on ? "haken" : "plus")}</span></button>`; }).join("")
         : `<p class="srnone">Kein Spot gefunden. Neue Spots legt ihr mit + auf der Karte an.</p>`;
     };
     const pick = id => {
