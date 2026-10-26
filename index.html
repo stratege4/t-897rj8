@@ -269,9 +269,9 @@ details>*:not(summary){margin-top:8px}
 .tlbody .nm{font-weight:800;border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:15px}
 .tlbody .sub{font-size:12.5px;color:var(--mute)}
 .tlbody a{color:var(--accent2);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
-.tlbody .stay{display:flex;width:max-content;align-items:center;gap:2px;margin-top:4px;font-size:12.5px;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums}
-.tlbody .stay span{min-width:44px;text-align:center}
-.tlbody .stay button{width:42px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:800 17px/1 var(--sans);cursor:pointer;display:grid;place-items:center}
+.tlbody .stay,.sheet .stay{display:flex;width:max-content;align-items:center;gap:2px;margin-top:4px;font-size:12.5px;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums}
+.tlbody .stay span,.sheet .stay span{min-width:44px;text-align:center}
+.tlbody .stay button,.sheet .stay button{width:42px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:800 17px/1 var(--sans);cursor:pointer;display:grid;place-items:center}
 .tledit{display:flex;gap:4px}
 .tledit button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--mute)}
 .tledit .ic{width:17px;height:17px}
@@ -393,6 +393,7 @@ const ICONS = {
   zug: '<rect x="5.5" y="3" width="13" height="14" rx="3"/><path d="M5.5 11h13M9 14.5h.01M15 14.5h.01"/><path d="M8 21l2-4M16 21l-2-4"/>',
   bus: '<rect x="4" y="4" width="16" height="13" rx="2.5"/><path d="M4 11h16M8 4v7M16 4v7"/><path d="M7 17v2.5M17 17v2.5"/>',
   faehre: '<path d="M3 15h18l-2.5 4.5h-13z"/><path d="M6 15v-5h12v5"/><path d="M10 10V6.5h4V10"/>',
+  stift: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   suche: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>',
 };
 const ic = (name, cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]||ICONS.info}</svg>`;
@@ -454,8 +455,10 @@ const rkey = (a,b) => [a,b].sort().join("|");
    frei  Boot, Bus, Bahn: keine Berechnung, nur von euch eingetragene Zeiten je Abschnitt */
 const LMODES = {auto:{l:"Auto, Taxi", icon:"auto", gm:"driving", wort:"Fahrt"}, fuss:{l:"Zu Fuß", icon:"gehen1", gm:"walking", wort:"zu Fuß"}, frei:{l:"Boot, Bus, Bahn", icon:"faehre", gm:"transit", wort:"unterwegs"}};
 const modeOf = plan => LMODES[plan?.modus] ? plan.modus : "auto";
-const mkey = (k, mode) => mode === "fuss" ? "fuss:" + k : k;
-function routeFor(a,b,mode="auto"){ if(mode === "frei") return null; const ka = rid(a), kb = rid(b); if(!ka || !kb) return null; if(ka===kb) return [0,0,""]; const k = rkey(ka,kb); return (mode === "auto" ? DATA.routes?.[k] : null) || RCACHE[mkey(k, mode)] || null; }
+const pkey = x => x.id + "@" + (+x.lat).toFixed(4) + "," + (+x.lng).toFixed(4);
+const ckey = (a, b, mode) => (mode === "fuss" ? "fuss:" : "") + [pkey(a), pkey(b)].sort().join("|");
+// vorab berechnete Routen (DATA.routes) gelten nur, solange keiner der beiden Punkte verschoben wurde
+function routeFor(a,b,mode="auto"){ if(mode === "frei") return null; const ka = rid(a), kb = rid(b); if(!ka || !kb) return null; if(ka===kb) return [0,0,""]; return (mode === "auto" && !a.moved && !b.moved ? DATA.routes?.[rkey(ka,kb)] : null) || RCACHE[ckey(a, b, mode)] || null; }
 function travel(a,b,mode="auto"){ const r = routeFor(a,b,mode); return r ? Math.round(r[0]*(mode === "auto" ? ROUTE_FACTOR : 1)) : null; } // null = noch keine Zeit
 // Fahrzeit ab der Unterkunft des gerade geplanten Tages, nur für Spots im Umkreis (sonst null)
 const hotelMin = p => { const b = baseFor(editDay()); if(!b || airKm(b, p) > NEAR_KM) return null; const m = travel(b, p); return m === null ? null : Math.max(5, Math.round(m/5)*5); };
@@ -470,7 +473,7 @@ async function osrm(a,b,mode="auto"){
 const rPending = new Set();
 function ensureRoutes(pairs, mode="auto"){
   if(navigator.onLine === false || mode === "frei") return;
-  const key = ([a,b]) => mkey(rkey(rid(a),rid(b)), mode);
+  const key = ([a,b]) => ckey(a, b, mode);
   // zu Fuß nur bis 25 km Luftlinie, darüber ist eine Gehzeit keine Planungsgrundlage
   const todo = pairs.filter(([a,b]) => rid(a) && rid(b) && rid(a)!==rid(b) && !routeFor(a,b,mode) && !rPending.has(key([a,b])) && (mode !== "fuss" || airKm(a,b) <= 25));
   if(!todo.length) return;
@@ -502,7 +505,7 @@ let _placesCache = null;
 const places = () => {
   if(_placesCache) return _placesCache;
   const out = {}; DATA.places.forEach(p=>out[p.id]=p);
-  for(const [id,o] of Object.entries(S.over)){ const m = {...(out[id]||{}), ...o, id}; if(m.name && Number.isFinite(m.lat) && TYPES[m.typ]) out[id] = m; }
+  for(const [id,o] of Object.entries(S.over)){ const m = {...(out[id]||{}), ...o, id}; if(m.name && Number.isFinite(m.lat) && TYPES[m.typ] && !m.weg) out[id] = m; }
   return _placesCache = out;
 };
 const shortName = p => String(p.name).replace(/\s*\(.*\)\s*$/,"");
@@ -510,8 +513,21 @@ const isFoodP = p => p.typ==="essen" || p.typ==="cafe";
 const P = id => places()[id];
 const rating = id => S.ratings[id]?.emoji ? S.ratings[id] : null; // {emoji:null} = gelöscht, bleibt für den Abgleich stehen
 const today = () => nowParts().date;
-const setOver = (id, patch) => { S.over[id] = {...(S.over[id]||{}), ...patch, at:Date.now()}; };
-const setPlace = (id, patch) => write("places", id, {...(S.over[id]||{}), ...patch, at:Date.now()});
+// Jede Änderung an einem Spot bekommt je Feld einen Zeitstempel (_t), damit der Abgleich Felder einzeln zusammenführt
+const setOver = (id, patch) => { const now = Date.now(), cur = S.over[id] || {}; S.over[id] = {...cur, ...patch, at:now, _t:{...(cur._t || {}), ...Object.fromEntries(Object.keys(patch).filter(k => k !== "at").map(k => [k, now]))}}; };
+const setPlace = (id, patch) => { setOver(id, patch); persist(); renderAll(); };
+// Zwei Stände eines Spots zusammenführen: pro Feld gilt der neuere Zeitstempel (ältere Einträge ohne _t zählen mit at)
+function mergeOver(a, b){
+  if(!a) return b; if(!b) return a;
+  const out = {}, t = {};
+  for(const f of [...new Set([...Object.keys(a), ...Object.keys(b)])].sort()){
+    if(f === "_t" || f === "at") continue;
+    const ta = a._t?.[f] ?? a.at ?? 0, tb = b._t?.[f] ?? b.at ?? 0;
+    const src = tb > ta || (tb === ta && JSON.stringify(b[f]) > JSON.stringify(a[f])) ? b : a, other = src === a ? b : a;
+    const v = f in src ? src[f] : other[f]; if(v !== undefined) out[f] = v; t[f] = Math.max(ta, tb);
+  }
+  return {...out, _t:t, at:Math.max(a.at || 0, b.at || 0)};
+}
 const setDay = (d, patch) => write("days", d, {...(S.days[d]||{}), ...patch, at:Date.now()});
 const touchDay = (d, patch) => { S.days[d] = {...(S.days[d]||{}), ...patch, at:Date.now()}; };
 
@@ -725,12 +741,12 @@ function openPlace(id){
       ${hotelMin(p) !== null ? `<div class="fact" title="Fahrzeit ab Unterkunft">${ic("hotel")}${hotelMin(p)}′</div>` : ""}
       ${ME?.inArea ? `<div class="fact" title="Fahrzeit ab deinem Standort">${ic("standort")}<span id="meMin">${minTxt(travel(ME, p))}</span></div>` : ""}
       <div class="fact">${ic("uhr")}${durTxt(p.dauerMin)}</div>
-      <div class="fact">${ic(AKTIV[p.aktivitaet]||"gehen1")}${AKTIVT[p.aktivitaet]}</div>
-      <div class="fact"><span class="wx">${(p.wetter||[]).map(w=>ic(WICON[w])).join("")}</span>Wetter</div>
-      <div class="fact">${ic("euro")}${esc(p.preis==="gratis"?"gratis":p.preis||"–")}</div>
+      ${p.aktivitaet ? `<div class="fact">${ic(AKTIV[p.aktivitaet]||"gehen1")}${AKTIVT[p.aktivitaet]}</div>` : ""}
+      ${(p.wetter||[]).length ? `<div class="fact"><span class="wx">${p.wetter.map(w=>ic(WICON[w])).join("")}</span>Wetter</div>` : ""}
+      ${p.preis ? `<div class="fact">${ic("euro")}${esc(p.preis)}</div>` : ""}
       ${p.vegetarischGut?`<div class="fact">${ic("blatt")}${esc(p.vegetarischGut)}</div>`:""}
     </div>
-    <p class="why">${esc(p.warumFuerUns||"")}</p>
+    ${p.warumFuerUns ? `<p class="why">${esc(p.warumFuerUns)}</p>` : ""}
     ${p.wunschtag?`<p><span class="pill">${ic("kalender")}${esc(p.wunschtag)}</span></p>`:""}
     ${dayBtnHTML(id)}
     <div class="actions">
@@ -747,7 +763,8 @@ function openPlace(id){
       <p>${esc(p.kurzbeschreibung||"")}</p>
       ${p.hinweise?`<p class="note">${esc(p.hinweise)}</p>`:""}
       ${p.ideeText?`<p class="note">${esc(p.ideeText)}</p>`:""}
-    </details>`;
+    </details>
+    <button class="btn" id="pEdit">${ic("stift")}Spot bearbeiten</button>`;
   openSheet(html, sh => {
     sh.querySelectorAll("[data-open]").forEach(b => b.onclick = () => focusPlace(b.dataset.open));
     const bindDay = () => sh.querySelector("#pDay").onclick = e => {
@@ -774,7 +791,66 @@ function openPlace(id){
       sh.querySelectorAll("#rateBox .rate").forEach(x => x.setAttribute("aria-pressed", !weg && x.dataset.k===k));
       persist(); renderAll(); toast(weg ? "Bewertung weg" : "Gespeichert", weg ? "x" : k==="herz" ? "herz" : "haken");
     });
+    sh.querySelector("#pEdit").onclick = () => openEditPlace(id);
     sh.querySelector("#pHide").onclick = () => { const wasHidden = p.status==="abgelehnt"; setPlace(id, {status: wasHidden ? "offen" : "abgelehnt"}); closeSheet(); toast(wasHidden?"Wieder sichtbar":"Ausgeblendet", wasHidden?"auge":"ausblenden"); };
+  });
+}
+
+/* ---------- Spot bearbeiten ----------
+   Geändert werden nur Felder, die sich wirklich ändern, jedes mit eigenem Zeitstempel. Löschen geht nur bei eigenen Spots,
+   vorbereitete Spots blendet ihr mit „Nicht für uns“ aus. */
+const PREISE = ["gratis","€","€€","€€€"];
+const ownSpot = id => !DATA.places.some(p => p.id === id);
+function openEditPlace(id, draft){
+  const p = P(id); if(!p) return;
+  const e = draft || {name:p.name, typ:p.typ, region:p.region || "", dauerMin:p.dauerMin || 60, aktivitaet:p.aktivitaet || null, preis:p.preis || null,
+    kurzbeschreibung:p.kurzbeschreibung || "", hinweise:p.hinweise || "", mapsQuery:p.mapsQuery || "", lat:p.lat, lng:p.lng};
+  const g = GOF[e.typ] || "spots";
+  openSheet(`<div class="sheethead"><div class="ph"><span class="tbig" style="--c:var(${TYPES[e.typ][1]})">${ic("stift")}</span><div><div class="eyebrow">Spot bearbeiten</div><h2>${esc(p.name)}</h2></div></div>${closeBtn}</div>
+    <div class="formgrid">
+      <label class="wide">Name<input type="text" id="sName" value="${esc(e.name)}" autocomplete="off"></label>
+      <label class="wide">Region oder Ort<input type="text" id="sRegion" value="${esc(e.region)}" placeholder="z. B. Insel oder Stadtteil" autocomplete="off"></label>
+    </div>
+    <div class="typepick" id="sGroup">${Object.entries(GROUPS).map(([k,[l,icon,c]]) => `<button type="button" data-g="${k}" style="--c:var(${c})" aria-pressed="${k===g}">${ic(icon)}${l}</button>`).join("")}</div>
+    <div><div class="eyebrow">Aufenthalt</div><div class="sub stay" style="margin-top:8px"><button type="button" id="sDm" aria-label="Kürzer">−</button><span id="sDur">${durTxt(e.dauerMin)}</span><button type="button" id="sDp" aria-label="Länger">+</button></div></div>
+    <div><div class="eyebrow">Aktivität</div><div class="chiprow" id="sAkt" style="margin-top:8px">${[1,2,3].map(n => `<button type="button" class="chip" data-a="${n}" aria-pressed="${e.aktivitaet===n}">${ic(AKTIV[n])}${AKTIVT[n]}</button>`).join("")}</div></div>
+    <div><div class="eyebrow">Kosten</div><div class="chiprow" id="sPreis" style="margin-top:8px">${PREISE.map(x => `<button type="button" class="chip" data-p="${x}" aria-pressed="${e.preis===x}">${x}</button>`).join("")}</div></div>
+    <textarea id="sBeschr" placeholder="Beschreibung">${esc(e.kurzbeschreibung)}</textarea>
+    <textarea id="sHinw" placeholder="Hinweise, z. B. Öffnungszeiten, Anfahrt, Eintritt">${esc(e.hinweise)}</textarea>
+    <label class="field">Suchbegriff für Google Maps, optional<input type="text" id="sMaps" value="${esc(e.mapsQuery)}" placeholder="sonst gelten die Koordinaten" autocomplete="off"></label>
+    <div><div class="eyebrow">Ort</div><p class="small muted" id="sWhere" style="margin:6px 0">${e.lat.toFixed(5)}, ${e.lng.toFixed(5)}${e.lat !== p.lat || e.lng !== p.lng ? " (neu gesetzt)" : ""}</p><button type="button" class="btn" id="sMove">${ic("standort")}Auf der Karte neu setzen</button></div>
+    <div class="btnrow"><button class="btn solid" id="sSave">${ic("haken")}Speichern</button>${ownSpot(id) ? `<button class="btn" id="sDel">${ic("muell")}Löschen</button>` : ""}</div>`, sh => {
+    const v = q => sh.querySelector(q).value.trim();
+    const grab = () => { e.name = v("#sName"); e.region = v("#sRegion"); e.kurzbeschreibung = v("#sBeschr"); e.hinweise = v("#sHinw"); e.mapsQuery = v("#sMaps"); };
+    const one = (sel, attr, set) => sh.querySelectorAll(sel + " button").forEach(b => b.onclick = () => { const val = set(b.dataset[attr]); sh.querySelectorAll(sel + " button").forEach(x => x.setAttribute("aria-pressed", x === b && val !== null)); });
+    one("#sGroup", "g", k => { if(GOF[e.typ] !== k) e.typ = GROUPS[k][3][0]; sh.querySelector(".tbig").style.setProperty("--c", `var(${TYPES[e.typ][1]})`); return k; });
+    one("#sAkt", "a", n => e.aktivitaet = e.aktivitaet === +n ? null : +n);
+    one("#sPreis", "p", x => e.preis = e.preis === x ? null : x);
+    const dur = d => { e.dauerMin = Math.min(8*60, Math.max(15, e.dauerMin + d)); sh.querySelector("#sDur").textContent = durTxt(e.dauerMin); };
+    sh.querySelector("#sDm").onclick = () => dur(-15); sh.querySelector("#sDp").onclick = () => dur(15);
+    sh.querySelector("#sName").oninput = () => { sh.querySelector("#sSave").disabled = !v("#sName"); };
+    sh.querySelector("#sMove").onclick = () => {
+      grab(); closeSheet(); document.body.classList.add("crosshair");
+      const bar = document.createElement("div"); bar.id = "placing"; bar.className = "glass placing"; bar.innerHTML = `${ic("standort")}<span style="flex:1">Tippe auf die neue Stelle</span><button class="closebtn" aria-label="Abbrechen">${ic("x")}</button>`;
+      document.querySelector(".mapwrap").appendChild(bar);
+      bar.querySelector("button").onclick = () => { placingCb = null; bar.remove(); document.body.classList.remove("crosshair"); openEditPlace(id, e); };
+      placingCb = ll => { e.lat = +ll.lat.toFixed(6); e.lng = +ll.lng.toFixed(6); openEditPlace(id, e); };
+    };
+    sh.querySelector("#sSave").onclick = () => {
+      grab(); if(!e.name) return;
+      const neu = {name:e.name.slice(0,80), typ:e.typ, region:e.region.slice(0,60), dauerMin:e.dauerMin, aktivitaet:e.aktivitaet, preis:e.preis,
+        kurzbeschreibung:e.kurzbeschreibung.slice(0,2000), hinweise:e.hinweise.slice(0,2000) || null, mapsQuery:e.mapsQuery.slice(0,120) || null, lat:e.lat, lng:e.lng};
+      const patch = Object.fromEntries(Object.entries(neu).filter(([k,x]) => JSON.stringify(x ?? null) !== JSON.stringify(p[k] ?? null)));
+      if(patch.lat !== undefined || patch.lng !== undefined) patch.moved = true; // vorab berechnete Routen gelten nicht mehr
+      if(!Object.keys(patch).length){ toast("Nichts geändert", "info"); return openPlace(id); }
+      setPlace(id, patch);
+      persist(); toast("Spot gespeichert", "haken"); openPlace(id);
+    };
+    const del = sh.querySelector("#sDel");
+    if(del) del.onclick = () => {
+      if(!del.dataset.sure){ del.dataset.sure = "1"; del.innerHTML = ic("muell") + "Wirklich löschen?"; return; }
+      setPlace(id, {weg:true}); closeSheet(); toast("Spot gelöscht", "muell");
+    };
   });
 }
 
@@ -820,8 +896,8 @@ function openIdea(){
       const nm = name.value.trim(); const typ = state.typ || guessType(nm);
       const {lat,lng} = state.latlng;
       const pid = uid("idee-");
-      const o = {id:pid, name:nm.slice(0,80), typ, tags:[], lat, lng, region:nearestTown({lat,lng}) || "", dauerMin: typ==="cafe"?45: typ==="essen"?90: typ==="strand"?150: 75, aktivitaet:1, wetter: typ==="strand"?["sonne"]:["sonne","wechselhaft"], preis: typ==="essen"?"€€":"€", vegetarischGut:null, kurzbeschreibung:note.value.trim(), warumFuerUns:"Eure eigene Idee.", hinweise: typ==="essen"||typ==="cafe" ? "Öffnungszeiten vorher prüfen." : null, mapsQuery:null, quelle:"idee", status:"gemerkt", wunschtag:state.wunschtag, ideeText:note.value.trim(), createdAt:Date.now(), at:Date.now()};
-      write("places", pid, o); const base = baseFor(editDay()); if(base && airKm(base, o) <= NEAR_KM) ensureRoutes([[base, o]]); closeSheet(); toast("Idee gespeichert","stern"); focusPlace(pid);
+      const o = {id:pid, name:nm.slice(0,80), typ, tags:[], lat, lng, region:nearestTown({lat,lng}) || "", dauerMin: typ==="cafe"?45: typ==="essen"?90: typ==="strand"?150: 75, aktivitaet:null, wetter:[], preis:null, vegetarischGut:null, kurzbeschreibung:note.value.trim(), warumFuerUns:"", hinweise:null, mapsQuery:null, quelle:"idee", status:"gemerkt", wunschtag:state.wunschtag, ideeText:null, createdAt:Date.now()};
+      setPlace(pid, o); const base = baseFor(editDay()); if(base && airKm(base, o) <= NEAR_KM) ensureRoutes([[base, o]]); closeSheet(); toast("Idee gespeichert","stern"); focusPlace(pid);
     };
   };
   function setWhereFor(sh, ll){ state.latlng = ll; sh.querySelector("#iWhere").textContent = nearestTown(ll) ? `Gesetzt bei ${nearestTown(ll)}` : `Gesetzt: ${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`; sh.querySelector("#iSave").disabled = !sh.querySelector("#iName").value.trim(); }
@@ -967,7 +1043,7 @@ function dayBodyHTML(date, added){
   const pl = dayPlanFor(date);
   const has = pl && pl.plan.stationen.some(x => x.placeId && P(x.placeId));
   if(!has) return `<div class="dpempty">${ic("insel")}<span>Noch keine Spots für ${fmtDate(date)}<br>Oben suchen oder auf der Karte einen Spot öffnen und „Zum Tagesplan hinzufügen“.</span></div>`;
-  const plan = pl.plan, rows = timeline(plan), end = rows[rows.length-1].time, mode = modeOf(plan), M = LMODES[mode];
+  const plan = pl.plan, rows = timeline(plan), end = rows[rows.length-1].time, mode = modeOf(plan), M = LMODES[mode], anz = plan.stationen.filter(x => P(x.placeId)).length;
   const drive = rows.filter(r => r.kind==="drive").reduce((a,r) => a + (r.min||0), 0), missing = rows.filter(r => r.kind==="drive" && r.min===null).length;
   const shown = rows.filter(r => r.kind!=="end");
   const km = rows.filter(r => r.kind==="drive").reduce((a,r) => a + (r.km||0), 0);
@@ -984,7 +1060,7 @@ function dayBodyHTML(date, added){
     return `<div class="tlrow${added && r.place?.id===added ? " added" : ""}"><span class="time">${toHHMM(r.time)}</span><span class="rail"><i style="--c:var(${colorVar})">${ic(icon)}</i></span><div class="tlbody">${r.place?`<button class="nm" data-open="${r.place.id}">${esc(r.name)}</button>`:`<span class="nm">${esc(r.name)}</span>`}${stay}</div>${edit}</div>`;
   }).join("");
   return `<div class="chiprow" id="dpMode" role="group" aria-label="Unterwegs mit">${Object.entries(LMODES).map(([k,v]) => `<button class="chip" data-mode="${k}" aria-pressed="${k===mode}">${ic(v.icon)}${v.l}</button>`).join("")}</div>
-    <div class="dpsum"><span>${ic("insel")}${plan.stationen.length} ${plan.stationen.length===1?"Spot":"Spots"}</span>${!drive&&missing?`<span>${ic(M.icon)}Zeiten offen</span>`:""}${drive?`<span>${ic(M.icon)}${mode==="frei"?"":"ca. "}${durTxt(drive)} ${M.wort}${km?` · ${Math.round(km)} km`:""}${missing?", unvollständig":""}</span>`:""}<span>${ic(planEnd(plan)?"hotel":"uhr")}${planEnd(plan)?"zurück":"Ende"} ${toHHMM(end)}</span></div>
+    <div class="dpsum"><span>${ic("insel")}${anz} ${anz===1?"Spot":"Spots"}</span>${!drive&&missing?`<span>${ic(M.icon)}Zeiten offen</span>`:""}${drive?`<span>${ic(M.icon)}${mode==="frei"?"":"ca. "}${durTxt(drive)} ${M.wort}${km?` · ${Math.round(km)} km`:""}${missing?", unvollständig":""}</span>`:""}<span>${ic(planEnd(plan)?"hotel":"uhr")}${planEnd(plan)?"zurück":"Ende"} ${toHHMM(end)}</span></div>
     ${isTravelDay(plan.datum)?`<p class="note">Reisetag: Start bei ${esc(dayStart(plan.datum).name)}, der Plan endet beim letzten Stopp. Die Weiterreise zu ${esc(ukNight(plan.datum).name)} steht in den Etappen.</p>`:""}
     ${missing?`<p class="note">${missing===1?"Eine Zeit fehlt":missing+" Zeiten fehlen"}. Die Uhrzeiten danach sind deshalb zu früh. ${mode==="frei" ? "Für Boot, Bus und Bahn rechnet die App nichts, tragt die Zeiten mit + selbst ein." : "Mit Netz werden fehlende Routen nachgeladen."}</p>`:""}
     <div class="tl">${tl}</div>
@@ -1234,7 +1310,7 @@ function snapshot(){ return {app:SYNC_KEY, t:Date.now(), over:S.over, ratings:S.
 function mergeState(js){
   let n = 0;
   const neuer = (a, b) => !a ? !!b : (b?.at || b?.erzeugtUm || 0) > (a?.at || a?.erzeugtUm || 0);
-  for(const [k, v] of Object.entries(js.over || {})) if(neuer(S.over[k], v)){ if(JSON.stringify(S.over[k]) !== JSON.stringify(v)) n++; S.over[k] = v; }
+  for(const [k, v] of Object.entries(js.over || {})){ const m = mergeOver(S.over[k], v); if(JSON.stringify(m) !== JSON.stringify(S.over[k])) n++; S.over[k] = m; }
   for(const [k, v] of Object.entries(js.unterkuenfte || {})) if(neuer(S.unterkuenfte[k], v)){ if(JSON.stringify(S.unterkuenfte[k]) !== JSON.stringify(v)) n++; S.unterkuenfte[k] = v; }
   for(const [k, v] of Object.entries(js.etappen || {})) if(neuer(S.etappen[k], v)){ if(JSON.stringify(S.etappen[k]) !== JSON.stringify(v)) n++; S.etappen[k] = v; }
   for(const [k, v] of Object.entries(js.ratings || {})) if(neuer(S.ratings[k], v)){ if((S.ratings[k]?.emoji || null) !== (v.emoji || null)) n++; S.ratings[k] = v; }
@@ -1324,7 +1400,7 @@ function insights(){
   const rs = Object.entries(S.ratings).filter(([,r]) => r.emoji).map(([id,r]) => [P(id), SCORE[r.emoji]]).filter(x=>x[0]);
   const agg = {};
   const add = (k, label, v) => { (agg[k] ||= {label, n:0, sum:0}); agg[k].n++; agg[k].sum += v; };
-  rs.forEach(([p,v]) => { add("typ:"+p.typ, TYPELONG[p.typ], v); p.tags.forEach(t => TAGTEXT[t] && add("tag:"+t, TAGTEXT[t], v)); add("akt:"+p.aktivitaet, ["","Entspannte Orte","Orte mit etwas Bewegung","Aktive Ausflüge"][p.aktivitaet], v); add("reg:"+p.region, "Region "+p.region, v); });
+  rs.forEach(([p,v]) => { add("typ:"+p.typ, TYPELONG[p.typ], v); (p.tags||[]).forEach(t => TAGTEXT[t] && add("tag:"+t, TAGTEXT[t], v)); if(p.aktivitaet) add("akt:"+p.aktivitaet, ["","Entspannte Orte","Orte mit etwas Bewegung","Aktive Ausflüge"][p.aktivitaet], v); if(p.region) add("reg:"+p.region, "Region "+p.region, v); });
   const out = [];
   Object.values(agg).forEach(a => { const avg = a.sum/a.n; if(a.n>=2 && avg>=1.25) out.push({good:true, text:`${a.label} gefallen euch`, beleg:`${a.n} Bewertungen, Schnitt ${avg.toFixed(1)}`}); if(a.n>=2 && avg<=-0.75) out.push({good:false, text:`${a.label} eher nicht euer Ding`, beleg:`${a.n} Bewertungen`}); });
   return out.sort((a,b)=>b.good-a.good).slice(0,8);
