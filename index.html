@@ -185,15 +185,50 @@ button.row:active, a.row:active{background:var(--surface2)}
 .empty b{font-size:17px}
 .empty p{margin:0;color:var(--ink2);font-size:15px;max-width:34ch}
 
-/* Vergleich */
-.cmpwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
-.cmp{border-collapse:separate;border-spacing:0;min-width:100%;font-size:14px}
-.cmp th,.cmp td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left;min-width:150px;max-width:220px;overflow-wrap:anywhere;background:var(--surface)}
-.cmp th:first-child,.cmp td:first-child{position:sticky;left:0;z-index:1;min-width:118px;max-width:130px;overflow-wrap:normal;hyphens:none;color:var(--ink2);font-weight:600;background:var(--surface2)}
-.cmp thead th{font-size:15px;color:var(--ink);font-weight:700}
-.cmp tr:first-child th{border-top:1px solid var(--line)}
-.cmp td.best{color:var(--accent);font-weight:650}
-.cmp .muted{color:var(--ink3)}
+/* Vergleich: gleich aufgebaute Karten untereinander, auf dem iPhone ohne seitliches Scrollen */
+.ccards{display:flex;flex-direction:column;gap:12px}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.ccard.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.ccard.konflikt{border-color:var(--konflikt);box-shadow:inset 0 0 0 1px var(--konflikt)}
+.ccard header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ccard header .t{border:0;background:none;padding:0;text-align:left;font-size:17px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;min-height:24px}
+.cprice{font-size:16px;font-weight:650;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cprice.best{color:var(--accent)}
+.cprice .tag{font-size:12px;font-weight:650;padding:2px 8px;border-radius:10px;background:var(--accent-soft);color:var(--accent)}
+.ccard dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
+.ccard dt{color:var(--ink2)}
+.ccard dd{margin:0;overflow-wrap:anywhere}
+.cnote{margin:0;font-size:14px;color:var(--ink2);border-top:1px solid var(--line);padding-top:10px}
+.ccard footer{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.ccard footer .btn{min-height:42px}
+.ccard footer .btn.ghost{margin-right:auto;padding:0 6px}
+.chosen{display:inline-flex;align-items:center;gap:6px;font-weight:650;color:var(--accent);min-height:42px}
+.muted{color:var(--ink3);font-weight:400}
+
+/* Reise-Einstieg */
+.subbtn{display:inline-flex;align-items:center;gap:2px;border:0;background:none;padding:0;min-height:30px;color:var(--accent);font-size:15px;font-weight:550}
+.subbtn .ic{width:16px;height:16px}
+.setup{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.setup-t{display:flex;gap:12px;align-items:flex-start}
+.setup-t > .ic{width:32px;height:32px;padding:6px;border-radius:9px;background:var(--offen-soft);color:var(--offen);flex:none}
+.setup-t b{display:block;font-size:16px}
+.setup-t small{display:block;font-size:14px;color:var(--ink2);margin-top:2px}
+.tally{display:flex;gap:10px;font-size:13px;font-weight:650}
+.tal.konflikt{color:var(--konflikt)}.tal.fehlt{color:var(--fehlt)}.tal.offen{color:var(--offen)}
+.lvl.more{color:var(--accent);font-weight:600;align-items:center}
+.lvl.more .chev{width:18px;height:18px}
+.allok{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--accent-soft);color:var(--accent);font-size:15px;font-weight:550}
+.row.addrow{color:var(--accent)}
+.row.addrow .lead{background:var(--accent-soft);color:var(--accent)}
+.row.addrow .t{font-weight:600}
+.btn.small{min-height:38px;padding:0 12px;font-size:15px}
+.linkish{border:0;background:none;padding:0;text-align:left;color:var(--ink);font:inherit;font-weight:550}
+.note.ok{display:flex;gap:8px;align-items:center;background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:550}
+.note.ok .ic{width:18px;height:18px;flex:none}
+.tllink .card.konflikt{border-color:color-mix(in srgb, var(--konflikt) 45%, var(--line));background:var(--konflikt-soft);color:var(--konflikt)}
+.tllink .card.konflikt .t small{color:inherit;opacity:.85}
+.tlstay .lodge.z-konflikt{background:var(--konflikt-soft)}
+.tlstay .lodge.z-konflikt .t small{color:var(--konflikt)}
 
 /* Karte */
 #mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#0E3A4A}
@@ -521,29 +556,43 @@ const lodgingsOf = sid => live("lodgings").filter(l => l.stayId === sid).sort(by
 const conns = () => live("conns");
 const optsOf = cid => live("opts").filter(o => o.connId === cid).sort(byStatus);
 
-// Gewählte Option: gebucht vor ausgewählt, sonst die zuletzt gewählte. Mehr als eine gewählt = Konflikt (wird gemeldet, nicht still gelöst).
+// Gewählt ist eine Option nur, wenn sie die einzige ausgewählte oder gebuchte ist. Sind mehrere gewählt (paralleler Abgleich),
+// gilt keine: item ist null, überall wird der Konflikt gezeigt, bis ihr eine behaltet. So bestimmt nie eine zufällige Option
+// Tagesstart, Karte oder Prüfung. alle = die gewählten, gebuchte zuerst.
 function chosenOf(list){
   const sel = list.filter(o => GEWAEHLT.has(o.status));
-  sel.sort((a, b) => (a.status === "gebucht" ? 0 : 1) - (b.status === "gebucht" ? 0 : 1) || fieldTime(b, "status") - fieldTime(a, "status") || a.id.localeCompare(b.id));
-  return {item:sel[0] || null, mehrere:sel.length > 1, alle:sel};
+  return {item:sel.length === 1 ? sel[0] : null, mehrere:sel.length > 1, alle:sel};
 }
 const stayLodging = sid => chosenOf(lodgingsOf(sid)).item;
 const connOpt = cid => chosenOf(optsOf(cid)).item;
+const siblingsOf = (col, r) => col === "lodgings" ? lodgingsOf(r.stayId) : optsOf(r.connId);
 
 // Auswählen: die bisher ausgewählte wird Favorit. Eine gebuchte wird nie automatisch abgewählt.
+// Ist die Option schon gewählt und es gibt einen Konflikt, löst dasselbe den Konflikt zu ihren Gunsten („Behalten“).
 function chooseOption(col, id){
   const r = rec(col, id); if(!r) return {ok:false};
-  const sibs = col === "lodgings" ? lodgingsOf(r.stayId) : optsOf(r.connId);
+  const sibs = siblingsOf(col, r);
   const gebucht = sibs.find(o => o.id !== id && o.status === "gebucht");
   if(gebucht) return {ok:false, blockiert:gebucht};
   sibs.filter(o => o.id !== id && o.status === "ausgewaehlt").forEach(o => setRec(col, o.id, {status:"favorit"}));
   if(!GEWAEHLT.has(r.status)) setRec(col, id, {status:"ausgewaehlt"});
   return {ok:true};
 }
+// Option einem anderen Aufenthalt bzw. einer anderen Verbindung zuordnen (auch zum Retten nach einem Abgleich, siehe Prüfung).
+// Ist sie gewählt und dort ist schon eine gewählt, wird nichts verschoben: erst eine der beiden auf Favorit setzen.
+function moveOption(col, id, parentId){
+  const r = rec(col, id), key = col === "lodgings" ? "stayId" : "connId"; if(!r || !parentId || r[key] === parentId) return {ok:!!r};
+  if(GEWAEHLT.has(r.status)){
+    const dort = chosenOf(col === "lodgings" ? lodgingsOf(parentId) : optsOf(parentId)).alle[0];
+    if(dort) return {ok:false, blockiert:dort};
+  }
+  setRec(col, id, {[key]:parentId});
+  return {ok:true};
+}
 function setOptionStatus(col, id, status){
   const r = rec(col, id); if(!r) return {ok:false};
   if(status === "ausgewaehlt" || status === "gebucht"){
-    const sibs = col === "lodgings" ? lodgingsOf(r.stayId) : optsOf(r.connId);
+    const sibs = siblingsOf(col, r);
     const gebucht = sibs.find(o => o.id !== id && o.status === "gebucht");
     if(gebucht) return {ok:false, blockiert:gebucht};
     sibs.filter(o => o.id !== id && o.status === "ausgewaehlt").forEach(o => setRec(col, o.id, {status:"favorit"}));
@@ -570,17 +619,27 @@ const optDauer = o => o.dauerMin ? (o.dauerOk ? legTxt(o.dauerMin) : "ca. " + le
 
 /* ---------- Zeitraum und Reisetage ---------- */
 const tripRange = () => { const r = S.meta.reise; return r?.start && r?.end && r.end >= r.start ? r : null; };
-// Zeitraum der Reise: eingetragen, sonst aus den Aufenthalten, sonst null
+// Zeitraum der Reise: eingetragen, sonst aus der Planung (Aufenthalte und eindeutig gewählte Verbindungen), sonst null.
+// Abgeleitet ist nur ein Vorschlag, festgelegt wird er im Formular „Reisezeitraum“.
 function tripBounds(){
   const r = tripRange(); if(r) return {start:r.start, end:r.end, quelle:"eingetragen"};
-  const ds = datedStays(); if(!ds.length) return null;
-  return {start:ds[0].von, end:ds.map(s => s.bis).sort().pop(), quelle:"aus Aufenthalten"};
+  const ds = datedStays().filter(s => s.bis > s.von), os = conns().map(c => connOpt(c.id)).filter(o => o?.datum);
+  if(!ds.length && !os.length) return null;
+  const a = [...ds.map(s => s.von), ...os.map(o => o.datum)].sort(), e = [...ds.map(s => s.bis), ...os.map(o => o.anDatum || o.datum)].sort();
+  return {start:a[0], end:e.pop(), quelle:"aus der Planung"};
 }
 const tripDays = () => { const b = tripBounds(); const a = b ? b.start : today(), n = b ? dayDiff(b.end, b.start) + 1 : 7; return Array.from({length:Math.max(1, n)}, (_, i) => addDays(a, i)); };
 const stayForNight = d => datedStays().find(s => s.von <= d && d < s.bis) || null;
 const stayForDay = d => stayForNight(d) || stayForNight(addDays(d, -1));
-// Nacht d verbringt ihr unterwegs, wenn eine gewählte Option am Tag d (oder früher) abfährt und erst danach ankommt
-const nightInTransit = d => conns().some(c => { const o = connOpt(c.id); return o?.datum && o.anDatum && o.datum <= d && d < o.anDatum; });
+// Nacht d verbringt ihr unterwegs, wenn eine gewählte Option am Tag d (oder früher) abfährt und erst danach ankommt.
+// Bei einem Auswahlkonflikt nur, wenn alle gewählten Optionen darin übereinstimmen: nichts wird aus einer zufälligen Option abgeleitet.
+const nightInTransit = d => conns().some(c => { const sel = chosenOf(optsOf(c.id)).alle; return sel.length > 0 && sel.every(o => o.datum && o.anDatum && o.datum <= d && d < o.anDatum); });
+// Unterkunftsentscheidung eines Aufenthalts als Zustand: gewaehlt (genau eine), konflikt (mehrere), offen (Optionen da), leer
+function stayChoice(sid){
+  const ls = lodgingsOf(sid), ch = chosenOf(ls), k = ls.filter(l => !RAUS.has(l.status)).length;
+  return {...ch, zustand:ch.mehrere ? "konflikt" : ch.item ? "gewaehlt" : k ? "offen" : "leer", aktiv:k};
+}
+const connChoice = cid => { const os = optsOf(cid), ch = chosenOf(os), k = os.filter(o => !RAUS.has(o.status)).length; return {...ch, zustand:ch.mehrere ? "konflikt" : ch.item ? "gewaehlt" : k ? "offen" : "leer", aktiv:k}; };
 
 /* ---------- Anschluss an die Tagesplanung ----------
    Ein Tag startet an der gewählten Unterkunft des Aufenthalts der Vornacht und endet an der der Nacht.
@@ -589,7 +648,9 @@ const NEAR_KM = 80;
 const lodgingPoint = l => l && Number.isFinite(l.lat) && Number.isFinite(l.lng) ? {id:l.id, name:l.name, lat:l.lat, lng:l.lng} : null;
 const ukNight = d => { const s = stayForNight(d); return s ? lodgingPoint(stayLodging(s.id)) : null; };
 const isTravelDay = d => { const a = stayForNight(addDays(d, -1)), b = stayForNight(d); return !!(a && b && a.id !== b.id); };
-const dayStart = d => ukNight(addDays(d, -1)) || ukNight(d);
+// Gab es einen Aufenthalt in der Vornacht, startet der Tag nur dort. Ist dessen Unterkunft offen oder ungeklärt, gibt es keinen Start
+// (früher sprang der Start dann auf die Unterkunft der nächsten Nacht, am Reisetag also an den falschen Ort).
+const dayStart = d => stayForNight(addDays(d, -1)) ? ukNight(addDays(d, -1)) : ukNight(d);
 const dayEnd = d => isTravelDay(d) ? null : ukNight(d);
 const baseFor = d => ukNight(d) || ukNight(addDays(d, -1));
 // alle Unterkünfte mit Ort, die für die Karte und das Vorladen zählen (nicht verworfen oder storniert)
@@ -604,32 +665,56 @@ function connsOnDay(d){
 }
 
 /* ---------- Chronologische Übersicht ----------
-   Aufenthalte nach Datum, dazwischen Lücken und die Verbindungen. Fehlt eine Verbindung zwischen zwei Aufenthalten,
-   erscheint ein Platzhalter zum Anlegen. Nicht zuordenbare Verbindungen und Aufenthalte ohne Datum kommen ans Ende. */
+   Eine Zeitachse aus Aufenthalten, Verbindungen, Nächten ohne Aufenthalt und Platzhaltern für fehlende Verbindungen.
+   Verbindungen stehen am Datum ihrer gewählten Option, sonst an der Ab- bzw. Anreise des verknüpften Aufenthalts.
+   So erscheinen auch Flüge ohne verknüpften Aufenthalt an der richtigen Stelle. Am selben Tag gilt:
+   Platzhalter davor (0) · ankommende Verbindung (1) · Aufenthalt (2) · abfahrende Verbindung (3) · Platzhalter danach (4) · Lücke (5).
+   Ohne Datum und ohne Bezug bleiben nur Verbindungen ohne gewählte Option und Aufenthalte ohne Datum (rest, ohneDatum). */
 function overview(){
-  const ds = datedStays(), cs = conns(), used = new Set(), items = [];
-  const between = (vonId, nachId) => cs.filter(c => (c.vonStay || null) === vonId && (c.nachStay || null) === nachId);
-  const push = list => list.forEach(c => { used.add(c.id); items.push({art:"conn", c}); });
-  if(ds.length){
-    const an = cs.filter(c => c.nachStay === ds[0].id && !c.vonStay);
-    push(an); if(!an.length) items.push({art:"connFehlt", nach:ds[0], richtung:"anreise"});
-  }
-  ds.forEach((s, i) => {
-    items.push({art:"stay", s});
-    const next = ds[i + 1];
-    if(next){
-      if(s.bis < next.von) items.push({art:"luecke", von:s.bis, bis:next.von, n:dayDiff(next.von, s.bis)});
-      const c = between(s.id, next.id); push(c);
-      if(!c.length) items.push({art:"connFehlt", von:s, nach:next});
-    }
+  const ds = datedStays().filter(s => s.bis > s.von), dsIds = new Set(ds.map(s => s.id)), cs = conns(), b = tripBounds(), items = [], rest = [];
+  const put = (d, rang, x) => items.push({...x, _d:d, _r:rang});
+  ds.forEach(s => put(s.von, 2, {art:"stay", s}));
+  cs.forEach(c => {
+    const o = connOpt(c.id), v = dsIds.has(c.vonStay) ? rec("stays", c.vonStay) : null, n = dsIds.has(c.nachStay) ? rec("stays", c.nachStay) : null;
+    const d = o?.datum || v?.bis || n?.von;
+    if(!d) return rest.push(c);
+    put(d, n && d === n.von ? 1 : 3, {art:"conn", c});
   });
-  if(ds.length){
-    const last = ds[ds.length - 1], ab = cs.filter(c => c.vonStay === last.id && !c.nachStay);
-    push(ab); if(!ab.length) items.push({art:"connFehlt", von:last, richtung:"abreise"});
+  ds.forEach((s, i) => {
+    if(i === 0 && !cs.some(c => c.nachStay === s.id)) put(s.von, 0, {art:"connFehlt", nach:s, richtung:"anreise"});
+    const next = ds[i + 1];
+    if(next && !cs.some(c => c.vonStay === s.id && c.nachStay === next.id)) put(next.von, 0, {art:"connFehlt", von:s, nach:next});
+    if(!next && !cs.some(c => c.vonStay === s.id)) put(s.bis, 4, {art:"connFehlt", von:s, richtung:"abreise"});
+  });
+  if(b){ // Nächte ohne Aufenthalt, zusammengefasst. Eine Nacht in einer gewählten Nachtverbindung (Flug, Nachtzug) ist keine Lücke.
+    let start = null;
+    for(let d = b.start; d <= b.end; d = addDays(d, 1)){
+      const frei = d < b.end && !stayForNight(d) && !nightInTransit(d);
+      if(frei && !start) start = d;
+      if(!frei && start){ put(start, 5, {art:"luecke", von:start, bis:d, n:dayDiff(d, start)}); start = null; }
+    }
   }
-  const rest = cs.filter(c => !used.has(c.id));
-  const ohneDatum = stays().filter(s => !s.von || !s.bis);
+  items.sort((x, y) => x._d.localeCompare(y._d) || x._r - y._r);
+  const ohneDatum = stays().filter(s => !s.von || !s.bis || s.bis <= s.von);
   return {items, rest, ohneDatum};
+}
+// Vorhandene Verbindungen, die zu einem Platzhalter passen (die fehlende Seite ist noch frei), passende Ortsnamen zuerst
+function connCandidates(x){
+  // keine Verbindung, die schon von diesem Ort abfährt, als Anreise anbieten (und umgekehrt)
+  const ab = (c, s) => c.vonStay === s.id || (!c.vonStay && c.vonText && norm(c.vonText) === norm(stayName(s)));
+  const an = (c, s) => c.nachStay === s.id || (!c.nachStay && c.nachText && norm(c.nachText) === norm(stayName(s)));
+  const frei = c => x.von && x.nach ? (!c.vonStay || c.vonStay === x.von.id) && (!c.nachStay || c.nachStay === x.nach.id) : x.nach ? !c.nachStay && !ab(c, x.nach) : !c.vonStay && !an(c, x.von);
+  const passt = c => !!((x.nach && c.nachText && norm(c.nachText) === norm(stayName(x.nach))) || (x.von && c.vonText && norm(c.vonText) === norm(stayName(x.von))));
+  return conns().filter(frei).sort((a, c) => passt(c) - passt(a));
+}
+// Verbindung mit dem Aufenthalt des Platzhalters verknüpfen. Der bisherige Ortstext bleibt stehen, angezeigt wird der Aufenthalt.
+function linkConn(cid, x){
+  const c = rec("conns", cid); if(!c) return false;
+  const patch = {};
+  if(x.von && !c.vonStay) patch.vonStay = x.von.id;
+  if(x.nach && !c.nachStay) patch.nachStay = x.nach.id;
+  if(Object.keys(patch).length) setRec("conns", cid, patch);
+  return true;
 }
 
 /* ---------- Prüfung ----------
@@ -637,7 +722,7 @@ function overview(){
    Jeder Punkt nennt, wohin ein Tipp führt. Nichts wird automatisch gewählt oder geschätzt. */
 function planIssues(){
   const out = [], add = (lvl, text, ziel, datum) => out.push({lvl, text, ziel, datum:datum || ""});
-  const all = stays(), ds = datedStays(), b = tripBounds(), r = tripRange();
+  const all = stays(), ds = datedStays(), r = tripRange();
   if(!r) add("offen", "Reisezeitraum noch nicht festgelegt", ["zeitraum"]);
   all.filter(s => s.von && s.bis && s.bis <= s.von).forEach(s => add("konflikt", `${stayName(s)}: Abreise liegt nicht nach der Anreise`, ["stay", {id:s.id}], s.von));
   all.filter(s => !s.von || !s.bis).forEach(s => add("fehlt", `${stayName(s)}: An- oder Abreisedatum fehlt`, ["stay", {id:s.id}]));
@@ -646,29 +731,27 @@ function planIssues(){
     if(a.bis > a.von && c.bis > c.von && a.von < c.bis && c.von < a.bis) add("konflikt", `${stayName(a)} und ${stayName(c)} überschneiden sich`, ["stay", {id:c.id}], c.von);
   }
   if(r) ds.filter(s => s.von < r.start || s.bis > r.end).forEach(s => add("konflikt", `${stayName(s)} liegt außerhalb des Reisezeitraums`, ["stay", {id:s.id}], s.von));
-  if(b){ // Nächte ohne Aufenthalt, zusammengefasst. Eine Nacht in einer gewählten Nachtverbindung (Flug, Nachtzug) ist keine Lücke.
-    let start = null;
-    for(let d = b.start; d <= b.end; d = addDays(d, 1)){
-      const frei = d < b.end && !stayForNight(d) && !nightInTransit(d);
-      if(frei && !start) start = d;
-      if(!frei && start){ const n = dayDiff(d, start); add("fehlt", `${plural(n, "Nacht", "Nächte")} ohne Aufenthalt (${fmtRange(start, d)})`, ["neuStay", {von:start, bis:d}], start); start = null; }
-    }
-  }
+  const ov = overview();
+  ov.items.filter(x => x.art === "luecke").forEach(x => add("fehlt", `${plural(x.n, "Nacht", "Nächte")} ohne Aufenthalt (${fmtRange(x.von, x.bis)})`, ["neuStay", {von:x.von, luecke:x.bis}], x.von));
   ds.forEach(s => {
-    const ls = lodgingsOf(s.id), ch = chosenOf(ls);
-    if(ch.mehrere) add("konflikt", `${stayName(s)}: ${ch.alle.length} Unterkünfte gleichzeitig gewählt`, ["stay", {id:s.id}], s.von);
-    else if(!ch.item) add("offen", ls.filter(l => !RAUS.has(l.status)).length ? `${stayName(s)}: Unterkunft noch nicht gewählt (${plural(ls.filter(l => !RAUS.has(l.status)).length, "Option", "Optionen")})` : `${stayName(s)}: noch keine Unterkunft erfasst`, ["stay", {id:s.id}], s.von);
+    const ch = stayChoice(s.id);
+    if(ch.zustand === "konflikt") add("konflikt", `${stayName(s)}: ${ch.alle.length} Unterkünfte gleichzeitig gewählt, bis ihr eine behaltet, gilt keine`, ["stay", {id:s.id}], s.von);
+    else if(ch.zustand === "offen") add("offen", `${stayName(s)}: Unterkunft noch nicht gewählt (${plural(ch.aktiv, "Option", "Optionen")})`, ["stay", {id:s.id}], s.von);
+    else if(ch.zustand === "leer") add("offen", `${stayName(s)}: noch keine Unterkunft erfasst`, ["stay", {id:s.id}], s.von);
     else if(!lodgingPoint(ch.item)) add("fehlt", `${stayName(s)}: Ort der Unterkunft fehlt, Tagespläne haben keinen Startpunkt`, ["lodging", {id:ch.item.id}], s.von);
   });
-  const ov = overview();
   ov.items.filter(x => x.art === "connFehlt").forEach(x => add("fehlt",
     x.richtung === "anreise" ? `Anreise nach ${stayName(x.nach)} fehlt` : x.richtung === "abreise" ? `Abreise ab ${stayName(x.von)} fehlt` : `Keine Verbindung ${stayName(x.von)} → ${stayName(x.nach)}`,
     ["neuConn", {vonStay:x.von?.id || null, nachStay:x.nach?.id || null}], x.von?.bis || x.nach?.von));
+  // Nach einem Abgleich kann eine Option an einem gelöschten Aufenthalt oder einer gelöschten Verbindung hängen. Sie ginge sonst still verloren.
+  live("lodgings").filter(l => !rec("stays", l.stayId)).forEach(l => add("konflikt", `${l.name || "Unterkunft"}: gehört zu einem gelöschten Aufenthalt, neu zuordnen oder löschen`, ["lodgingEdit", {id:l.id}]));
+  live("opts").filter(o => !rec("conns", o.connId)).forEach(o => add("konflikt", `${[TRANSPORT[o.art]?.[0], o.anbieter].filter(Boolean).join(" ") || "Transportoption"}: gehört zu einer gelöschten Verbindung, neu zuordnen oder löschen`, ["optEdit", {id:o.id}], o.datum));
   conns().forEach(c => {
-    const os = optsOf(c.id), ch = chosenOf(os), t = connTitle(c);
+    const ch = connChoice(c.id), t = connTitle(c);
     if(!connEnd(c, "von") || !connEnd(c, "nach")) add("fehlt", `Verbindung ${t}: Start oder Ziel fehlt`, ["conn", {id:c.id}]);
-    if(ch.mehrere) add("konflikt", `${t}: ${ch.alle.length} Optionen gleichzeitig gewählt`, ["conn", {id:c.id}]);
-    if(!ch.item){ add("offen", os.filter(o => !RAUS.has(o.status)).length ? `${t}: noch keine Option gewählt` : `${t}: noch keine Option erfasst`, ["conn", {id:c.id}], optsOf(c.id)[0]?.datum); return; }
+    // Bei einem Konflikt wird keine der gewählten Optionen weiter geprüft, sonst stammten Zeiten und Preise aus einer zufälligen
+    if(ch.zustand === "konflikt") return add("konflikt", `${t}: ${ch.alle.length} Optionen gleichzeitig gewählt, bis ihr eine behaltet, gilt keine`, ["conn", {id:c.id}], ch.alle[0]?.datum);
+    if(!ch.item){ add("offen", ch.aktiv ? `${t}: noch keine Option gewählt` : `${t}: noch keine Option erfasst`, ["conn", {id:c.id}], optsOf(c.id)[0]?.datum); return; }
     const o = ch.item, st = optStart(o), en = optEnd(o);
     if(st && en && en < st) add("konflikt", `${t}: Ankunft liegt vor der Abfahrt`, ["opt", {id:o.id}], o.datum);
     const v = c.vonStay && rec("stays", c.vonStay), n = c.nachStay && rec("stays", c.nachStay);
@@ -1063,7 +1146,7 @@ function row(o){
   const at = o.href ? `href="${esc(o.href)}" target="_blank" rel="noopener"` : o.go ? attrGo(o.go, o.p) : o.act ? `data-act="${o.act}"${o.id ? ` data-id="${esc(o.id)}"` : ""}` : "";
   const lead = o.icon ? `<span class="lead${o.c ? " c" : ""}"${o.c ? ` style="--c:var(${o.c})"` : ""}>${ic(o.icon)}</span>` : "";
   const chev = o.go || o.act ? ic(o.href ? "extern" : "weiter", "chev") : o.href ? ic("extern", "chev") : "";
-  return `<${tag} class="row" ${at}>${lead}<span class="txt"><span class="t">${o.t}</span>${o.s ? `<span class="s">${o.s}</span>` : ""}${o.s2 ? `<span class="s2">${o.s2}</span>` : ""}</span><span class="end">${o.end || ""}${o.chev === false ? "" : chev}</span></${tag}>`;
+  return `<${tag} class="row${o.cls ? " " + o.cls : ""}" ${at}>${lead}<span class="txt"><span class="t">${o.t}</span>${o.s ? `<span class="s">${o.s}</span>` : ""}${o.s2 ? `<span class="s2">${o.s2}</span>` : ""}</span><span class="end">${o.end || ""}${o.chev === false ? "" : chev}</span></${tag}>`;
 }
 const pill = st => st ? `<span class="pill s-${st}">${st === "gebucht" ? ic("haken") : ""}${esc(STATUS[st] || STAY_STATUS[st] || st)}</span>` : "";
 const empty = (icon, title, text, btn) => `<div class="empty">${ic(icon)}<b>${esc(title)}</b>${text ? `<p>${text}</p>` : ""}${btn || ""}</div>`;
@@ -1129,66 +1212,100 @@ function armDelete(btn, label, onDelete){
 // Formulare halten ihren Entwurf in den Parametern der Seite, damit er einen Abstecher (Ort auf der Karte wählen) übersteht
 function keepDraft(root){ const p = current().params; p.draft = {...(p.draft || {}), ...readForm(root)}; return p.draft; }
 
+// Entscheidungszustand als Zeile: gewählt (jade), Konflikt (rot), offen oder leer (bernstein). Konflikt nennt nie eine der Optionen als gewählt.
+const ZUST_FARBE = {gewaehlt:"var(--accent)", konflikt:"var(--konflikt)", offen:"var(--fehlt)", leer:"var(--fehlt)"};
 function lodgeLine(s){
-  const ls = lodgingsOf(s.id), ch = chosenOf(ls), n = nights(s);
-  if(ch.item){ const pr = lodgingPrice(ch.item, n); return {t:esc(ch.item.name), s:[STATUS[ch.item.status], pr.nacht !== null ? money(pr.nacht, ch.item.waehrung) + " pro Nacht" : null, ch.mehrere ? "mehrere gewählt" : null].filter(Boolean).join(" · "), ok:true, item:ch.item}; }
-  const k = ls.filter(l => !RAUS.has(l.status)).length;
-  return {t:k ? `${plural(k, "Option", "Optionen")}, noch keine gewählt` : "Noch keine Unterkunft erfasst", s:k ? "Vergleichen und auswählen" : "Option hinzufügen", ok:false};
+  const ch = stayChoice(s.id), n = nights(s);
+  if(ch.zustand === "gewaehlt"){ const pr = lodgingPrice(ch.item, n); return {t:esc(ch.item.name), s:[STATUS[ch.item.status], pr.nacht !== null ? money(pr.nacht, ch.item.waehrung) + " pro Nacht" : "Preis unbekannt"].join(" · "), z:ch.zustand}; }
+  if(ch.zustand === "konflikt") return {t:`${ch.alle.length} Unterkünfte gleichzeitig gewählt`, s:"Ungeklärt, bitte eine behalten", z:ch.zustand};
+  return {t:ch.aktiv ? `${plural(ch.aktiv, "Option", "Optionen")}, noch keine gewählt` : "Noch keine Unterkunft erfasst", s:ch.aktiv ? "Vergleichen und auswählen" : "Kandidaten sammeln", z:ch.zustand};
 }
 function connLine(c){
-  const os = optsOf(c.id), o = connOpt(c.id), k = os.filter(x => !RAUS.has(x.status)).length;
-  if(o) return {icon:TRANSPORT[o.art]?.[1] || "reise", s:[TRANSPORT[o.art]?.[0], optWhen(o), STATUS[o.status]].filter(Boolean).join(" · "), ok:true};
-  return {icon:"reise", s:k ? `${plural(k, "Option", "Optionen")}, noch keine gewählt` : "Noch keine Option erfasst", ok:false};
+  const ch = connChoice(c.id), o = ch.item;
+  if(o) return {icon:TRANSPORT[o.art]?.[1] || "reise", s:[TRANSPORT[o.art]?.[0], optWhen(o), STATUS[o.status]].filter(Boolean).join(" · "), z:ch.zustand};
+  if(ch.zustand === "konflikt") return {icon:"warn", s:`${ch.alle.length} Optionen gleichzeitig gewählt, ungeklärt`, z:ch.zustand};
+  return {icon:"reise", s:ch.aktiv ? `${plural(ch.aktiv, "Option", "Optionen")}, noch keine gewählt` : "Noch keine Option erfasst", z:ch.zustand};
 }
 const dateBox = iso => iso ? `<span class="date"><b>${+iso.slice(8,10)}</b><span>${MON[+iso.slice(5,7)-1].replace(".","")}</span></span>` : `<span class="date"><b>?</b><span>Datum</span></span>`;
 function stayCard(s){
   const n = nights(s), l = lodgeLine(s);
-  return `<div class="tlstay"><button class="top" ${attrGo("stay", {id:s.id})}>${dateBox(s.von)}<span class="info"><h3>${esc(stayName(s))}</h3><div class="meta">${esc(fmtRange(s.von, s.bis))}${n !== null ? " · " + plural(n, "Nacht", "Nächte") : ""}</div></span>${pill(s.status)}</button>
-    <button class="lodge" ${attrGo("stay", {id:s.id})}><span class="lead" style="color:${l.ok ? "var(--accent)" : "var(--fehlt)"}">${ic("hotel")}</span><span class="t">${l.t}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}</button></div>`;
+  return `<div class="tlstay"><button class="top" ${attrGo("stay", {id:s.id})}>${dateBox(s.von)}<span class="info"><h3>${esc(stayName(s))}</h3><div class="meta">${esc(fmtRange(s.von, s.bis))}${n !== null && n > 0 ? " · " + plural(n, "Nacht", "Nächte") : ""}</div></span>${pill(s.status)}</button>
+    <button class="lodge z-${l.z}" ${attrGo("stay", {id:s.id})}><span class="lead" style="color:${ZUST_FARBE[l.z]}">${ic(l.z === "konflikt" ? "warn" : "hotel")}</span><span class="t">${l.t}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}</button></div>`;
 }
 const linkCard = (inner, attrs, cls = "") => `<div class="tllink"><span class="rail"></span><button class="card ${cls}" ${attrs}>${inner}</button></div>`;
-function connCard(c){ const l = connLine(c); return linkCard(`${ic(l.icon)}<span class="t">${esc(connTitle(c))}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}`, attrGo("conn", {id:c.id}), l.ok ? "" : "warn"); }
+function connCard(c){ const l = connLine(c); return linkCard(`${ic(l.icon)}<span class="t">${esc(connTitle(c))}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}`, attrGo("conn", {id:c.id}), l.z === "gewaehlt" ? "" : l.z === "konflikt" ? "konflikt" : "warn"); }
+const isZeitraumIssue = i => i.ziel?.[0] === "zeitraum";
+// Eine Hinzufügen-Aktion für den ganzen Bereich: Aufenthalt oder Verbindung. Ein neuer Aufenthalt beginnt an der ersten Lücke.
+function addToTrip(){
+  const lk = overview().items.find(x => x.art === "luecke"), last = datedStays().filter(s => s.bis > s.von).pop();
+  pickSheet({title:"Hinzufügen", items:[
+    {label:"Aufenthalt", sub:lk ? `Ort mit An- und Abreise, Anreise vorbelegt mit ${fmtDate(lk.von)}` : "Ort mit An- und Abreise, danach Unterkünfte sammeln", icon:"hotel", value:"stay"},
+    {label:"Verbindung", sub:"Flug, Zug, Bus oder Fähre zwischen zwei Orten", icon:"reise", value:"conn"},
+  ]}).then(v => v === "stay" ? go("neuStay", lk ? {von:lk.von, luecke:lk.bis} : last ? {von:last.bis} : {}) : v === "conn" ? go("neuConn", {}) : null);
+}
+// Platzhalter „Verbindung fehlt“: eine vorhandene zuordnen (z. B. einen schon erfassten Flug) oder eine neue anlegen
+function fillGap(x){
+  const neu = () => go("neuConn", {vonStay:x.von?.id || null, nachStay:x.nach?.id || null});
+  const cands = connCandidates(x); if(!cands.length) return neu();
+  pickSheet({title:x.richtung === "anreise" ? `Anreise nach ${stayName(x.nach)}` : x.richtung === "abreise" ? `Abreise ab ${stayName(x.von)}` : `${stayName(x.von)} → ${stayName(x.nach)}`,
+    text:"Eine schon erfasste Verbindung zuordnen oder eine neue anlegen.",
+    items:[...cands.map(c => ({label:connTitle(c), sub:connLine(c).s, icon:connLine(c).icon, value:c.id})), {label:"Neue Verbindung anlegen", icon:"plus", value:"neu"}]})
+    .then(v => { if(!v) return; if(v === "neu") return neu(); linkConn(v, x); commit("Verbindung zugeordnet"); });
+}
 
 VIEWS.reise = () => {
-  const b = tripBounds(), all = stays(), cs = conns(), iss = planIssues();
-  const nTotal = b ? dayDiff(b.end, b.start) : null;
-  const sub = b ? `${esc(fmtDateLong(b.start))} bis ${esc(fmtDateLong(b.end))} · ${plural(nTotal, "Nacht", "Nächte")}${b.quelle === "aus Aufenthalten" ? " (aus Aufenthalten)" : ""}` : "Zeitraum noch offen";
+  const r = tripRange(), b = tripBounds(), all = stays(), cs = conns(), iss = planIssues().filter(i => !isZeitraumIssue(i));
+  const add = `<button class="navbtn" data-act="add" aria-label="Aufenthalt oder Verbindung hinzufügen">${ic("plus")}</button>`;
+  // Der Zeitraum steht genau einmal da: festgelegt als tippbare Zeile unter der Überschrift, sonst als Karte mit einer Hauptaktion
+  const sub = r ? `<button class="subbtn" ${attrGo("zeitraum")}>${esc(fmtRange(r.start, r.end))} · ${plural(dayDiff(r.end, r.start), "Nacht", "Nächte")}${ic("weiter")}</button>` : "";
+  const setup = r ? "" : `<div class="setup"><div class="setup-t">${ic("zeitraum")}<span><b>Reisezeitraum festlegen</b><small>${b ? `Eure Planung reicht bisher vom ${esc(fmtDateLong(b.start))} bis ${esc(fmtDateLong(b.end))}. Legt ihn fest, dann prüft die App jede Nacht darin.` : "Erster und letzter Reisetag. Danach prüft die App jede Nacht darin. Kann offen bleiben, bis er feststeht."}</small></span></div><button class="btn primary block" ${attrGo("zeitraum")}>Zeitraum festlegen</button></div>`;
   if(!all.length && !cs.length) return {title:"Reise", large:true, sub,
-    html:`${empty("reise", "Plant eure Reise", "So geht’s: Zeitraum festlegen, Aufenthaltsorte anlegen, je Ort Unterkünfte sammeln und eine wählen, dann die Verbindungen dazwischen. Die App wählt nichts selbst aus.",
-      `<div class="btns" style="width:100%"><button class="btn primary" ${attrGo("neuStay", {})}>${ic("plus")}Ersten Aufenthalt anlegen</button><button class="btn" ${attrGo("zeitraum")}>${ic("zeitraum")}Zeitraum festlegen</button></div>`)}
+    html:`${empty("reise", "Plant eure Reise", "Aufenthaltsorte anlegen, je Ort Unterkünfte sammeln und eine wählen, dann die Verbindungen dazwischen. Die App wählt nichts selbst aus.",
+      `<div class="btns" style="width:100%"><button class="btn primary" ${attrGo("neuStay", {})}>${ic("plus")}Ersten Aufenthalt anlegen</button><button class="btn" ${attrGo("neuConn", {})}>${ic("flug")}Flug oder Verbindung</button></div>`)}
+      ${setup}
       ${sect("Schon vorhanden", group([row({icon:"karte", t:"Spots auf der Karte", s:"Eure Sammlung, unabhängig von der Reiseplanung", act:"zurKarte"})]))}`,
     mount(el){ el.querySelector('[data-act="zurKarte"]').onclick = () => switchTab("karte"); }};
   const ov = overview(), cnt = lvl => iss.filter(i => i.lvl === lvl).length;
-  const counts = iss.length ? `<div class="counts">${["konflikt","fehlt","offen"].filter(cnt).map(l => `<button class="count ${l}" ${attrGo("pruefung")}>${ic(LVL[l][0])}${cnt(l)} ${l === "konflikt" ? (cnt(l) === 1 ? "Konflikt" : "Konflikte") : l === "fehlt" ? "fehlt" : "offen"}</button>`).join("")}</div>` : `<div class="counts"><span class="count ok">${ic("haken")}Alles geprüft, nichts offen</span></div>`;
-  const tl = ov.items.map(x => x.art === "stay" ? stayCard(x.s) : x.art === "conn" ? connCard(x.c)
-    : x.art === "luecke" ? linkCard(`${ic("warn")}<span class="t">${plural(x.n, "Nacht", "Nächte")} ohne Aufenthalt<small>${esc(fmtRange(x.von, x.bis))} · Aufenthalt anlegen</small></span>${ic("plus")}`, attrGo("neuStay", {von:x.von, bis:x.bis}), "warn")
-    : linkCard(`${ic("plus")}<span class="t">${x.richtung === "anreise" ? "Anreise nach " + esc(stayName(x.nach)) : x.richtung === "abreise" ? "Abreise ab " + esc(stayName(x.von)) : esc(stayName(x.von)) + " → " + esc(stayName(x.nach))}<small>Verbindung anlegen</small></span>`, attrGo("neuConn", {vonStay:x.von?.id || null, nachStay:x.nach?.id || null}), "dashed")).join("");
-  return {title:"Reise", large:true, sub,
-    html:`${group([row({icon:"zeitraum", t:"Reisezeitraum", s:tripRange() ? esc(fmtRange(tripRange().start, tripRange().end)) + " · " + plural(dayDiff(tripRange().end, tripRange().start), "Nacht", "Nächte") : "Noch nicht festgelegt", go:"zeitraum"})])}
-      ${sect("Prüfung", counts + (iss.length ? `<div class="group">${issueRows(iss.slice(0, 3))}</div>${iss.length > 3 ? `<button class="btn ghost" ${attrGo("pruefung")}>Alle ${iss.length} Punkte</button>` : ""}` : ""))}
-      ${sect("Ablauf", ov.items.length ? `<div class="tl">${tl}</div>` : `<p class="hint">Noch kein Aufenthalt mit Datum.</p>`)}
-      ${ov.ohneDatum.length ? sect("Ohne Datum", ov.ohneDatum.map(stayCard).join("")) : ""}
-      ${ov.rest.length ? sect("Weitere Verbindungen", group(ov.rest.map(c => { const l = connLine(c); return row({icon:l.icon, t:esc(connTitle(c)), s:esc(l.s), go:"conn", p:{id:c.id}}); }))) : ""}
-      <div class="btns"><button class="btn" ${attrGo("neuConn", {})}>${ic("reise")}Verbindung hinzufügen</button></div>`,
-    fab:`<button class="fab" ${attrGo("neuStay", {})}>${ic("plus")}Aufenthalt</button>`};
+  const tally = ["konflikt","fehlt","offen"].filter(cnt).map(l => `<span class="tal ${l}">${cnt(l)} ${l === "konflikt" ? (cnt(l) === 1 ? "Konflikt" : "Konflikte") : l}</span>`).join("");
+  // Oben steht nur der nächste Schritt (alle Konflikte, sonst der früheste Punkt), der Rest ist im Ablauf und in „Prüfung“
+  const naechste = cnt("konflikt") ? iss.filter(i => i.lvl === "konflikt").slice(0, 3) : iss.slice(0, 1);
+  const status = iss.length ? sect(naechste.length > 1 ? "Zuerst klären" : "Nächster Schritt", `<div class="group">${issueRows(naechste)}${iss.length > naechste.length ? `<button class="lvl more" ${attrGo("pruefung")}><span class="tx">Alle ${plural(iss.length, "offenen Punkt", "offenen Punkte")}</span><span class="tally">${tally}</span>${ic("weiter", "chev")}</button>` : ""}</div>`)
+    : r ? `<div class="allok">${ic("haken")}<span>Alles geprüft: keine Konflikte, keine Lücken, alles entschieden.</span></div>` : "";
+  const tl = ov.items.map((x, i) => x.art === "stay" ? stayCard(x.s) : x.art === "conn" ? connCard(x.c)
+    : x.art === "luecke" ? linkCard(`${ic("warn")}<span class="t">${plural(x.n, "Nacht", "Nächte")} ohne Aufenthalt<small>${esc(fmtRange(x.von, x.bis))} · Aufenthalt anlegen</small></span>${ic("plus")}`, attrGo("neuStay", {von:x.von, luecke:x.bis}), "warn")
+    : linkCard(`${ic("plus")}<span class="t">${x.richtung === "anreise" ? "Anreise nach " + esc(stayName(x.nach)) : x.richtung === "abreise" ? "Abreise ab " + esc(stayName(x.von)) : esc(stayName(x.von)) + " → " + esc(stayName(x.nach))}<small>Verbindung fehlt · zuordnen oder anlegen</small></span>`, `data-gap="${i}"`, "dashed")).join("");
+  return {title:"Reise", large:true, sub, right:add,
+    html:`${setup}${status}
+      ${sect("Ablauf", ov.items.length ? `<div class="tl">${tl}</div>` : `<p class="hint">Noch nichts mit Datum. Tippt oben auf +.</p>`)}
+      ${ov.ohneDatum.length ? sect("Ohne gültiges Datum", ov.ohneDatum.map(stayCard).join("")) : ""}
+      ${ov.rest.length ? sect("Noch ohne Datum", `<p class="hint">Verbindungen ohne gewählte Option und ohne verknüpften Aufenthalt.</p>` + group(ov.rest.map(c => { const l = connLine(c); return row({icon:l.icon, t:esc(connTitle(c)), s:esc(l.s), go:"conn", p:{id:c.id}}); }))) : ""}`,
+    mount(el){
+      el.querySelectorAll("[data-gap]").forEach(b => b.onclick = () => fillGap(ov.items[+b.dataset.gap]));
+      el.querySelector('.nav [data-act="add"]')?.addEventListener("click", addToTrip);
+    }};
 };
 
 VIEWS.pruefung = () => {
   const iss = planIssues(), by = l => iss.filter(i => i.lvl === l);
   const block = (l, title, text) => by(l).length ? sect(title, `<p class="hint">${text}</p><div class="group">${issueRows(by(l))}</div>`) : "";
   return {title:"Prüfung", large:true, sub:iss.length ? plural(iss.length, "Punkt", "Punkte") : "Nichts offen",
-    html:iss.length ? block("konflikt", "Konflikte", "Echte Widersprüche, die ihr auflösen solltet.") + block("fehlt", "Fehlt", "Hier fehlt ein Eintrag.") + block("offen", "Offene Entscheidungen", "Noch nicht entschieden. Die App wählt nichts selbst aus.")
+    html:iss.length ? block("konflikt", "Konflikte", "Echte Widersprüche, die ihr auflösen müsst. Bis dahin verwendet die App keine der beteiligten Angaben.") + block("fehlt", "Fehlt", "Hier fehlt ein Eintrag. Die App schätzt nichts.") + block("offen", "Offene Entscheidungen", "Noch nicht entschieden. Die App wählt nichts selbst aus.")
       : empty("haken", "Alles geprüft", "Keine Konflikte, keine Lücken, alle Entscheidungen getroffen.")};
 };
 
 VIEWS.zeitraum = p => {
-  const r = p.draft || S.meta.reise || {};
+  const b = tripBounds(), vorschlag = !S.meta.reise && b ? {start:b.start, end:b.end} : null;
+  const r = p.draft || S.meta.reise || vorschlag || {};
   return {title:"Reisezeitraum", form:true,
-    html:`<div class="form"><div class="fgroup">${fRow(fText("start", "Erster Tag", r.start, {type:"date"}), fText("end", "Letzter Tag", r.end, {type:"date"}))}</div>
+    html:`<div class="form">${vorschlag && !p.draft ? `<p class="note">Vorschlag aus eurer Planung (gewählte Verbindungen und Aufenthalte). Prüft die Tage, gespeichert wird erst mit „Festlegen“.</p>` : ""}
+      <div class="fgroup">${fRow(fText("start", "Erster Tag", r.start, {type:"date"}), fText("end", "Letzter Tag", r.end, {type:"date"}))}</div>
       <p class="fhint" id="zN"></p>
-      <p class="fhint">Bleibt auf euren Geräten und geht nur über den Abgleich ans andere Handy. Leer lassen, wenn er noch nicht feststeht.</p></div>`,
-    bar:`<button class="btn" data-back>Abbrechen</button><button class="btn primary" data-act="save">Speichern</button>`,
+      <p class="fhint">Erster Tag ist der Abreisetag zu Hause, letzter der Rückreisetag. Bleibt auf euren Geräten und geht nur über den Abgleich ans andere Handy.</p>
+      ${S.meta.reise ? `<button type="button" class="btn ghost" data-act="clear">Zeitraum wieder offen lassen</button>` : ""}</div>`,
+    bar:`<button class="btn" data-back>Abbrechen</button><button class="btn primary" data-act="save">Festlegen</button>`,
     mount(el){
+      el.querySelector('[data-act="clear"]')?.addEventListener("click", () => confirmSheet({title:"Zeitraum offen lassen?", text:"Tage und Prüfung richten sich dann wieder nach euren Aufenthalten und gewählten Verbindungen.", ok:"Offen lassen"})
+        .then(y => { if(!y) return; S.meta.reise = null; S.meta.at = Date.now(); persist(); back(); toast("Zeitraum ist wieder offen", "zeitraum"); }));
       const upd = () => { const f = readForm(el); el.querySelector("#zN").textContent = f.start && f.end ? (f.end >= f.start ? plural(dayDiff(f.end, f.start), "Nacht", "Nächte") : "Der letzte Tag liegt vor dem ersten.") : ""; };
       el.querySelectorAll("input").forEach(x => x.addEventListener("input", upd)); upd();
       el.querySelector('[data-act="save"]').onclick = () => {
@@ -1196,7 +1313,7 @@ VIEWS.zeitraum = p => {
         if((f.start && !f.end) || (!f.start && f.end)) return toast("Beide Tage eintragen oder beide leer lassen", "warn", 3000, true);
         if(f.start && f.end < f.start) return toast("Der letzte Tag liegt vor dem ersten", "warn", 3000, true);
         S.meta.reise = f.start ? {start:f.start, end:f.end} : null; S.meta.at = Date.now();
-        persist(); back(); toast("Zeitraum gespeichert");
+        persist(); back(); toast(f.start ? "Zeitraum festgelegt" : "Zeitraum ist offen");
       };
     }};
 };
@@ -1204,23 +1321,40 @@ VIEWS.zeitraum = p => {
 /* ---------- Aufenthalt ---------- */
 VIEWS.stay = ({id}) => {
   const s = rec("stays", id); if(!s) return {title:"Nicht gefunden", html:empty("info", "Dieser Aufenthalt wurde gelöscht.", "")};
-  const n = nights(s), ls = lodgingsOf(id), ch = chosenOf(ls), aktiv = ls.filter(l => !RAUS.has(l.status)), raus = ls.filter(l => RAUS.has(l.status));
+  const n = nights(s), ls = lodgingsOf(id), ch = stayChoice(id), aktiv = ls.filter(l => !RAUS.has(l.status)), raus = ls.filter(l => RAUS.has(l.status));
   const cin = conns().filter(c => c.nachStay === id), cout = conns().filter(c => c.vonStay === id);
-  const lrow = l => { const pr = lodgingPrice(l, n); return row({icon:"hotel", c:GEWAEHLT.has(l.status) ? "--accent" : null, t:esc(l.name), s:[l.art, pr.nacht !== null ? money(pr.nacht, l.waehrung) + " / Nacht" : "Preis unbekannt", pr.gesamt !== null && n ? money(pr.gesamt, l.waehrung) + " gesamt" : null].filter(Boolean).map(esc).join(" · "), s2:!Number.isFinite(l.lat) ? "Ort fehlt" : "", end:pill(l.status), go:"lodging", p:{id:l.id}}); };
+  const preisText = l => { const pr = lodgingPrice(l, n); return [pr.nacht !== null ? money(pr.nacht, l.waehrung) + " / Nacht" : "Preis unbekannt", pr.gesamt !== null && n ? money(pr.gesamt, l.waehrung) + " gesamt" : null].filter(Boolean).join(" · "); };
+  const lrow = l => row({icon:"hotel", c:ch.zustand === "gewaehlt" && GEWAEHLT.has(l.status) ? "--accent" : null, t:esc(l.name), s:esc([l.art, preisText(l)].filter(Boolean).join(" · ")), s2:!Number.isFinite(l.lat) ? "Kartenpunkt fehlt" : "", end:pill(l.status), go:"lodging", p:{id:l.id}});
+  const addRow = row({icon:"plus", t:"Unterkunftsoption hinzufügen", go:"lodgingEdit", p:{stayId:id}, cls:"addrow", chev:false});
+  const keepRow = l => `<div class="row"><span class="lead c" style="--c:var(--konflikt)">${ic("hotel")}</span><span class="txt"><button class="t linkish" ${attrGo("lodging", {id:l.id})}>${esc(l.name)}</button><span class="s">${esc(STATUS[l.status] + " · " + preisText(l))}</span></span><button class="btn small" data-keep="${l.id}">Behalten</button></div>`;
+  const andere = aktiv.filter(l => !(ch.zustand !== "offen" && GEWAEHLT.has(l.status)));
+  const cmp = aktiv.length > 1 ? `<button class="link" ${attrGo("compare", {col:"lodgings", parent:id})}>Vergleichen</button>` : "";
+  const unterkunft = ch.zustand === "gewaehlt" ? sect("Gewählte Unterkunft", group([lrow(ch.item)]) + `<p class="hint">Start und Ziel der Tagespläne in dieser Zeit.</p>`, cmp)
+    : ch.zustand === "konflikt" ? sect("Unterkunft ungeklärt", `<p class="note konflikt">${ch.alle.length} Optionen sind gleichzeitig gewählt, meist nach einem Abgleich. Bis ihr eine behaltet, gilt keine: Tagespläne haben hier keinen Startpunkt. Die andere wird Favorit, nichts geht verloren.</p>` + `<div class="group">${ch.alle.map(keepRow).join("")}</div>`, cmp)
+    : "";
+  const optionen = ch.zustand === "leer" ? sect("Unterkunft", empty("hotel", "Noch keine Unterkunft", "Sammelt hier alle Kandidaten, die ihr recherchiert habt, mit Preis, Link und Lage. Danach vergleicht ihr und wählt eine.", `<button class="btn primary" ${attrGo("lodgingEdit", {stayId:id})}>${ic("plus")}Erste Option hinzufügen</button>`))
+    : sect(ch.zustand === "offen" ? "Unterkunftsoptionen" : "Alternativen", (ch.zustand === "offen" ? `<p class="hint">Noch keine gewählt. Öffnet eine Option oder vergleicht sie.</p>` : "") + group([...andere.map(lrow), addRow]), ch.zustand === "offen" ? cmp : "");
   const days = s.von && s.bis && s.bis >= s.von ? Array.from({length:dayDiff(s.bis, s.von) + 1}, (_, i) => addDays(s.von, i)) : [];
-  const crow = c => { const l = connLine(c); return row({icon:l.icon, t:esc(connTitle(c)), s:esc(l.s), go:"conn", p:{id:c.id}}); };
-  return {title:stayName(s), large:true, sub:`${esc(fmtRange(s.von, s.bis))}${n !== null ? " · " + plural(n, "Nacht", "Nächte") : ""} · ${pill(s.status)}`,
+  const crow = c => { const l = connLine(c); return row({icon:l.icon, c:l.z === "konflikt" ? "--konflikt" : null, t:esc(connTitle(c)), s:esc(l.s), go:"conn", p:{id:c.id}}); };
+  return {title:stayName(s), large:true, sub:`${esc(fmtRange(s.von, s.bis))}${n !== null && n > 0 ? " · " + plural(n, "Nacht", "Nächte") : ""} · ${pill(s.status)}`,
     right:`<button class="navbtn" ${attrGo("stayEdit", {id})}>Bearbeiten</button>`,
-    html:`${ch.mehrere ? `<p class="note konflikt">${ch.alle.length} Unterkünfte sind gleichzeitig gewählt (zum Beispiel nach einem Abgleich). Wählt eine aus, dann ist es wieder eindeutig.</p>` : ""}
-      ${sect("Unterkunft", (ch.item ? `<p class="hint">Gewählt: ${esc(ch.item.name)}. Sie ist Start und Ziel der Tagespläne hier.</p>` : aktiv.length ? `<p class="hint">Noch keine gewählt. Öffnet eine Option und tippt „Für diesen Aufenthalt wählen“.</p>` : "")
-        + (aktiv.length ? group(aktiv.map(lrow)) : empty("hotel", "Noch keine Unterkunft", "Sammelt hier alle Kandidaten, die ihr recherchiert habt, mit Preis, Link und Lage."))
-        + `<div class="btns"><button class="btn" ${attrGo("lodgingEdit", {stayId:id})}>${ic("plus")}Option hinzufügen</button>${aktiv.length > 1 ? `<button class="btn" ${attrGo("compare", {col:"lodgings", parent:id})}>${ic("vergleich")}Vergleichen</button>` : ""}</div>`
-        + (raus.length ? `<details class="group"><summary class="row"><span class="txt"><span class="s">${plural(raus.length, "verworfene oder stornierte Option", "verworfene oder stornierte Optionen")}</span></span></summary>${raus.map(lrow).join("")}</details>` : ""))}
-      ${sect("An- und Weiterreise", (cin.length || cout.length ? group([...cin, ...cout].map(crow)) : `<p class="hint">Noch keine Verbindung zu oder ab ${esc(stayName(s))}.</p>`)
-        + `<div class="btns"><button class="btn" ${attrGo("neuConn", {nachStay:id})}>${ic("plus")}Anreise</button><button class="btn" ${attrGo("neuConn", {vonStay:id})}>${ic("plus")}Weiterreise</button></div>`)}
+    html:`${unterkunft}${optionen}
+      ${raus.length ? `<details class="group"><summary class="row"><span class="txt"><span class="s">${plural(raus.length, "verworfene oder stornierte Option", "verworfene oder stornierte Optionen")}</span></span></summary>${raus.map(lrow).join("")}</details>` : ""}
+      ${sect("An- und Weiterreise", group([...cin.map(crow), ...(cin.length ? [] : [row({icon:"plus", t:"Anreise zuordnen oder anlegen", act:"anreise", cls:"addrow", chev:false})]), ...cout.map(crow), ...(cout.length ? [] : [row({icon:"plus", t:"Weiterreise zuordnen oder anlegen", act:"abreise", cls:"addrow", chev:false})])]))}
       ${days.length ? sect("Tage hier", group(days.map(d => { const pl = dayPlanFor(d), k = pl ? pl.plan.stationen.filter(x => P(x.placeId)).length : 0; return row({icon:"kalender", t:esc(fmtDateLong(d)), s:d === s.von ? "Anreise" : d === s.bis ? "Abreise" : k ? plural(k, "Spot", "Spots") : "noch leer", end:k && d !== s.von && d !== s.bis ? "" : k ? plural(k, "Spot", "Spots") : "", go:"day", p:{d}}); }))) : ""}
-      ${s.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(s.notiz)}</p></div>`) : ""}`};
+      ${s.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(s.notiz)}</p></div>`) : ""}`,
+    mount(el){
+      el.querySelectorAll("[data-keep]").forEach(b => b.onclick = () => keepOption("lodgings", b.dataset.keep));
+      el.querySelector('[data-act="anreise"]')?.addEventListener("click", () => fillGap({nach:s, richtung:"anreise"}));
+      el.querySelector('[data-act="abreise"]')?.addEventListener("click", () => fillGap({von:s, richtung:"abreise"}));
+    }};
 };
+// Wählen bzw. bei einem Konflikt behalten. Blockiert eine gebuchte Option, sagt die App, was zu tun ist.
+function keepOption(col, id){
+  const r = chooseOption(col, id), o = rec(col, id);
+  if(!r.ok && r.blockiert) return toast(`${r.blockiert.name || [TRANSPORT[r.blockiert.art]?.[0], r.blockiert.anbieter].filter(Boolean).join(" ") || "Eine andere Option"} ist gebucht. Setzt sie zuerst auf „Storniert“.`, "warn", 4200, true);
+  commit(`${o?.name || [TRANSPORT[o?.art]?.[0], o?.anbieter].filter(Boolean).join(" ") || "Option"} gewählt`);
+}
 
 VIEWS.neuStay = p => VIEWS.stayEdit({...p, neu:true});
 VIEWS.stayEdit = p => {
@@ -1233,7 +1367,7 @@ VIEWS.stayEdit = p => {
       <div class="fgroup">${fRow(fText("von", "Anreise", d.von, {type:"date"}), fText("bis", "Abreise", d.bis, {type:"date"}))}
         <div class="field"><span>Nächte</span><div class="stepper"><button type="button" data-n="-1" aria-label="Eine Nacht weniger">−</button><output id="nN">–</output><button type="button" data-n="1" aria-label="Eine Nacht mehr">+</button></div></div>
         <div class="field"><span>Ganzen Aufenthalt um einen Tag verschieben</span><div class="btns"><button type="button" class="btn" data-shift="-1">${ic("zurueck")}Früher</button><button type="button" class="btn" data-shift="1">Später${ic("weiter")}</button></div></div></div>
-      <p class="fhint">Abreise ist der Tag, an dem ihr weiterfahrt.</p>
+      <p class="fhint">Abreise ist der Tag, an dem ihr weiterfahrt.${p.luecke && !s ? ` Die Lücke reicht bis ${esc(fmtDateLong(p.luecke))}.` : ""}</p>
       <div class="flabel">Stand</div>${fChips("status", Object.entries(STAY_STATUS), d.status || "idee", {req:true})}
       <div class="fgroup">${fArea("notiz", "Notiz", d.notiz, "Optional")}</div>
       ${s ? `<button class="btn danger block" data-act="del">${ic("muell")}Aufenthalt löschen</button><p class="fhint">Löscht auch ${plural(lc, "Unterkunftsoption", "Unterkunftsoptionen")}. Verbindungen bleiben und behalten den Ortsnamen.</p>` : ""}
@@ -1282,16 +1416,21 @@ VIEWS.lodging = ({id}) => {
     Number.isFinite(l.lat) ? row({icon:"karte", t:"Lage auf der Karte", s:`${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}`, act:"karte"}) : row({icon:"pin", t:"Ort fehlt", s:"Ohne Ort hat der Tagesplan keinen Start", go:"lodgingEdit", p:{id}}),
     l.link && row({icon:"link", t:"Seite der Unterkunft", s:esc(l.link.replace(/^https?:\/\//, "").slice(0, 48)), href:l.link}),
   ].filter(Boolean);
-  return {title:l.name, large:true, sub:`${esc([l.art, stayName(s)].filter(Boolean).join(" · "))} ${pill(l.status)}`,
+  const konflikt = gew && s && stayChoice(s.id).zustand === "konflikt";
+  const entscheidung = !s ? `<p class="note konflikt">Diese Option gehört zu einem Aufenthalt, der gelöscht wurde. Ordnet sie unter „Bearbeiten“ einem Aufenthalt zu oder löscht sie.</p>`
+    : konflikt ? `<p class="note konflikt">Gleichzeitig mit einer anderen Option gewählt. Bis ihr eine behaltet, gilt keine.</p><button class="btn primary block" data-act="choose">${ic("haken")}Diese behalten</button>`
+    : gew ? `<p class="note ok">${ic("haken")}${l.status === "gebucht" ? "Gebucht" : "Gewählt"} für ${esc(stayName(s))}. Start und Ziel der Tagespläne in dieser Zeit.</p>`
+    : `<button class="btn primary block" data-act="choose">${ic("haken")}Für ${esc(stayName(s))} wählen</button>`;
+  return {title:l.name, large:true, sub:`${esc([l.art, s ? stayName(s) : null].filter(Boolean).join(" · "))} ${pill(l.status)}`,
     right:`<button class="navbtn" ${attrGo("lodgingEdit", {id})}>Bearbeiten</button>`,
-    html:`${gew ? `<p class="note">Gewählt für ${esc(stayName(s))}. Start und Ziel der Tagespläne in dieser Zeit.</p>` : `<button class="btn primary block" data-act="choose">${ic("haken")}Für ${esc(stayName(s))} wählen</button>`}
+    html:`${entscheidung}
       ${sect("Angaben", group(facts))}
       ${sect("Status", statusChips(l.status) + `<p class="hint">Kandidat und Favorit zum Sammeln, „Ausgewählt“ ist eure Entscheidung, „Gebucht“ wenn bestätigt.</p>`)}
       ${l.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(l.notiz)}</p></div>`) : ""}
-      ${s ? group([row({icon:"vergleich", t:"Mit anderen Optionen vergleichen", go:"compare", p:{col:"lodgings", parent:s.id}})]) : ""}`,
+      ${s && lodgingsOf(s.id).filter(x => !RAUS.has(x.status)).length > 1 ? group([row({icon:"vergleich", t:"Mit anderen Optionen vergleichen", go:"compare", p:{col:"lodgings", parent:s.id}})]) : ""}`,
     mount(el){
       bindStatus(el, "lodgings", id);
-      el.querySelector('[data-act="choose"]')?.addEventListener("click", () => { const r = chooseOption("lodgings", id); if(!r.ok && r.blockiert) return toast(`${r.blockiert.name} ist gebucht. Setzt sie zuerst auf „Storniert“.`, "warn", 4200, true); commit(`${l.name} gewählt`); });
+      el.querySelector('[data-act="choose"]')?.addEventListener("click", () => keepOption("lodgings", id));
       el.querySelector('[data-act="karte"]')?.addEventListener("click", () => { openInTab("karte"); mapFocus([l.lat, l.lng], 15); });
     }};
 };
@@ -1300,7 +1439,7 @@ VIEWS.lodgingEdit = p => {
   const d = p.draft || (l ? {...l, preis:l.preis ?? ""} : {status:"kandidat", waehrung:"THB", bezug:"nacht"});
   return {title:l ? "Unterkunft bearbeiten" : "Unterkunftsoption", form:true,
     html:`<div class="form">
-      <div class="fgroup">${fText("name", "Name", d.name, {ph:"Name der Unterkunft"})}${fSelect("art", "Art", d.art || "", [["", "Keine Angabe"], ...LODGING_ART.map(a => [a, a])])}</div>
+      <div class="fgroup">${fText("name", "Name", d.name, {ph:"Name der Unterkunft"})}${fSelect("art", "Art", d.art || "", [["", "Keine Angabe"], ...LODGING_ART.map(a => [a, a])])}${l ? fSelect("stayId", "Gehört zu", s ? (d.stayId || l.stayId) : "", [...(s ? [] : [["", "Bitte einem Aufenthalt zuordnen"]]), ...stays().map(x => [x.id, stayName(x) + (x.von ? " · " + fmtRange(x.von, x.bis) : "")])]) : ""}</div>
       <div class="flabel">Preis</div>
       <div class="fgroup">${fRow(fText("preis", "Betrag", d.preis, {type:"text", im:"decimal", ph:"unbekannt"}), fSelect("waehrung", "Währung", d.waehrung || "THB", WAEHRUNG.map(w => [w, w])))}${fSelect("bezug", "Bezieht sich auf", d.bezug || "nacht", [["nacht", "pro Nacht"], ["gesamt", "gesamten Aufenthalt"]])}</div>
       <p class="fhint">${s && nights(s) ? `Für ${plural(nights(s), "Nacht", "Nächte")} in ${esc(stayName(s))}.` : "Nächte noch offen."} Kein Preis bedeutet unbekannt, es wird nichts geschätzt.</p>
@@ -1331,6 +1470,9 @@ VIEWS.lodgingEdit = p => {
         const patch = {name:f.name.slice(0, 100), art:f.art, preis, waehrung:f.waehrung || "THB", bezug:f.bezug || "nacht", adresse:f.adresse, lat:c ? c.lat : null, lng:c ? c.lng : null, link:f.link, checkin:f.checkin, checkout:f.checkout, bewertung:f.bewertung ? +f.bewertung : null, notiz:(f.notiz || "").slice(0, 3000) || null};
         const st = f.status || "kandidat";
         if(l){
+          if(!f.stayId) return toast("Bitte einem Aufenthalt zuordnen", "warn", 2600, true);
+          const mv = moveOption("lodgings", l.id, f.stayId);
+          if(!mv.ok && mv.blockiert) return toast(`Dort ist schon „${mv.blockiert.name}“ gewählt. Setzt diese Option zuerst auf Favorit.`, "warn", 4200, true);
           const ch = Object.fromEntries(Object.entries(patch).filter(([k, v]) => JSON.stringify(v ?? null) !== JSON.stringify(l[k] ?? null)));
           if(Object.keys(ch).length) setRec("lodgings", l.id, ch);
           if(st !== l.status){ const r = setOptionStatus("lodgings", l.id, st); if(!r.ok && r.blockiert){ persist(); return toast(`${r.blockiert.name} ist gebucht. Status nicht geändert.`, "warn", 4200, true); } }
@@ -1338,7 +1480,7 @@ VIEWS.lodgingEdit = p => {
         } else {
           const nid = uid("lo-"); setRec("lodgings", nid, {...patch, stayId, status:"kandidat", createdAt:Date.now()});
           if(st !== "kandidat"){ const r = setOptionStatus("lodgings", nid, st); if(!r.ok && r.blockiert) toast(`${r.blockiert.name} ist gebucht, die neue Option bleibt Kandidat.`, "warn", 4200, true); }
-          persist(); replaceView("lodging", {id:nid}); toast("Option hinzugefügt");
+          persist(); back(); toast(`${patch.name} hinzugefügt`);
         }
       };
       const del = el.querySelector('[data-act="del"]');
@@ -1376,60 +1518,70 @@ VIEWS.ortWahl = p => ({title:"Ort wählen", form:true,
 VIEWS.compare = ({col, parent, alle}) => {
   const isL = col === "lodgings", owner = isL ? rec("stays", parent) : rec("conns", parent);
   if(!owner) return {title:"Vergleich", html:empty("info", "Nicht mehr vorhanden.", "")};
-  const n = isL ? nights(owner) : null, listAll = isL ? lodgingsOf(parent) : optsOf(parent), list = alle ? listAll : listAll.filter(o => !RAUS.has(o.status));
+  // feste Reihenfolge nach Erfassung: nach dem Wählen springt keine Karte unter dem Finger weg
+  const n = isL ? nights(owner) : null, listAll = (isL ? lodgingsOf(parent) : optsOf(parent)).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || a.id.localeCompare(b.id)), list = alle ? listAll : listAll.filter(o => !RAUS.has(o.status));
   if(list.length < 1) return {title:"Vergleich", html:empty("vergleich", "Nichts zu vergleichen", "Legt mindestens zwei Optionen an.")};
-  const cell = v => v === null || v === undefined || v === "" ? `<span class="muted">unbekannt</span>` : v;
-  // günstigste je Währung hervorheben, Währungen werden nie umgerechnet
-  const priceOf = o => isL ? lodgingPrice(o, n).gesamt ?? lodgingPrice(o, n).nacht : o.preis;
+  const ch = chosenOf(list), unb = `<span class="muted">unbekannt</span>`, val = v => v === null || v === undefined || v === "" ? unb : v;
+  // günstigste je Währung hervorheben, Währungen werden nie umgerechnet. Unterkünfte nach Gesamtpreis, solange die Nächte feststehen.
+  const priceOf = o => isL ? (n ? lodgingPrice(o, n).gesamt : lodgingPrice(o, n).nacht) : o.preis;
   const best = {}; list.forEach(o => { const v = priceOf(o); if(Number.isFinite(v)) best[o.waehrung || "THB"] = Math.min(best[o.waehrung || "THB"] ?? Infinity, v); });
-  const isBest = o => { const v = priceOf(o); return Number.isFinite(v) && Object.keys(best).length && best[o.waehrung || "THB"] === v && list.filter(x => Number.isFinite(priceOf(x)) && (x.waehrung || "THB") === (o.waehrung || "THB")).length > 1; };
-  const rows = isL ? [
-    ["Status", o => pill(o.status)],
-    ["Art", o => cell(esc(o.art))],
-    ["Pro Nacht", o => cell(lodgingPrice(o, n).nacht !== null ? money(lodgingPrice(o, n).nacht, o.waehrung) : null), true],
-    [n ? `Gesamt (${n} N.)` : "Gesamt", o => cell(lodgingPrice(o, n).gesamt !== null ? money(lodgingPrice(o, n).gesamt, o.waehrung) : null), true],
-    ["Sterne", o => cell(o.bewertung ? "★".repeat(o.bewertung) : null)],
-    ["Check-in/out", o => cell([o.checkin, o.checkout].filter(Boolean).join(" / "))],
-    ["Lage", o => cell(esc(o.adresse || "") || (Number.isFinite(o.lat) ? "auf der Karte" : null))],
-    ["Link", o => o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">öffnen</a>` : "–"],
-    ["Notiz", o => o.notiz ? esc(o.notiz.slice(0, 160)) : "–"],
+  const isBest = o => { const v = priceOf(o); return Number.isFinite(v) && best[o.waehrung || "THB"] === v && list.filter(x => Number.isFinite(priceOf(x)) && (x.waehrung || "THB") === (o.waehrung || "THB")).length > 1; };
+  // Jede Karte hat dieselben Zeilen in derselben Reihenfolge, Unbekanntes steht als „unbekannt“ da statt zu fehlen
+  const price = o => { if(!isL) return Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : null; const pr = lodgingPrice(o, n); return pr.nacht === null && pr.gesamt === null ? null : [pr.nacht !== null ? money(pr.nacht, o.waehrung) + " / Nacht" : null, pr.gesamt !== null ? money(pr.gesamt, o.waehrung) + " gesamt" : null].filter(Boolean).join(" · "); };
+  const facts = o => isL ? [
+    ["Lage", esc(o.adresse || "") || (Number.isFinite(o.lat) ? "auf der Karte gesetzt" : null)],
+    ["Art", esc(o.art || "")],
+    ["Eure Wertung", o.bewertung ? "★".repeat(o.bewertung) : null],
+    ["Check-in/out", [o.checkin, o.checkout].filter(Boolean).join(" / ")],
   ] : [
-    ["Status", o => pill(o.status)],
-    ["Art", o => cell(esc(TRANSPORT[o.art]?.[0]))],
-    ["Abfahrt", o => cell([o.datum ? fmtDate(o.datum) : null, o.ab].filter(Boolean).join(" "))],
-    ["Ankunft", o => cell([o.anDatum && o.anDatum !== o.datum ? fmtDate(o.anDatum) : null, o.an].filter(Boolean).join(" "))],
-    ["Dauer", o => cell(optDauer(o))],
-    ["Preis", o => cell(Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : null), true],
-    ["Anbieter", o => cell(esc([o.anbieter, o.nummer].filter(Boolean).join(" ")))],
-    ["Link", o => o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">öffnen</a>` : "–"],
-    ["Notiz", o => o.notiz ? esc(o.notiz.slice(0, 160)) : "–"],
+    ["Abfahrt", [o.datum ? fmtDate(o.datum) : null, o.ab].filter(Boolean).join(" ")],
+    ["Ankunft", [o.anDatum && o.anDatum !== o.datum ? fmtDate(o.anDatum) : null, o.an].filter(Boolean).join(" ")],
+    ["Dauer", o.dauerMin ? esc(optDauer(o)) + (o.dauerOk ? "" : " (geschätzt)") : null],
+    ["Anbieter", esc([o.anbieter, o.nummer].filter(Boolean).join(" "))],
   ];
   const head = o => isL ? esc(o.name) : esc([TRANSPORT[o.art]?.[0], o.anbieter].filter(Boolean).join(" · ") || "Option");
+  const action = o => GEWAEHLT.has(o.status) && ch.mehrere ? `<button class="btn primary" data-choose="${o.id}">Behalten</button>`
+    : GEWAEHLT.has(o.status) ? `<span class="chosen">${ic("haken")}${o.status === "gebucht" ? "Gebucht" : "Gewählt"}</span>`
+    : RAUS.has(o.status) ? "" : `<button class="btn" data-choose="${o.id}">Wählen</button>`;
+  const card = o => `<article class="ccard${GEWAEHLT.has(o.status) ? (ch.mehrere ? " konflikt" : " on") : ""}">
+      <header><button class="t" ${attrGo(isL ? "lodging" : "opt", {id:o.id})}>${head(o)}</button>${pill(o.status)}</header>
+      <div class="cprice${isBest(o) ? " best" : ""}">${val(price(o))}${isBest(o) ? `<span class="tag">günstigste</span>` : ""}</div>
+      <dl>${facts(o).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${val(v)}</dd>`).join("")}</dl>
+      ${o.notiz ? `<p class="cnote">${esc(o.notiz.slice(0, 140))}${o.notiz.length > 140 ? " …" : ""}</p>` : ""}
+      <footer>${o.link ? `<a class="btn ghost" href="${esc(o.link)}" target="_blank" rel="noopener">${ic("extern")}Seite</a>` : ""}${action(o)}</footer>
+    </article>`;
   return {title:"Vergleich", large:true, sub:esc(isL ? stayName(owner) + (n ? " · " + plural(n, "Nacht", "Nächte") : "") : connTitle(owner)),
-    html:`<div class="cmpwrap"><table class="cmp"><thead><tr><th></th>${list.map(o => `<th>${head(o)}</th>`).join("")}</tr></thead><tbody>
-      ${rows.map(([label, f, istPreis]) => `<tr><th>${esc(label)}</th>${list.map(o => `<td class="${istPreis && isBest(o) ? "best" : ""}">${f(o)}</td>`).join("")}</tr>`).join("")}
-      <tr><th></th>${list.map(o => `<td>${GEWAEHLT.has(o.status) ? `<span class="pill s-ausgewaehlt">${ic("haken")}gewählt</span>` : `<button class="btn primary" data-choose="${o.id}" style="min-height:40px;width:100%">Wählen</button>`}<button class="btn ghost" ${attrGo(isL ? "lodging" : "opt", {id:o.id})} style="min-height:36px;width:100%">Details</button></td>`).join("")}</tr>
-    </tbody></table></div>
-    <p class="hint">Grün ist der niedrigste Preis innerhalb derselben Währung. Euro und Baht werden nicht umgerechnet. Unbekanntes bleibt unbekannt.</p>
-    ${listAll.length > list.length || alle ? `<button class="btn ghost" ${attrGo("compare", {col, parent, alle:!alle})}>${alle ? "Verworfene ausblenden" : "Auch verworfene zeigen"}</button>` : ""}`,
-    mount(el){ el.querySelectorAll("[data-choose]").forEach(b => b.onclick = () => { const r = chooseOption(col, b.dataset.choose); if(!r.ok && r.blockiert) return toast(`${r.blockiert.name || "Eine andere Option"} ist gebucht. Setzt sie zuerst auf „Storniert“.`, "warn", 4200, true); commit("Gewählt"); }); }};
+    html:`${ch.mehrere ? `<p class="note konflikt">${ch.alle.length} Optionen sind gleichzeitig gewählt. Behaltet eine, die andere wird Favorit.</p>` : ""}
+      <div class="ccards">${list.map(card).join("")}</div>
+      <p class="hint">Hervorgehoben ist der niedrigste ${isL && n ? "Gesamtpreis" : "Preis"} innerhalb derselben Währung. Euro und Baht werden nicht umgerechnet, Unbekanntes bleibt unbekannt.</p>
+      ${listAll.length > list.length || alle ? `<button class="btn ghost" ${attrGo("compare", {col, parent, alle:!alle})}>${alle ? "Verworfene ausblenden" : "Auch verworfene zeigen"}</button>` : ""}`,
+    mount(el){ el.querySelectorAll("[data-choose]").forEach(b => b.onclick = () => keepOption(col, b.dataset.choose)); }};
 };
 
 /* ---------- Verbindung und Transportoptionen ---------- */
 VIEWS.conn = ({id}) => {
   const c = rec("conns", id); if(!c) return {title:"Nicht gefunden", html:empty("info", "Diese Verbindung wurde gelöscht.", "")};
-  const os = optsOf(id), ch = chosenOf(os), aktiv = os.filter(o => !RAUS.has(o.status)), raus = os.filter(o => RAUS.has(o.status));
+  const os = optsOf(id), ch = connChoice(id), aktiv = os.filter(o => !RAUS.has(o.status)), raus = os.filter(o => RAUS.has(o.status));
   const v = c.vonStay && rec("stays", c.vonStay), n = c.nachStay && rec("stays", c.nachStay);
-  const orow = o => row({icon:TRANSPORT[o.art]?.[1] || "reise", c:GEWAEHLT.has(o.status) ? "--accent" : null, t:esc([TRANSPORT[o.art]?.[0], o.anbieter, o.nummer].filter(Boolean).join(" · ")), s:esc([optWhen(o) || "Zeit unbekannt", optDauer(o), Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "Preis unbekannt"].filter(Boolean).join(" · ")), end:pill(o.status), go:"opt", p:{id:o.id}});
+  const optLabel = o => [TRANSPORT[o.art]?.[0], o.anbieter, o.nummer].filter(Boolean).join(" · ");
+  const optInfo = o => [optWhen(o) || "Zeit unbekannt", optDauer(o), Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "Preis unbekannt"].filter(Boolean).join(" · ");
+  const orow = o => row({icon:TRANSPORT[o.art]?.[1] || "reise", c:ch.zustand === "gewaehlt" && GEWAEHLT.has(o.status) ? "--accent" : null, t:esc(optLabel(o)), s:esc(optInfo(o)), end:pill(o.status), go:"opt", p:{id:o.id}});
+  const keepRow = o => `<div class="row"><span class="lead c" style="--c:var(--konflikt)">${ic(TRANSPORT[o.art]?.[1] || "reise")}</span><span class="txt"><button class="t linkish" ${attrGo("opt", {id:o.id})}>${esc(optLabel(o))}</button><span class="s">${esc(STATUS[o.status] + " · " + optInfo(o))}</span></span><button class="btn small" data-keep="${o.id}">Behalten</button></div>`;
+  const addRow = row({icon:"plus", t:"Transportoption hinzufügen", go:"optEdit", p:{connId:id}, cls:"addrow", chev:false});
+  const andere = aktiv.filter(o => !(ch.zustand !== "offen" && GEWAEHLT.has(o.status)));
+  const cmp = aktiv.length > 1 ? `<button class="link" ${attrGo("compare", {col:"opts", parent:id})}>Vergleichen</button>` : "";
   const kontext = [v?.bis ? `Abreise aus ${stayName(v)} am ${fmtDateLong(v.bis)}` : null, n?.von ? `Anreise in ${stayName(n)} am ${fmtDateLong(n.von)}` : null].filter(Boolean);
+  const gewaehlt = ch.zustand === "gewaehlt" ? sect("Gewählte Option", group([orow(ch.item)]), cmp)
+    : ch.zustand === "konflikt" ? sect("Auswahl ungeklärt", `<p class="note konflikt">${ch.alle.length} Optionen sind gleichzeitig gewählt, meist nach einem Abgleich. Bis ihr eine behaltet, gilt keine, und die App prüft keine ihrer Zeiten. Die andere wird Favorit.</p><div class="group">${ch.alle.map(keepRow).join("")}</div>`, cmp) : "";
+  const optionen = ch.zustand === "leer" ? sect("Optionen", empty("reise", "Noch keine Option", "Tragt Flüge, Züge, Busse oder Fähren ein, die ihr gefunden habt. Zeiten und Preise nur, wenn bekannt.", `<button class="btn primary" ${attrGo("optEdit", {connId:id})}>${ic("plus")}Erste Option hinzufügen</button>`))
+    : sect(ch.zustand === "offen" ? "Optionen" : "Alternativen", (ch.zustand === "offen" ? `<p class="hint">Noch keine gewählt. Öffnet eine Option oder vergleicht sie.</p>` : "") + group([...andere.map(orow), addRow]), ch.zustand === "offen" ? cmp : "");
   return {title:connTitle(c), large:true, sub:kontext.length ? esc(kontext.join(" · ")) : "",
     right:`<button class="navbtn" ${attrGo("connEdit", {id})}>Bearbeiten</button>`,
-    html:`${ch.mehrere ? `<p class="note konflikt">${ch.alle.length} Optionen sind gleichzeitig gewählt. Wählt eine aus.</p>` : ""}
-      ${sect("Optionen", (aktiv.length ? group(aktiv.map(orow)) : empty("reise", "Noch keine Option", "Tragt Flüge, Züge, Busse oder Fähren ein, die ihr gefunden habt. Zeiten und Preise nur, wenn bekannt."))
-        + `<div class="btns"><button class="btn" ${attrGo("optEdit", {connId:id})}>${ic("plus")}Option hinzufügen</button>${aktiv.length > 1 ? `<button class="btn" ${attrGo("compare", {col:"opts", parent:id})}>${ic("vergleich")}Vergleichen</button>` : ""}</div>`
-        + (raus.length ? `<details class="group"><summary class="row"><span class="txt"><span class="s">${plural(raus.length, "verworfene oder stornierte Option", "verworfene oder stornierte Optionen")}</span></span></summary>${raus.map(orow).join("")}</details>` : ""))}
-      ${sect("Orte", group([v ? row({icon:"hotel", t:"Von " + esc(stayName(v)), go:"stay", p:{id:v.id}}) : row({icon:"pin", t:"Von " + esc(c.vonText || "?")}), n ? row({icon:"hotel", t:"Nach " + esc(stayName(n)), go:"stay", p:{id:n.id}}) : row({icon:"pin", t:"Nach " + esc(c.nachText || "?")})]))}
-      ${c.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(c.notiz)}</p></div>`) : ""}`};
+    html:`${gewaehlt}${optionen}
+      ${raus.length ? `<details class="group"><summary class="row"><span class="txt"><span class="s">${plural(raus.length, "verworfene oder stornierte Option", "verworfene oder stornierte Optionen")}</span></span></summary>${raus.map(orow).join("")}</details>` : ""}
+      ${sect("Orte", group([v ? row({icon:"hotel", t:"Von " + esc(stayName(v)), go:"stay", p:{id:v.id}}) : row({icon:"pin", t:"Von " + esc(c.vonText || "?"), s:"Kein Aufenthalt verknüpft", go:"connEdit", p:{id}}), n ? row({icon:"hotel", t:"Nach " + esc(stayName(n)), go:"stay", p:{id:n.id}}) : row({icon:"pin", t:"Nach " + esc(c.nachText || "?"), s:"Kein Aufenthalt verknüpft", go:"connEdit", p:{id}})]))}
+      ${c.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(c.notiz)}</p></div>`) : ""}`,
+    mount(el){ el.querySelectorAll("[data-keep]").forEach(b => b.onclick = () => keepOption("opts", b.dataset.keep)); }};
 };
 const endOptions = () => [["", "Anderer Ort (Text)"], ...stays().map(s => ["st:" + s.id, `${stayName(s)}${s.von ? " · " + fmtRange(s.von, s.bis) : ""}`])];
 VIEWS.neuConn = p => VIEWS.connEdit({...p, neu:true});
@@ -1469,7 +1621,9 @@ VIEWS.opt = ({id}) => {
   return {title:[TRANSPORT[o.art]?.[0], o.anbieter].filter(Boolean).join(" · ") || "Option", large:true, sub:`${esc(c ? connTitle(c) : "")} ${pill(o.status)}`,
     right:`<button class="navbtn" ${attrGo("optEdit", {id})}>Bearbeiten</button>`,
     html:`${warn.map(w => `<p class="note konflikt">${esc(w)}</p>`).join("")}
-      ${gew ? `<p class="note">Gewählt für diese Verbindung.</p>` : `<button class="btn primary block" data-act="choose">${ic("haken")}Diese Option wählen</button>`}
+      ${!c ? `<p class="note konflikt">Diese Option gehört zu einer Verbindung, die gelöscht wurde. Ordnet sie unter „Bearbeiten“ einer Verbindung zu oder löscht sie.</p>`
+        : gew && connChoice(c.id).zustand === "konflikt" ? `<p class="note konflikt">Gleichzeitig mit einer anderen Option gewählt. Bis ihr eine behaltet, gilt keine.</p><button class="btn primary block" data-act="choose">${ic("haken")}Diese behalten</button>`
+        : gew ? `<p class="note ok">${ic("haken")}${o.status === "gebucht" ? "Gebucht" : "Gewählt"} für diese Verbindung.</p>` : `<button class="btn primary block" data-act="choose">${ic("haken")}Diese Option wählen</button>`}
       ${sect("Angaben", group([
         row({icon:"uhr", t:optWhen(o) ? esc(optWhen(o)) : "Zeiten unbekannt", s:optDauer(o) ? "Dauer " + esc(optDauer(o)) + (o.dauerMin && !o.dauerOk ? " (geschätzt)" : "") : "Ortszeit"}),
         row({icon:"euro", t:Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "Preis unbekannt"}),
@@ -1480,7 +1634,7 @@ VIEWS.opt = ({id}) => {
       ${o.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(o.notiz)}</p></div>`) : ""}`,
     mount(el){
       bindStatus(el, "opts", id);
-      el.querySelector('[data-act="choose"]')?.addEventListener("click", () => { const r = chooseOption("opts", id); if(!r.ok && r.blockiert) return toast("Eine andere Option ist gebucht. Setzt sie zuerst auf „Storniert“.", "warn", 4200, true); commit("Option gewählt"); });
+      el.querySelector('[data-act="choose"]')?.addEventListener("click", () => keepOption("opts", id));
     }};
 };
 VIEWS.optEdit = p => {
@@ -1489,7 +1643,7 @@ VIEWS.optEdit = p => {
   const d = p.draft || (o ? {...o, preis:o.preis ?? "", dh:o.dauerMin ? Math.floor(o.dauerMin / 60) : "", dm:o.dauerMin ? o.dauerMin % 60 : "", dauerOk:o.dauerOk ? "1" : "0"} : {art:null, status:"kandidat", waehrung:"THB", datum:v?.bis || null, dauerOk:"0"});
   return {title:o ? "Option bearbeiten" : "Transportoption", form:true,
     html:`<div class="form">
-      <p class="hint">${esc(c ? connTitle(c) : "")}</p>
+      ${o ? `<div class="fgroup">${fSelect("connId", "Gehört zu", c ? (d.connId || o.connId) : "", [...(c ? [] : [["", "Bitte einer Verbindung zuordnen"]]), ...conns().map(x => [x.id, connTitle(x)])])}</div>` : `<p class="hint">${esc(c ? connTitle(c) : "")}</p>`}
       <div class="flabel">Verkehrsmittel</div>${fChips("art", Object.entries(TRANSPORT).map(([k, [l, icon]]) => [k, l, icon]), d.art || "", {req:true})}
       <div class="fgroup">${fRow(fText("datum", "Abfahrt am", d.datum, {type:"date"}), fText("ab", "um", d.ab, {type:"time"}))}${fRow(fText("anDatum", "Ankunft am", d.anDatum || "", {type:"date"}), fText("an", "um", d.an, {type:"time"}))}</div>
       <p class="fhint">Ortszeit. Ankunftsdatum nur, wenn es ein anderer Tag ist.</p>
@@ -1514,6 +1668,9 @@ VIEWS.optEdit = p => {
         const patch = {art:f.art, datum:f.datum, ab:f.ab, anDatum:f.anDatum && f.anDatum !== f.datum ? f.anDatum : null, an:f.an, dauerMin:dauer || null, dauerOk:!!(dauer && f.dauerOk === "1"), anbieter:f.anbieter, nummer:f.nummer, preis, waehrung:f.waehrung || "THB", link:f.link, notiz:(f.notiz || "").slice(0, 3000) || null};
         const st = f.status || "kandidat";
         if(o){
+          if(!f.connId) return toast("Bitte einer Verbindung zuordnen", "warn", 2600, true);
+          const mv = moveOption("opts", o.id, f.connId);
+          if(!mv.ok && mv.blockiert) return toast("Dort ist schon eine Option gewählt. Setzt diese zuerst auf Favorit.", "warn", 4200, true);
           const ch = Object.fromEntries(Object.entries(patch).filter(([k, v]) => JSON.stringify(v ?? null) !== JSON.stringify(o[k] ?? null)));
           if(Object.keys(ch).length) setRec("opts", o.id, ch);
           if(st !== o.status){ const r = setOptionStatus("opts", o.id, st); if(!r.ok && r.blockiert){ persist(); return toast("Eine andere Option ist gebucht. Status nicht geändert.", "warn", 4200, true); } }
@@ -1521,7 +1678,7 @@ VIEWS.optEdit = p => {
         } else {
           const nid = uid("op-"); setRec("opts", nid, {...patch, connId, status:"kandidat", createdAt:Date.now()});
           if(st !== "kandidat"){ const r = setOptionStatus("opts", nid, st); if(!r.ok && r.blockiert) toast("Eine andere Option ist gebucht, die neue bleibt Kandidat.", "warn", 4200, true); }
-          persist(); replaceView("opt", {id:nid}); toast("Option hinzugefügt");
+          persist(); back(); toast("Option hinzugefügt");
         }
       };
       const del = el.querySelector('[data-act="del"]');
@@ -1545,7 +1702,7 @@ VIEWS.tage = () => {
     const info = [k ? plural(k, "Spot", "Spots") : "noch leer", travel ? "Reisetag" : null, cs.length ? cs.map(({c, o}) => (o ? TRANSPORT[o.art]?.[0] : "Verbindung") + " " + connEnd(c, "nach")).join(", ") : null].filter(Boolean);
     return row({icon:travel ? "reise" : "kalender", c:d === ad ? "--accent" : null, t:esc(fmtDateLong(d)) + (d === today() ? " · heute" : ""), s:esc(info.join(" · ")), go:"day", p:{d}});
   };
-  return {title:"Tage", large:true, sub:b ? `${plural(days.length, "Tag", "Tage")}${b.quelle === "aus Aufenthalten" ? ", aus den Aufenthalten" : ""}` : "Ohne Reisezeitraum: die nächsten 7 Tage",
+  return {title:"Tage", large:true, sub:b ? `${plural(days.length, "Tag", "Tage")}${b.quelle !== "eingetragen" ? ", aus eurer Planung" : ""}` : "Ohne Reisezeitraum: die nächsten 7 Tage",
     html:`${!b ? `<p class="note">Legt in „Reise“ den Zeitraum oder Aufenthalte an, dann erscheinen hier eure Reisetage mit Startpunkt.</p>` : ""}
       ${groups.map(g => sect(g.s ? `${stayName(g.s)}` : "Ohne Aufenthalt", group(g.days.map(drow)), g.s ? `<button class="link" ${attrGo("stay", {id:g.s.id})}>Aufenthalt</button>` : "")).join("")}`};
 };
@@ -1555,10 +1712,13 @@ VIEWS.day = ({d}) => {
   const pl = dayPlanFor(d), s = stayForDay(d), start = dayStart(d), end = dayEnd(d), travel = isTravelDay(d), cs = connsOnDay(d);
   const has = pl && pl.plan.stationen.some(x => P(x.placeId)), mode = modeOf(pl?.plan), M = LMODES[mode];
   const days = tripDays(), i = days.indexOf(d), prev = i > 0 ? days[i - 1] : addDays(d, -1), next = i >= 0 && i < days.length - 1 ? days[i + 1] : addDays(d, 1);
+  // Start kommt aus der Unterkunft der Vornacht, sonst der Nacht. Ist sie ungeklärt (Konflikt), steht das hier statt einer der Optionen.
+  const sStart = stayForNight(addDays(d, -1)) || stayForNight(d), zStart = sStart ? stayChoice(sStart.id).zustand : null;
   const rahmen = [
     start ? row({icon:"hotel", c:"--accent", t:"Start: " + esc(start.name), s:travel ? "Reisetag, der Plan endet beim letzten Stopp" : end ? "Start und Ziel des Tages" : "Ende beim letzten Stopp", go:"lodging", p:{id:start.id}})
-      : row({icon:"hotel", t:s ? "Keine Unterkunft mit Ort gewählt" : "Kein Aufenthalt an diesem Tag", s:s ? "Ohne Startpunkt beginnt der Plan beim ersten Stopp" : "Aufenthalt in „Reise“ anlegen", go:s ? "stay" : "neuStay", p:s ? {id:s.id} : {von:d}}),
-    ...cs.map(({c, o}) => row({icon:o ? TRANSPORT[o.art]?.[1] || "reise" : "reise", t:esc(connTitle(c)), s:esc(o ? [optWhen(o), STATUS[o.status]].filter(Boolean).join(" · ") : "noch keine Option gewählt"), go:"conn", p:{id:c.id}})),
+      : zStart === "konflikt" ? row({icon:"warn", c:"--konflikt", t:`Unterkunft in ${esc(stayName(sStart))} ungeklärt`, s:"Mehrere gewählt, behaltet eine. Bis dahin beginnt der Plan beim ersten Stopp.", go:"stay", p:{id:sStart.id}})
+      : row({icon:"hotel", t:sStart ? (zStart === "gewaehlt" ? "Ort der Unterkunft fehlt" : "Noch keine Unterkunft gewählt") : "Kein Aufenthalt an diesem Tag", s:sStart ? "Ohne Startpunkt beginnt der Plan beim ersten Stopp" : "Aufenthalt in „Reise“ anlegen", go:sStart ? "stay" : "neuStay", p:sStart ? {id:sStart.id} : {von:d}}),
+    ...cs.map(({c, o}) => { const z = connChoice(c.id).zustand; return row({icon:o ? TRANSPORT[o.art]?.[1] || "reise" : z === "konflikt" ? "warn" : "reise", c:z === "konflikt" ? "--konflikt" : null, t:esc(connTitle(c)), s:esc(o ? [optWhen(o), STATUS[o.status]].filter(Boolean).join(" · ") : z === "konflikt" ? "Mehrere Optionen gewählt, ungeklärt" : "noch keine Option gewählt"), go:"conn", p:{id:c.id}}); }),
   ];
   let body;
   if(!has) body = empty("pin", "Noch keine Spots", "Sucht oben einen eurer Spots oder öffnet einen auf der Karte. Die App ordnet nur, was ihr auswählt.");
@@ -1981,7 +2141,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2";
+const APP_VERSION = "Version 2.1";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
