@@ -1,7 +1,7 @@
 // Service Worker Thailand 2027. Bei jeder Veröffentlichung APP hochzählen, sonst bekommen installierte Geräte nichts Neues.
 // APP: Seite, Symbole, Leaflet, Schriften. TILES: Kartenkacheln, begrenzt auf MAX_TILES (älteste fliegen zuerst raus).
 // Fahrzeiten liegen nicht hier, sondern im localStorage der App.
-const APP = "thailand-app-v6", TILES = "thailand-tiles-v1", MAX_TILES = 4000, NET_TIMEOUT = 4000;
+const APP = "thailand-app-v7", TILES = "thailand-tiles-v1", MAX_TILES = 4000, NET_TIMEOUT = 4000;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"];

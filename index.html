@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#F2F4F1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0E1412" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1613" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,323 +16,465 @@
 <link rel="icon" href="icon-180.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-/* Designsystem Thailand-Planer, Version 2
-   Ruhige Fläche, Jade als einziger Akzent, Statusfarben nur mit Bedeutung. Systemschrift (SF auf dem iPhone, offline vorhanden).
-   Layout: Tab-Leiste unten, Seiten mit großer Überschrift, Detailseiten mit Zurück oben links, Formulare mit fester Leiste unten. */
+/* Designsystem Thailand-Planer, Version 3 („warm“)
+   Warme Sandflächen, Petrol für Orientierung und Auswahl, Koralle nur für die eine Hauptaktion einer Ansicht.
+   Statusfarben haben überall dieselbe Bedeutung und stehen nie allein (immer mit Text, oft mit Symbol).
+   Systemschrift (SF auf dem iPhone, offline vorhanden), keine Webfonts, keine externen Bilder.
+   Die alten Variablennamen (--ink, --accent, --fehlt …) sind Aliase, damit Module, die sie im Stil-Attribut nutzen, weiter stimmen. */
 :root{
-  --bg:#F2F4F1; --surface:#FFFFFF; --surface2:#F7F8F6; --ink:#15201C; --ink2:#4B5853; --ink3:#87918C; --line:#E1E6E2; --line2:#CDD5D0;
-  --accent:#0E6A57; --accent-ink:#FFFFFF; --accent-soft:#E0EFEA;
-  --konflikt:#B3261E; --konflikt-soft:#FBE9E7; --fehlt:#94580A; --fehlt-soft:#FCF0DC; --offen:#3D5A70; --offen-soft:#E6EEF4;
-  --favorit:#8A6A00; --favorit-soft:#F6EFD6;
-  --k-beach:#16809E; --k-food:#B2445F; --k-kultur:#B07B0E; --k-natur:#4F7F2A;
-  --font:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, Roboto, sans-serif;
-  --r:12px; --r-s:10px; --tab:56px; --nav:48px;
+  /* Flächen */
+  --bg:#F5EEE3; --surface:#FFFAF2; --surface-raised:#FFFFFF; --sand:#E8C39D; --sand-soft:#F0E1CB; --border:#E8DCCB; --border-strong:#DCCAB2;
+  /* Meer und Natur */
+  --sea-light:#DDEFEA; --sea:#8ECBC5; --teal:#327F78; --teal-dark:#245F59; --nature:#A9C98C;
+  /* Sonne */
+  --coral:#F07855; --coral-strong:#C2512E; --mango:#F2BC67;
+  /* Text */
+  --text:#293A3D; --text-muted:#6F7A75; --text-faint:#9A9F98;
+  /* Status: Hintergrund und Schrift, je Bedeutung genau ein Paar */
+  --success-bg:#DDEBDD; --success:#2E6B4A;
+  --warning-bg:#F9E8C6; --warning:#8F5F0E;          /* offen: Entscheidung steht aus */
+  --missing-bg:#F0E1CB; --missing:#86592A;          /* fehlt: Angabe fehlt, blockiert nichts */
+  --danger-bg:#F4D9CF; --danger:#A93F25;            /* Konflikt */
+  --favorit-bg:#FBEFD5; --favorit-ink:#946A12;
+  /* Kategorien der Spots */
+  --k-beach:#2E8E9C; --k-food:#CC6A3F; --k-kultur:#B0812C; --k-natur:#5C8C43;
+  /* Formen, Abstände, Schatten */
+  --font:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --r-xl:22px; --r-lg:18px; --r:16px; --r-s:12px; --r-pill:999px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-7:32px;
+  --tab:58px; --nav:48px;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
-  --shadow:0 8px 28px rgba(18,32,27,.14);
+  --shadow-soft:0 1px 2px rgba(92,64,34,.05), 0 6px 20px rgba(92,64,34,.06);
+  --shadow:0 10px 30px rgba(70,48,24,.16);
+  /* Aliase für ältere Namen */
+  --ink:var(--text); --ink2:var(--text-muted); --ink3:var(--text-faint); --line:var(--border); --line2:var(--border-strong); --surface2:#F8F0E4;
+  --accent:var(--teal); --accent-ink:#FFFFFF; --accent-soft:var(--sea-light);
+  --konflikt:var(--danger); --konflikt-soft:var(--danger-bg); --fehlt:var(--missing); --fehlt-soft:var(--missing-bg); --offen:var(--warning); --offen-soft:var(--warning-bg);
+  --favorit:var(--favorit-ink); --favorit-soft:var(--favorit-bg);
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){ :root{
-  --bg:#0E1412; --surface:#171F1C; --surface2:#1C2521; --ink:#E8EEEB; --ink2:#A8B4AF; --ink3:#76827D; --line:#26302C; --line2:#33403A;
-  --accent:#4CC2A4; --accent-ink:#06231C; --accent-soft:#163029;
-  --konflikt:#F2877E; --konflikt-soft:#3A1D1B; --fehlt:#E6AE5C; --fehlt-soft:#33270F; --offen:#9DB9CE; --offen-soft:#1C2A35;
-  --favorit:#E3C35A; --favorit-soft:#2F2810;
-  --shadow:0 8px 28px rgba(0,0,0,.5); color-scheme:dark;
+  --bg:#1A1613; --surface:#241F1A; --surface-raised:#2C2620; --sand:#8A6B4C; --sand-soft:#33291F; --border:#3A3129; --border-strong:#4A3F35;
+  --sea-light:#1C3431; --sea:#4E8F89; --teal:#72C2B8; --teal-dark:#9AD6CE; --nature:#7E9B66;
+  --coral:#F08A6B; --coral-strong:#C2512E; --mango:#F2C47A;
+  --text:#F2E9DD; --text-muted:#BBAE9E; --text-faint:#8C8174;
+  --success-bg:#1E3326; --success:#9FD0AE; --warning-bg:#382B13; --warning:#F0C46E; --missing-bg:#34291C; --missing:#DDB27A;
+  --danger-bg:#3E2219; --danger:#F29C84; --favorit-bg:#352B14; --favorit-ink:#EBC46F;
+  --k-beach:#5BB4C1; --k-food:#E48B62; --k-kultur:#D6A752; --k-natur:#8CBB70;
+  --surface2:#2A231D; --accent-ink:#10231F;
+  --shadow-soft:0 1px 2px rgba(0,0,0,.3); --shadow:0 10px 30px rgba(0,0,0,.5);
+  color-scheme:dark;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.4 var(--font);-webkit-text-size-adjust:100%;font-variant-numeric:tabular-nums}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:16px/1.42 var(--font);-webkit-text-size-adjust:100%;font-variant-numeric:tabular-nums}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-a{color:var(--accent)}
+a{color:var(--teal)}
 .ic{width:20px;height:20px;flex:none}
 [hidden]{display:none!important}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 
-/* Gerüst */
+/* ---------- Gerüst ---------- */
 #screen{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #screen.formmode{bottom:0}
-#tabbar{position:fixed;left:0;right:0;bottom:0;height:calc(var(--tab) + var(--safe-b));padding-bottom:var(--safe-b);background:color-mix(in srgb, var(--surface) 92%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);z-index:900}
+#tabbar{position:fixed;left:0;right:0;bottom:0;height:calc(var(--tab) + var(--safe-b));padding-bottom:var(--safe-b);background:color-mix(in srgb, var(--surface) 90%, transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);z-index:900}
 #tabbar.versteckt{display:none}
-.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--ink3);position:relative}
+.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--text-faint);position:relative}
 .tab .ic{width:24px;height:24px}
-.tab[aria-current="page"]{color:var(--accent)}
-.tab .dot{position:absolute;top:8px;left:calc(50% + 8px);min-width:16px;height:16px;border-radius:8px;padding:0 4px;background:var(--konflikt);color:#fff;font-size:10px;line-height:16px;font-weight:700}
-.page{min-height:100%;padding:0 0 32px}
-.nav{position:sticky;top:0;z-index:50;height:calc(var(--nav) + var(--safe-t));padding:var(--safe-t) 8px 0;display:grid;grid-template-columns:minmax(64px,1fr) auto minmax(64px,1fr);align-items:center;background:color-mix(in srgb, var(--bg) 88%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid transparent}
-.nav.scrolled{border-bottom-color:var(--line)}
-.nav .navtitle{font-weight:600;font-size:16px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
-.navbtn{border:0;background:none;min-height:44px;min-width:44px;padding:0 8px;display:inline-flex;align-items:center;gap:2px;color:var(--accent);font-size:16px;font-weight:500}
+.tab[aria-current="page"]{color:var(--teal-dark)}
+.tab[aria-current="page"]::before{content:"";position:absolute;top:0;left:50%;width:22px;height:3px;margin-left:-11px;border-radius:0 0 3px 3px;background:var(--coral)}
+.tab .dot{position:absolute;top:7px;left:calc(50% + 8px);min-width:17px;height:17px;border-radius:9px;padding:0 4px;background:var(--danger);color:#fff;font-size:10px;line-height:17px;font-weight:700}
+.page{min-height:100%;padding:0 0 var(--sp-7)}
+.nav{position:sticky;top:0;z-index:50;height:calc(var(--nav) + var(--safe-t));padding:var(--safe-t) 8px 0;display:grid;grid-template-columns:minmax(64px,1fr) auto minmax(64px,1fr);align-items:center;background:color-mix(in srgb, var(--bg) 88%, transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-bottom:1px solid transparent}
+.nav.scrolled{border-bottom-color:var(--border)}
+.nav .navtitle{font-weight:650;font-size:17px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
+.navbtn{border:0;background:none;min-height:44px;min-width:44px;padding:0 8px;display:inline-flex;align-items:center;gap:2px;color:var(--teal);font-size:17px;font-weight:500}
 .navbtn .ic{width:22px;height:22px}
 .navbtn.strong{font-weight:650}
 .nav .right{justify-self:end;display:flex}
-.head{padding:4px 16px 12px}
-.head h1{margin:0;font-size:30px;line-height:1.15;font-weight:750;letter-spacing:-.02em;text-wrap:balance}
-.head .sub{margin-top:4px;color:var(--ink2);font-size:15px}
-.content{padding:0 16px;display:flex;flex-direction:column;gap:22px}
-.sect{display:flex;flex-direction:column;gap:8px}
+.head{padding:var(--sp-1) var(--sp-4) var(--sp-4)}
+.head h1{margin:0;font-size:32px;line-height:1.12;font-weight:720;letter-spacing:-.02em;text-wrap:balance}
+.head .sub{margin-top:6px;color:var(--text-muted);font-size:15px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.content{padding:0 var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-6)}
+.sect{display:flex;flex-direction:column;gap:var(--sp-2)}
 .secthead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 4px}
-.secthead h2{margin:0;font-size:13px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
-.secthead .link{border:0;background:none;color:var(--accent);font-size:15px;font-weight:500;min-height:32px;padding:0}
-.hint{font-size:13px;color:var(--ink3);padding:0 4px;margin:0}
+.secthead h2{margin:0;font-size:17px;font-weight:650;letter-spacing:-.01em;color:var(--text)}
+.secthead .link{border:0;background:none;color:var(--teal);font-size:15px;font-weight:600;min-height:36px;padding:0}
+.hint{font-size:13px;line-height:1.4;color:var(--text-muted);padding:0 4px;margin:0}
 
-/* Gruppierte Listen (Inset) */
-.group{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);overflow:hidden}
-.row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 14px;border:0;background:none;text-align:left;text-decoration:none;color:var(--ink)}
-.row + .row, .row + .rowx, .rowx + .row{border-top:1px solid var(--line)}
+/* ---------- Kopfbild der Reise (eigene Illustration, kein Foto) ---------- */
+.trip-hero{--h-sky1:#F7DDBC;--h-sky2:#F5EEE3;--h-sun:#F2BC67;--h-isle:#4F8576;--h-isle2:#8DB4A4;--h-sea1:#A7D6CF;--h-sea2:#8ECBC5;--h-wave:#FFFAF2;
+  position:relative;overflow:hidden;padding:calc(var(--safe-t) + 22px) var(--sp-4) 0;min-height:calc(var(--safe-t) + 200px);display:flex;flex-direction:column;justify-content:flex-start}
+@media (prefers-color-scheme: dark){ .trip-hero{--h-sky1:#3B2A1E;--h-sky2:#1A1613;--h-sun:#C98A45;--h-isle:#2C4A42;--h-isle2:#3A5A50;--h-sea1:#22504B;--h-sea2:#1B3D3A;--h-wave:#5E8F88} }
+.trip-hero svg.scene{position:absolute;inset:0;width:100%;height:100%}
+.trip-hero .ht{position:relative;z-index:1}
+.trip-hero h1{margin:0;font-size:34px;line-height:1.08;font-weight:750;letter-spacing:-.025em;color:#1F3A3A}
+.trip-hero .sub{margin-top:6px;font-size:15px;color:#3C5552;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.trip-hero .sub .subbtn{color:#1F5C55}
+.trip-hero .hadd{position:absolute;z-index:2;top:calc(var(--safe-t) + 8px);right:10px;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;color:#1F3A3A;background:color-mix(in srgb, #FFFAF2 70%, transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+@media (prefers-color-scheme: dark){ .trip-hero h1{color:#F5EDE1} .trip-hero .sub{color:#D9CBB8} .trip-hero .sub .subbtn{color:#9AD6CE} .trip-hero .hadd{color:#F5EDE1;background:rgba(36,31,26,.6)} }
+.trip-hero + .content{margin-top:-10px;position:relative}
+
+/* ---------- Gruppierte Listen ---------- */
+.group{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-soft)}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:11px 14px;border:0;background:none;text-align:left;text-decoration:none;color:var(--text)}
+.row + .row, .row + .rowx, .rowx + .row{border-top:1px solid var(--border)}
 button.row:active, a.row:active{background:var(--surface2)}
-.row .lead{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface2);color:var(--ink2);flex:none}
-.row .lead.c{background:color-mix(in srgb, var(--c) 14%, var(--surface));color:var(--c)}
+.row .lead{width:36px;height:36px;border-radius:var(--r-s);display:grid;place-items:center;background:var(--sand-soft);color:var(--teal-dark);flex:none}
+.row .lead.c{background:color-mix(in srgb, var(--c) 15%, var(--surface));color:var(--c)}
 .row .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.row .t{font-weight:550;overflow-wrap:anywhere}
-.row .s{font-size:14px;color:var(--ink2);overflow-wrap:anywhere}
-.row .s2{font-size:13px;color:var(--ink3)}
-.row .end{display:flex;align-items:center;gap:6px;color:var(--ink3);flex:none}
-.row .chev{width:18px;height:18px;color:var(--ink3)}
+.row .t{font-weight:600;overflow-wrap:anywhere}
+.row .s{font-size:14px;color:var(--text-muted);overflow-wrap:anywhere}
+.row .s2{font-size:13px;color:var(--text-faint)}
+.row .end{display:flex;align-items:center;gap:6px;color:var(--text-faint);flex:none}
+.row .chev{width:18px;height:18px;color:var(--text-faint)}
 .rowx{padding:12px 14px}
 
-/* Status */
-.pill{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:650;white-space:nowrap;border:1px solid transparent}
-.pill .ic{width:14px;height:14px}
-.s-kandidat{color:var(--ink2);border-color:var(--line2)}
-.s-favorit{color:var(--favorit);background:var(--favorit-soft)}
-.s-ausgewaehlt{color:var(--accent);border-color:var(--accent);background:var(--surface)}
-.s-gebucht{color:var(--accent-ink);background:var(--accent)}
-.s-verworfen,.s-storniert{color:var(--ink3);background:var(--surface2);text-decoration:line-through}
-.s-idee{color:var(--ink2);border-color:var(--line2)}
-.s-geplant{color:var(--offen);background:var(--offen-soft)}
-.s-fest{color:var(--accent-ink);background:var(--accent)}
-.lvl{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:0;background:none;padding:11px 14px;color:var(--ink);min-height:48px}
-.lvl + .lvl{border-top:1px solid var(--line)}
-.lvl .mark{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none;margin-top:1px}
+/* ---------- Status: eine Bedeutung, ein Aussehen ---------- */
+.pill{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 10px;border-radius:var(--r-pill);font-size:12px;font-weight:650;white-space:nowrap;border:1px solid transparent}
+.pill .ic{width:13px;height:13px}
+.s-kandidat,.s-idee{color:var(--text-muted);border-color:var(--border-strong);background:transparent}
+.s-favorit{color:var(--favorit-ink);background:var(--favorit-bg)}
+.s-ausgewaehlt{color:var(--teal-dark);border-color:var(--teal);background:var(--sea-light)}
+.s-gebucht,.s-fest{color:var(--success);background:var(--success-bg)}
+.s-geplant{color:var(--teal-dark);background:var(--sea-light)}
+.s-verworfen,.s-storniert{color:var(--text-faint);background:var(--surface2);text-decoration:line-through}
+.lvl{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:0;background:none;padding:12px 14px;color:var(--text);min-height:50px}
+.lvl + .lvl{border-top:1px solid var(--border)}
+.lvl .mark{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:none;margin-top:0}
 .lvl .mark .ic{width:15px;height:15px}
-.lvl.konflikt .mark{background:var(--konflikt-soft);color:var(--konflikt)}
-.lvl.fehlt .mark{background:var(--fehlt-soft);color:var(--fehlt)}
-.lvl.offen .mark{background:var(--offen-soft);color:var(--offen)}
+.lvl.konflikt .mark{background:var(--danger-bg);color:var(--danger)}
+.lvl.fehlt .mark{background:var(--missing-bg);color:var(--missing)}
+.lvl.offen .mark{background:var(--warning-bg);color:var(--warning)}
 .lvl .tx{flex:1;font-size:15px;overflow-wrap:anywhere}
 .counts{display:flex;gap:8px;flex-wrap:wrap}
-.count{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:15px;font-size:13px;font-weight:650;border:0}
-.count.konflikt{background:var(--konflikt-soft);color:var(--konflikt)}
-.count.fehlt{background:var(--fehlt-soft);color:var(--fehlt)}
-.count.offen{background:var(--offen-soft);color:var(--offen)}
-.count.ok{background:var(--accent-soft);color:var(--accent)}
+.count{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:var(--r-pill);font-size:13px;font-weight:650;border:0}
+.count.konflikt{background:var(--danger-bg);color:var(--danger)}
+.count.fehlt{background:var(--missing-bg);color:var(--missing)}
+.count.offen{background:var(--warning-bg);color:var(--warning)}
+.count.ok{background:var(--success-bg);color:var(--success)}
 
-/* Reise-Zeitachse */
-.tl{display:flex;flex-direction:column}
-.tlstay{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.tlstay .top{display:flex;gap:12px;align-items:flex-start;padding:14px;border:0;background:none;width:100%;text-align:left;color:var(--ink)}
-.tlstay .date{width:44px;flex:none;text-align:center;border-radius:9px;background:var(--surface2);padding:5px 0}
-.tlstay .date b{display:block;font-size:19px;line-height:1.1}
-.tlstay .date span{font-size:11px;color:var(--ink2);font-weight:600;text-transform:uppercase}
+/* ---------- Planung im Überblick ---------- */
+.ovw .row .lead{background:var(--sand-soft);color:var(--teal-dark)}
+.ovw .row .s b{font-weight:650;color:var(--text)}
+.ovw .flag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:650;padding:2px 8px;border-radius:var(--r-pill)}
+.ovw .flag .ic{width:12px;height:12px}
+.flag.konflikt{background:var(--danger-bg);color:var(--danger)}
+.flag.fehlt{background:var(--missing-bg);color:var(--missing)}
+.flag.offen{background:var(--warning-bg);color:var(--warning)}
+.flag.ok{background:var(--success-bg);color:var(--success)}
+
+/* ---------- Reise-Zeitachse: Aufenthalte als Karten, Verbindungen als Ereignisse auf einer Linie ---------- */
+.tl{display:flex;flex-direction:column;position:relative}
+.tl::before{content:"";position:absolute;left:31px;top:24px;bottom:24px;width:2px;border-radius:1px;background:var(--border-strong)}
+.tlstay{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-soft)}
+.tlstay .top{display:flex;gap:12px;align-items:flex-start;padding:14px;border:0;background:none;width:100%;text-align:left;color:var(--text)}
+.tlstay .date{width:36px;flex:none;text-align:center;border-radius:var(--r-s);background:var(--sea-light);color:var(--teal-dark);padding:5px 0 4px}
+.tlstay .date b{display:block;font-size:18px;line-height:1.1;font-weight:700}
+.tlstay .date span{font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
 .tlstay .info{flex:1;min-width:0}
 .tlstay h3{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em;overflow-wrap:anywhere}
-.tlstay .meta{font-size:14px;color:var(--ink2);margin-top:2px}
-.tlstay .lodge{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:11px 14px;width:100%;border-left:0;border-right:0;border-bottom:0;background:none;text-align:left;color:var(--ink)}
-.tlstay .lodge .t{flex:1;min-width:0;font-size:15px;overflow-wrap:anywhere}
-.tlstay .lodge .t small{display:block;color:var(--ink2);font-size:13px}
-.tllink{display:flex;align-items:stretch;gap:12px;padding:0 14px 0 34px;min-height:56px}
-.tllink .rail{width:2px;background:var(--line2);flex:none;margin:0 0 0 0}
-.tllink .card{flex:1;margin:8px 0;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--surface);width:100%;text-align:left;color:var(--ink)}
-.tllink .card.dashed{border-style:dashed;background:transparent;color:var(--ink2)}
-.tllink .card.warn{border-color:color-mix(in srgb, var(--fehlt) 45%, var(--line));background:var(--fehlt-soft);color:var(--fehlt)}
-.tllink .card .t{flex:1;min-width:0;font-size:15px;overflow-wrap:anywhere}
-.tllink .card .t small{display:block;font-size:13px;color:var(--ink2)}
-.tllink .card.warn .t small{color:inherit;opacity:.85}
+.tlstay .meta{font-size:14px;color:var(--text-muted);margin-top:2px}
+.tlstay .lodge{display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);padding:11px 14px;width:100%;border-left:0;border-right:0;border-bottom:0;background:var(--surface2);text-align:left;color:var(--text)}
+.tlstay .lodge .t{flex:1;min-width:0;font-size:15px;font-weight:550;overflow-wrap:anywhere}
+.tlstay .lodge .t small{display:block;color:var(--text-muted);font-size:13px;font-weight:400}
+.tlstay .lodge.z-konflikt{background:var(--danger-bg)}
+.tlstay .lodge.z-konflikt .t small{color:var(--danger)}
+.tllink{position:relative;display:flex;align-items:stretch;gap:0;padding:0 0 0 52px;min-height:58px}
+.tllink .rail{display:none}
+.tllink .card{position:relative;flex:1;margin:8px 0;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);width:100%;text-align:left;color:var(--text)}
+.tllink .card::before{content:"";position:absolute;left:-26px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--surface);border:2px solid var(--teal)}
+.tllink .card > .ic:first-child{color:var(--teal-dark)}
+.tllink .card.dashed{border-style:dashed;border-color:var(--border-strong);background:transparent;color:var(--text-muted)}
+.tllink .card.dashed::before{border-color:var(--border-strong)}
+.tllink .card.dashed > .ic:first-child{color:var(--text-muted)}
+.tllink .card.warn{border:1px dashed color-mix(in srgb, var(--warning) 45%, var(--border));background:var(--warning-bg);color:var(--warning)}
+.tllink .card.warn::before{border-color:var(--mango);background:var(--mango)}
+.tllink .card.warn > .ic:first-child{color:var(--warning)}
+.tllink .card.konflikt{border-color:color-mix(in srgb, var(--danger) 45%, var(--border));background:var(--danger-bg);color:var(--danger)}
+.tllink .card.konflikt::before{border-color:var(--danger);background:var(--danger)}
+.tllink .card.konflikt > .ic:first-child{color:var(--danger)}
+.tllink .card .t{flex:1;min-width:0;font-size:15px;font-weight:600;overflow-wrap:anywhere}
+.tllink .card .t small{display:block;font-size:13px;font-weight:400;color:var(--text-muted)}
+.tllink .card.warn .t small,.tllink .card.konflikt .t small{color:inherit;opacity:.85}
 
-/* Knöpfe */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;border-radius:var(--r-s);border:1px solid var(--line2);background:var(--surface);color:var(--ink);font-weight:600;font-size:16px;text-decoration:none}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.btn.danger{color:var(--konflikt);border-color:color-mix(in srgb, var(--konflikt) 40%, var(--line2))}
-.btn.ghost{border-color:transparent;background:transparent;color:var(--accent)}
+/* ---------- Knöpfe ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:var(--r-s);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-weight:600;font-size:16px;text-decoration:none}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--coral-strong);border-color:var(--coral-strong);color:#fff;font-weight:650;box-shadow:0 4px 14px color-mix(in srgb, var(--coral) 30%, transparent)}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 35%, var(--border))}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--teal);box-shadow:none}
 .btn.block{width:100%}
 .btn[disabled]{opacity:.45}
+.btn.small{min-height:38px;padding:0 13px;font-size:15px;white-space:nowrap;border-radius:var(--r-pill)}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
 .btns .btn{flex:1 1 140px}
-.fab{position:fixed;right:16px;bottom:calc(var(--tab) + var(--safe-b) + 16px);height:52px;padding:0 20px;border-radius:26px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:650;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);z-index:600}
+.fab{position:fixed;right:16px;bottom:calc(var(--tab) + var(--safe-b) + 16px);height:52px;padding:0 20px;border-radius:26px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);z-index:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{min-height:38px;padding:0 13px;border-radius:19px;border:1px solid var(--line2);background:var(--surface);font-size:14px;font-weight:550;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.chip{min-height:38px;padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--text)}
 .chip .ic{width:17px;height:17px}
-.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip small{font-weight:600;color:var(--text-faint)}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--accent-ink)}
+.chip[aria-pressed="true"] small{color:color-mix(in srgb, var(--accent-ink) 75%, transparent)}
 .chip.c[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
-.seg{display:flex;padding:3px;border-radius:11px;background:color-mix(in srgb, var(--ink) 7%, transparent);gap:2px}
-.seg button{flex:1;border:0;background:none;min-height:34px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink2);display:flex;align-items:center;justify-content:center;gap:6px}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chips.scroll .chip{flex:none}
+.seg{display:flex;padding:3px;border-radius:var(--r-s);background:color-mix(in srgb, var(--sand) 30%, var(--surface));gap:2px}
+.seg button{flex:1;border:0;background:none;min-height:36px;border-radius:9px;font-size:14px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:6px}
 .seg button .ic{width:17px;height:17px}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button[aria-pressed="true"]{background:var(--surface-raised);color:var(--teal-dark);box-shadow:0 1px 3px rgba(80,55,30,.14)}
+@media (prefers-color-scheme: dark){ .seg button[aria-pressed="true"]{background:var(--surface-raised)} }
 
-/* Formulare */
-.form{display:flex;flex-direction:column;gap:18px}
-.fgroup{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+/* ---------- Formulare ---------- */
+.form{display:flex;flex-direction:column;gap:20px}
+.fgroup{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .field{display:flex;flex-direction:column;gap:4px;padding:10px 14px}
-.field + .field, .fgroup > .frow + .frow, .field + .frow, .frow + .field{border-top:1px solid var(--line)}
-.field > span{font-size:13px;color:var(--ink2);font-weight:550}
-.field input,.field select,.field textarea{border:0;background:none;padding:2px 0;font-size:16px;width:100%;min-height:30px;outline:none;color:var(--ink)}
-.field textarea{min-height:72px;resize:vertical}
-.field input::placeholder,.field textarea::placeholder{color:var(--ink3)}
+.field + .field, .fgroup > .frow + .frow, .field + .frow, .frow + .field{border-top:1px solid var(--border)}
+.field > span{font-size:13px;color:var(--text-muted);font-weight:600}
+.field input,.field select,.field textarea{border:0;background:none;padding:2px 0;font-size:16px;width:100%;min-height:32px;outline:none;color:var(--text)}
+.field textarea{min-height:76px;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:var(--text-faint)}
+.field:focus-within{background:color-mix(in srgb, var(--sea-light) 45%, var(--surface))}
 .frow{display:grid;grid-template-columns:1fr 1fr}
-.frow > .field + .field{border-top:0;border-left:1px solid var(--line)}
-.flabel{font-size:13px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);padding:0 4px;margin-bottom:-10px}
-.fhint{font-size:13px;color:var(--ink3);padding:0 4px;margin-top:-10px}
-.fhint.warn{color:var(--fehlt)}
+.frow > .field + .field{border-top:0;border-left:1px solid var(--border)}
+.flabel{font-size:15px;font-weight:650;color:var(--text);padding:0 4px;margin-bottom:-12px}
+.fhint{font-size:13px;color:var(--text-muted);padding:0 4px;margin-top:-12px}
+.fhint.warn{color:var(--missing)}
 .stepper{display:flex;align-items:center;gap:6px}
-.stepper button{width:44px;height:40px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-size:20px;font-weight:600;display:grid;place-items:center;color:var(--ink)}
-.stepper output{min-width:64px;text-align:center;font-weight:650}
-.formbar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + var(--safe-b));background:color-mix(in srgb, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:flex;gap:10px;z-index:800}
+.stepper button{width:46px;height:42px;border-radius:var(--r-s);border:1px solid var(--border-strong);background:var(--surface-raised);font-size:20px;font-weight:600;display:grid;place-items:center;color:var(--text)}
+.stepper output{min-width:70px;text-align:center;font-weight:650}
+.formbar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + var(--safe-b));background:color-mix(in srgb, var(--bg) 92%, transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;gap:10px;z-index:800}
 .formbar .btn{flex:1}
-.page.hasbar{padding-bottom:calc(96px + var(--safe-b))}
+.formbar.overtab{bottom:calc(var(--tab) + var(--safe-b));padding-bottom:10px;z-index:850}
+.formbar .status{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:650;color:var(--teal-dark);min-height:48px}
+.page.hasbar{padding-bottom:calc(100px + var(--safe-b))}
 
-/* Leere Zustände */
-.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 20px;background:var(--surface);border:1px dashed var(--line2);border-radius:var(--r)}
-.empty .ic{width:30px;height:30px;color:var(--ink3)}
+/* ---------- Leere Zustände und Hinweise ---------- */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:30px 20px;background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--r-lg)}
+.empty .ic{width:32px;height:32px;color:var(--sand)}
 .empty b{font-size:17px}
-.empty p{margin:0;color:var(--ink2);font-size:15px;max-width:34ch}
-
-/* Vergleich: gleich aufgebaute Karten untereinander, auf dem iPhone ohne seitliches Scrollen */
-.ccards{display:flex;flex-direction:column;gap:12px}
-.ccard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
-.ccard.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.ccard.konflikt{border-color:var(--konflikt);box-shadow:inset 0 0 0 1px var(--konflikt)}
-.ccard header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.ccard header .t{border:0;background:none;padding:0;text-align:left;font-size:17px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;min-height:24px}
-.cprice{font-size:16px;font-weight:650;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.cprice.best{color:var(--accent)}
-.cprice .tag{font-size:12px;font-weight:650;padding:2px 8px;border-radius:10px;background:var(--accent-soft);color:var(--accent)}
-.ccard dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
-.ccard dt{color:var(--ink2)}
-.ccard dd{margin:0;overflow-wrap:anywhere}
-.cnote{margin:0;font-size:14px;color:var(--ink2);border-top:1px solid var(--line);padding-top:10px}
-.ccard footer{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
-.ccard footer .btn{min-height:42px}
-.ccard footer .btn.ghost{margin-right:auto;padding:0 6px}
-.chosen{display:inline-flex;align-items:center;gap:6px;font-weight:650;color:var(--accent);min-height:42px}
-.muted{color:var(--ink3);font-weight:400}
-
-/* Reise-Einstieg */
-.subbtn{display:inline-flex;align-items:center;gap:2px;border:0;background:none;padding:0;min-height:30px;color:var(--accent);font-size:15px;font-weight:550}
-.subbtn .ic{width:16px;height:16px}
-.setup{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
-.setup-t{display:flex;gap:12px;align-items:flex-start}
-.setup-t > .ic{width:32px;height:32px;padding:6px;border-radius:9px;background:var(--offen-soft);color:var(--offen);flex:none}
-.setup-t b{display:block;font-size:16px}
-.setup-t small{display:block;font-size:14px;color:var(--ink2);margin-top:2px}
-.tally{display:flex;gap:10px;font-size:13px;font-weight:650}
-.tal.konflikt{color:var(--konflikt)}.tal.fehlt{color:var(--fehlt)}.tal.offen{color:var(--offen)}
-.lvl.more{color:var(--accent);font-weight:600;align-items:center}
-.lvl.more .chev{width:18px;height:18px}
-.allok{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--accent-soft);color:var(--accent);font-size:15px;font-weight:550}
-.row.addrow{color:var(--accent)}
-.row.addrow .lead{background:var(--accent-soft);color:var(--accent)}
-.row.addrow .t{font-weight:600}
-.btn.small{min-height:38px;padding:0 12px;font-size:15px}
-.linkish{border:0;background:none;padding:0;text-align:left;color:var(--ink);font:inherit;font-weight:550}
-.note.ok{display:flex;gap:8px;align-items:center;background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:550}
+.empty p{margin:0;color:var(--text-muted);font-size:15px;max-width:34ch}
+.note{border-radius:var(--r);padding:12px 14px;font-size:14px;background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);margin:0}
+.note.warn{background:var(--missing-bg);color:var(--missing);border-color:transparent}
+.note.konflikt{background:var(--danger-bg);color:var(--danger);border-color:transparent}
+.note.ok{display:flex;gap:8px;align-items:center;background:var(--success-bg);color:var(--success);border-color:transparent;font-weight:600}
 .note.ok .ic{width:18px;height:18px;flex:none}
-.tllink .card.konflikt{border-color:color-mix(in srgb, var(--konflikt) 45%, var(--line));background:var(--konflikt-soft);color:var(--konflikt)}
-.tllink .card.konflikt .t small{color:inherit;opacity:.85}
-.tlstay .lodge.z-konflikt{background:var(--konflikt-soft)}
-.tlstay .lodge.z-konflikt .t small{color:var(--konflikt)}
+.note.info{display:flex;gap:10px;align-items:flex-start;background:var(--sea-light);color:var(--teal-dark);border-color:transparent}
+.note.info .ic{width:18px;height:18px;flex:none;margin-top:1px}
 
-/* Karte */
-#mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#0E3A4A}
+/* ---------- Reise-Einstieg ---------- */
+.subbtn{display:inline-flex;align-items:center;gap:2px;border:0;background:none;padding:0;min-height:32px;color:var(--teal);font-size:15px;font-weight:600}
+.subbtn .ic{width:16px;height:16px}
+.setup{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-soft)}
+.setup-t{display:flex;gap:12px;align-items:flex-start}
+.setup-t > .ic{width:40px;height:40px;padding:9px;border-radius:var(--r-s);background:var(--warning-bg);color:var(--warning);flex:none}
+.setup-t b{display:block;font-size:17px}
+.setup-t small{display:block;font-size:14px;color:var(--text-muted);margin-top:3px}
+.tally{display:flex;gap:10px;font-size:13px;font-weight:650}
+.tal.konflikt{color:var(--danger)}.tal.fehlt{color:var(--missing)}.tal.offen{color:var(--warning)}
+.lvl.more{color:var(--teal);font-weight:600;align-items:center}
+.lvl.more .chev{width:18px;height:18px}
+.allok{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--success-bg);color:var(--success);font-size:15px;font-weight:600}
+.row.addrow{color:var(--teal)}
+.row.addrow .lead{background:var(--sea-light);color:var(--teal-dark)}
+.row.addrow .t{font-weight:600}
+.linkish{border:0;background:none;padding:0;text-align:left;color:var(--text);font:inherit;font-weight:600}
+
+/* ---------- Vergleich ---------- */
+.ccards{display:flex;flex-direction:column;gap:14px}
+.ccard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-soft)}
+.ccard.on{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal), var(--shadow-soft)}
+.ccard.konflikt{border-color:var(--danger);box-shadow:inset 0 0 0 1px var(--danger)}
+.ccard header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ccard header .who{display:flex;align-items:center;gap:12px;min-width:0}
+.ccard .thumb{width:46px;height:46px;flex:none;border-radius:var(--r-s);display:grid;place-items:center;background:linear-gradient(160deg, var(--sea-light), color-mix(in srgb, var(--sand) 55%, var(--surface)));color:var(--teal-dark)}
+.ccard .thumb .ic{width:22px;height:22px}
+.ccard header .t{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:var(--text);overflow-wrap:anywhere;min-width:0}
+.ccard header .t small{display:block;font-size:13px;font-weight:500;color:var(--text-muted)}
+.ccard header .tt{min-width:0}
+.cprice{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:var(--r-s);background:var(--surface2)}
+.cprice b{display:block;font-size:18px;font-weight:700}
+.cprice small{display:block;font-size:13px;color:var(--text-muted);margin-top:1px}
+.cprice.best b{color:var(--teal-dark)}
+.cprice .tag{flex:none;font-size:12px;font-weight:650;padding:3px 9px;border-radius:var(--r-pill);background:var(--sea-light);color:var(--teal-dark)}
+.cp-leer{font-size:15px;color:var(--text-muted)}
+.ccard dl{margin:0;display:grid;grid-template-columns:96px 1fr;gap:0;font-size:14px}
+.ccard dt,.ccard dd{padding:7px 0;border-top:1px solid var(--border);min-height:38px;display:flex;align-items:center}
+.ccard dt:first-of-type,.ccard dd:first-of-type{border-top:0}
+.ccard dt{color:var(--text-muted)}
+.ccard dd{margin:0;overflow-wrap:anywhere;flex-wrap:wrap;gap:4px 6px}
+.ccard dd a{display:inline-flex;align-items:center;gap:4px;font-weight:600;text-decoration:none;min-height:34px}
+.ccard dd a .ic{width:16px;height:16px}
+.ccard .kp{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%}
+.ccard .kp .btn{flex:none}
+.stars{letter-spacing:1px;color:var(--mango)}
+.stars span{color:var(--border-strong)}
+.cnote{margin:0;font-size:14px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px}
+.ccard footer{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.ccard footer .btn{min-height:44px}
+.ccard footer .btn.ghost{margin-right:auto;padding:0 6px}
+.chosen{display:inline-flex;align-items:center;gap:6px;font-weight:650;color:var(--teal-dark);min-height:44px}
+.muted{color:var(--text-faint);font-weight:400}
+
+/* Leerwerte: optional nicht ausgefüllt (–), wichtig aber nicht eingetragen (neutral), fehlt laut Prüfung (Statusfarbe „fehlt“) */
+.v-leer{color:var(--text-faint)}
+.v-nicht{color:var(--text-faint);font-size:13px}
+.v-fehlt{display:inline-flex;align-items:center;gap:4px;color:var(--missing);font-weight:650;font-size:13px}
+.v-fehlt .ic{width:15px;height:15px}
+
+/* ---------- Unterkunft: Liste, Detail, Kartenpunkt ---------- */
+.pt{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text-faint)}
+.pt .ic{width:14px;height:14px}
+.pt.ok{color:var(--teal)}
+.pt.fehlt{color:var(--missing);font-weight:650}
+.row.lrow{padding:0;gap:0;align-items:stretch}
+.lrow .rowmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:11px 6px 11px 14px;border:0;background:none;text-align:left;color:var(--text)}
+.lrow .rowmain:active{background:var(--surface2)}
+.lrow .rowmain .end{display:flex;align-items:center;flex:none}
+.pinbtn{flex:none;width:52px;border:0;border-left:1px solid var(--border);background:none;display:grid;place-items:center;color:var(--teal)}
+.pinbtn.leer{color:var(--text-faint)}
+.pinbtn:active{background:var(--surface2)}
+.row .end .btn.small{min-height:36px;padding:0 12px;font-size:14px}
+.row .end .btn.small.ghost{padding:0 6px}
+.dhead{display:flex;flex-direction:column;gap:14px}
+.dsum{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dsum > div{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;min-width:0;box-shadow:var(--shadow-soft)}
+.dsum > div > span:first-child{display:block;font-size:12px;font-weight:600;color:var(--text-muted)}
+.stars{white-space:nowrap}
+.dsum b{display:block;font-size:18px;font-weight:700;margin-top:2px;overflow-wrap:anywhere}
+.dsum small{display:block;font-size:13px;color:var(--text-muted);margin-top:1px}
+.minimap{position:relative;height:150px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);background:var(--sea-light)}
+.minimap .mmap{position:absolute;inset:0}
+
+/* ---------- Verbindungsformular ---------- */
+.routesum{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow-soft)}
+.rs-end{min-width:0}
+.rs-end b{display:block;font-size:17px;font-weight:700;overflow-wrap:anywhere}
+.rs-end b.offen{color:var(--text-faint);font-weight:600}
+.rs-end small{display:block;font-size:12px;color:var(--text-muted);margin-top:2px}
+.rs-end:last-child{text-align:right}
+.rs-arrow{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--sea-light);color:var(--teal-dark)}
+.rs-arrow .ic{width:18px;height:18px}
+
+/* ---------- Kartenauswahl ---------- */
+.pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pickrow .hint{padding:0;font-variant-numeric:tabular-nums;min-width:0}
+.pickrow .btn{flex:none}
+
+/* ---------- Karte ---------- */
+#mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#1E4A52}
 #map{position:absolute;inset:0}
-.leaflet-container{background:#0E3A4A;font-family:var(--font)}
+.leaflet-container{background:#1E4A52;font-family:var(--font)}
 .maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:700;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .maptop > *{pointer-events:auto}
-.glass{background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px}
+.glass{background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid color-mix(in srgb, var(--border) 80%, transparent);box-shadow:var(--shadow);border-radius:var(--r)}
 .mapfilter{display:flex;gap:4px;padding:4px;overflow-x:auto}
-.mf{flex:1;min-height:38px;padding:0 10px;border-radius:10px;border:0;background:none;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:650;color:var(--ink3);white-space:nowrap}
+.mf{flex:1;min-height:40px;padding:0 10px;border-radius:var(--r-s);border:0;background:none;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:650;color:var(--text-faint);white-space:nowrap}
 .mf .ic{width:18px;height:18px}
-.mf[aria-pressed="true"]{color:var(--c);background:color-mix(in srgb, var(--c) 12%, transparent)}
+.mf[aria-pressed="true"]{color:var(--c);background:color-mix(in srgb, var(--c) 13%, transparent)}
 .mapright{position:absolute;right:12px;bottom:84px;z-index:700;display:flex;flex-direction:column;gap:8px}
-.mapbtn{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:var(--ink)}
-.mapbtn.on{color:var(--accent)}
+.mapbtn{width:46px;height:46px;border-radius:var(--r);display:grid;place-items:center;color:var(--teal-dark)}
+.mapbtn.on{color:var(--coral-strong)}
 .mapday{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;font-size:14px}
 .mapday span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mapday .navbtn{min-height:34px}
-.mpin{border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;box-shadow:0 0 0 2px #fff,0 3px 8px rgba(0,0,0,.35)}
+.mapday .navbtn{min-height:36px}
+.mpin{border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;box-shadow:0 0 0 2px #FFFAF2,0 3px 8px rgba(40,25,10,.35)}
 .mpin .ic{width:60%;height:60%}
-.mpin.done{background:#fff;color:var(--c);box-shadow:0 0 0 2.5px var(--c),0 3px 8px rgba(0,0,0,.25);opacity:.6}
-.mpin.inplan{box-shadow:0 0 0 2px #fff,0 0 0 5px var(--accent),0 3px 8px rgba(0,0,0,.35)}
-.hpin{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#15201C;color:#fff;box-shadow:0 0 0 2px #fff,0 4px 10px rgba(0,0,0,.4)}
+.mpin.done{background:#FFFAF2;color:var(--c);box-shadow:0 0 0 2.5px var(--c),0 3px 8px rgba(40,25,10,.25);opacity:.6}
+.mpin.inplan{box-shadow:0 0 0 2px #FFFAF2,0 0 0 5px var(--coral),0 3px 8px rgba(40,25,10,.35)}
+/* Unterkünfte: Quadrat statt Kreis, damit sie sich von Spots unterscheiden. Gewählt gefüllt petrol, Kandidat hell mit Rand. */
+.hpin{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#245F59;color:#fff;box-shadow:0 0 0 2px #FFFAF2,0 4px 12px rgba(40,25,10,.4)}
 .hpin .ic{width:20px;height:20px}
-.hpin.kand{background:#fff;color:#15201C;box-shadow:0 0 0 2px #15201C,0 3px 8px rgba(0,0,0,.3)}
+.hpin.kand{background:#FFFAF2;color:#245F59;box-shadow:0 0 0 2px #245F59,0 3px 8px rgba(40,25,10,.3)}
 .lbl{display:inline-block;transform:translate(-50%,0);white-space:nowrap;font-weight:650;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.6);pointer-events:none}
 .lbl.town{font-size:13px}.lbl.town.major{font-size:15px}
 .lbl.poi{font-size:12px;transform:none}
 .lbl.poi.done{opacity:.6}
-.rtlbl{display:inline-block;transform:translate(-50%,-50%);background:#15201C;color:#fff;font-size:12px;font-weight:650;padding:3px 8px;border-radius:9px;white-space:nowrap}
+.rtlbl{display:inline-block;transform:translate(-50%,-50%);background:#245F59;color:#fff;font-size:12px;font-weight:650;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap}
 .mepin{width:18px;height:18px;border-radius:50%;background:#1E7BFF;box-shadow:0 0 0 3px #fff,0 2px 8px rgba(0,0,0,.4)}
 .mepin.stale{background:#8AA0B8}
 .attrib{position:absolute;left:8px;bottom:6px;z-index:650;font-size:10px;color:rgba(255,255,255,.8);text-shadow:0 0 3px #000;pointer-events:none}
-.picker{position:relative;height:min(58vh,460px);margin:0 -16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.picker{position:relative;height:min(58vh,460px);margin:0 -16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .picker .pmap{position:absolute;inset:0}
-.picker .cross{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-34px 0 0 -17px;z-index:600;pointer-events:none;color:#fff;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))}
-.picker .cross .ic{width:34px;height:34px}
+.picker .cross{position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-38px 0 0 -19px;z-index:600;pointer-events:none;color:var(--coral);filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.picker .cross .ic{width:38px;height:38px;fill:#FFFAF2}
 
-/* Tagesplan */
+/* ---------- Tagesplan ---------- */
 .daynav{display:flex;align-items:center;gap:8px}
 .daynav .btn{min-height:40px;padding:0 12px}
 .dl{display:flex;flex-direction:column}
 .dlrow{display:grid;grid-template-columns:52px 28px 1fr auto;gap:0 10px;align-items:start}
-.dlrow .time{font-weight:650;font-size:15px;padding-top:12px;text-align:right}
+.dlrow .time{font-weight:700;font-size:15px;padding-top:12px;text-align:right;color:var(--text)}
 .dlrow .rail{position:relative;display:flex;justify-content:center}
-.dlrow .rail::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:var(--line2)}
+.dlrow .rail::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:var(--border-strong)}
 .dlrow:first-child .rail::before{top:18px}
 .dlrow:last-child .rail::before{bottom:calc(100% - 18px)}
-.dlrow .rail i{position:relative;margin-top:8px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--c, var(--ink2));color:#fff;box-shadow:0 0 0 3px var(--bg)}
+.dlrow .rail i{position:relative;margin-top:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--c, var(--teal));color:#fff;box-shadow:0 0 0 3px var(--surface)}
 .dlrow .rail i .ic{width:15px;height:15px}
 .dlrow .body{padding:10px 0;min-width:0}
-.dlrow .body .t{font-weight:600;border:0;background:none;padding:0;text-align:left;color:var(--ink);font-size:16px;overflow-wrap:anywhere}
-.dlrow .body .s{font-size:13px;color:var(--ink2);margin-top:2px}
+.dlrow .body .t{font-weight:650;border:0;background:none;padding:0;text-align:left;color:var(--text);font-size:16px;overflow-wrap:anywhere}
+.dlrow .body .s{font-size:13px;color:var(--text-muted);margin-top:2px}
 .dlrow.leg .time{visibility:hidden}
 .dlrow.leg .rail i{display:none}
-.dlrow.leg .body{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14px;color:var(--ink2);padding:6px 0}
+.dlrow.leg .body{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14px;color:var(--text-muted);padding:6px 0}
 .dlrow.leg .body .ic{width:17px;height:17px}
-.dlrow.leg .body a{display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:600;min-height:32px}
-.dlrow.leg.missing .body{color:var(--fehlt)}
+.dlrow.leg .body a{display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:600;min-height:34px}
+.dlrow.leg.missing .body{color:var(--missing)}
 .dlrow .tools{padding-top:8px;display:flex;align-items:center;gap:4px}
-.iconbtn{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink2)}
+.iconbtn{width:42px;height:42px;border-radius:var(--r-s);border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--text-muted)}
 .iconbtn .ic{width:18px;height:18px}
 .mini{display:inline-flex;align-items:center;gap:4px;margin-top:6px}
-.mini button{width:36px;height:32px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);font-weight:700;color:var(--ink)}
-.mini output{min-width:54px;text-align:center;font-size:14px;font-weight:600;color:var(--ink2)}
-.summary{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--ink2);padding:0 4px}
+.mini button{width:38px;height:34px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface-raised);font-weight:700;color:var(--text)}
+.mini output{min-width:54px;text-align:center;font-size:14px;font-weight:600;color:var(--text-muted)}
+.summary{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--text-muted);padding:0 4px}
 .summary span{display:inline-flex;align-items:center;gap:5px}
-.summary .ic{width:17px;height:17px}
-.note{border-radius:var(--r-s);padding:11px 13px;font-size:14px;background:var(--surface2);color:var(--ink2);border:1px solid var(--line);margin:0}
-.note.warn{background:var(--fehlt-soft);color:var(--fehlt);border-color:transparent}
-.note.konflikt{background:var(--konflikt-soft);color:var(--konflikt);border-color:transparent}
-.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r-s);padding:0 12px;min-height:46px}
-.search .ic{color:var(--ink3)}
-.search input{border:0;background:none;outline:none;flex:1;font-size:16px;min-height:44px;min-width:0}
-mark{background:var(--accent-soft);color:inherit;border-radius:3px}
+.summary .ic{width:17px;height:17px;color:var(--teal)}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-s);padding:0 12px;min-height:48px}
+.search:focus-within{border-color:var(--teal)}
+.search .ic{color:var(--text-faint)}
+.search input{border:0;background:none;outline:none;flex:1;font-size:16px;min-height:46px;min-width:0}
+mark{background:var(--warning-bg);color:inherit;border-radius:3px}
 
-/* Spot */
+/* ---------- Spot ---------- */
 .hero{display:flex;gap:14px;align-items:center;padding:0 16px 4px}
-.hero .big{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:var(--c);color:#fff;flex:none}
+.hero .big{width:54px;height:54px;border-radius:var(--r);display:grid;place-items:center;background:var(--c);color:#fff;flex:none}
 .hero .big .ic{width:28px;height:28px}
 .facts{display:flex;flex-wrap:wrap;gap:8px}
-.fact{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 11px;border-radius:17px;background:var(--surface);border:1px solid var(--line);font-size:14px;color:var(--ink2)}
+.fact{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:var(--r-pill);background:var(--surface);border:1px solid var(--border);font-size:14px;color:var(--text-muted)}
 .fact .ic{width:16px;height:16px}
 .rates{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.rate{min-height:56px;border-radius:var(--r-s);border:1px solid var(--line2);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:600;color:var(--ink2)}
+.rate{min-height:58px;border-radius:var(--r-s);border:1px solid var(--border-strong);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:600;color:var(--text-muted)}
 .rate.down .ic{transform:scaleY(-1)}
-.rate[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.prose{margin:0;font-size:16px;line-height:1.5;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.rate[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--accent-ink)}
+.prose{margin:0;font-size:16px;line-height:1.5;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
 
-/* Blätter (nur kurze Auswahl und Bestätigung) */
-.sheetbg{position:fixed;inset:0;background:rgba(10,16,14,.42);z-index:1000;display:flex;align-items:flex-end;animation:fade .18s ease-out}
-.sheet{width:100%;max-height:86vh;overflow-y:auto;background:var(--bg);border-radius:18px 18px 0 0;padding:8px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:14px;animation:up .22s cubic-bezier(.32,.72,0,1)}
-.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 2px}
-.sheet h3{margin:0;font-size:19px;font-weight:700}
-.sheet p{margin:0;color:var(--ink2)}
+/* ---------- Blätter, Hinweise ---------- */
+.sheetbg{position:fixed;inset:0;background:rgba(40,28,16,.38);z-index:1000;display:flex;align-items:flex-end;animation:fade .18s ease-out}
+.sheet{width:100%;max-height:86vh;overflow-y:auto;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:8px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:14px;animation:up .24s cubic-bezier(.32,.72,0,1)}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--border-strong);margin:0 auto 2px}
+.sheet h3{margin:0;font-size:20px;font-weight:700}
+.sheet p{margin:0;color:var(--text-muted)}
 @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.toast{position:fixed;left:50%;top:calc(var(--safe-t) + 10px);transform:translateX(-50%);z-index:1200;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:14px;background:var(--ink);color:var(--bg);font-size:15px;font-weight:550;box-shadow:var(--shadow);animation:up .2s ease-out}
+.toast{position:fixed;left:50%;top:calc(var(--safe-t) + 10px);transform:translateX(-50%);z-index:1200;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:var(--r);background:#245F59;color:#fff;font-size:15px;font-weight:600;box-shadow:var(--shadow);animation:down .2s ease-out}
 .toast .ic{width:18px;height:18px}
-.toast.warn{background:var(--konflikt);color:#fff}
+.toast.warn{background:var(--danger);color:#fff}
+@media (prefers-color-scheme: dark){ .toast{background:#2F5D57} .toast.warn{background:#8E3420} }
 @keyframes down{from{transform:translate(-50%,-14px);opacity:.3}to{transform:translate(-50%,0);opacity:1}}
-.toast{animation:down .2s ease-out}
-.offline{position:fixed;top:calc(var(--safe-t) + 6px);left:50%;transform:translateX(-50%);z-index:1100;font-size:12px;font-weight:650;padding:4px 10px;border-radius:10px;background:var(--ink);color:var(--bg)}
-.code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;word-break:break-all;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-s);padding:10px;max-height:120px;overflow:auto;user-select:all}
+.offline{position:fixed;top:calc(var(--safe-t) + 6px);left:50%;transform:translateX(-50%);z-index:1100;font-size:12px;font-weight:650;padding:4px 10px;border-radius:var(--r-pill);background:var(--text);color:var(--bg)}
+.code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;word-break:break-all;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-s);padding:10px;max-height:120px;overflow:auto;user-select:all}
+.ccard header .tt small{display:block;font-size:13px;margin-top:1px}
+/* Verbindung im Verlauf: gewählt (Ring), gebucht (gefüllt), Entscheidung offen (Mango-Ring, Untertitel amber), Lücke (gestrichelt, Fläche), Konflikt (rot) */
+.tllink .card.gebucht::before{background:var(--teal)}
+.tllink .card.offen{border-color:color-mix(in srgb, var(--mango) 55%, var(--border))}
+.tllink .card.offen::before{border-color:var(--mango)}
+.tllink .card.offen > .ic:first-child{color:var(--warning)}
+.tllink .card.offen .t small{color:var(--warning)}
+/* Dunkelmodus: Akzentflächen sind dort hell, Schrift darauf dunkel */
+@media (prefers-color-scheme: dark){ .tab .dot{color:#2A120C} .chip.c[aria-pressed="true"]{color:#1A1613} }
 
 </style>
 </head>
@@ -639,6 +781,13 @@ function stayChoice(sid){
   const ls = lodgingsOf(sid), ch = chosenOf(ls), k = ls.filter(l => !RAUS.has(l.status)).length;
   return {...ch, zustand:ch.mehrere ? "konflikt" : ch.item ? "gewaehlt" : k ? "offen" : "leer", aktiv:k};
 }
+// Unmittelbarer Nachbar eines Aufenthalts für Vorbelegungen: genau ein Aufenthalt, der am Anreisetag endet (vor) bzw. am Abreisetag
+// beginnt (nach). Kein oder mehrere Kandidaten (Lücke, Überschneidung) = null, die Seite bleibt offen. Nie für Prüfungen verwenden.
+function neighborStay(s, seite){
+  if(!s?.von || !s?.bis) return null;
+  const c = datedStays().filter(x => x.id !== s.id && x.bis > x.von && (seite === "vor" ? x.bis === s.von : x.von === s.bis));
+  return c.length === 1 ? c[0] : null;
+}
 const connChoice = cid => { const os = optsOf(cid), ch = chosenOf(os), k = os.filter(o => !RAUS.has(o.status)).length; return {...ch, zustand:ch.mehrere ? "konflikt" : ch.item ? "gewaehlt" : k ? "offen" : "leer", aktiv:k}; };
 
 /* ---------- Anschluss an die Tagesplanung ----------
@@ -738,7 +887,7 @@ function planIssues(){
     if(ch.zustand === "konflikt") add("konflikt", `${stayName(s)}: ${ch.alle.length} Unterkünfte gleichzeitig gewählt, bis ihr eine behaltet, gilt keine`, ["stay", {id:s.id}], s.von);
     else if(ch.zustand === "offen") add("offen", `${stayName(s)}: Unterkunft noch nicht gewählt (${plural(ch.aktiv, "Option", "Optionen")})`, ["stay", {id:s.id}], s.von);
     else if(ch.zustand === "leer") add("offen", `${stayName(s)}: noch keine Unterkunft erfasst`, ["stay", {id:s.id}], s.von);
-    else if(!lodgingPoint(ch.item)) add("fehlt", `${stayName(s)}: Ort der Unterkunft fehlt, Tagespläne haben keinen Startpunkt`, ["lodging", {id:ch.item.id}], s.von);
+    else if(!lodgingPoint(ch.item)) add("fehlt", `${stayName(s)}: Kartenpunkt der gewählten Unterkunft fehlt, Tagespläne haben keinen Startpunkt`, ["ortWahl", {lodgingId:ch.item.id}], s.von);
   });
   ov.items.filter(x => x.art === "connFehlt").forEach(x => add("fehlt",
     x.richtung === "anreise" ? `Anreise nach ${stayName(x.nach)} fehlt` : x.richtung === "abreise" ? `Abreise ab ${stayName(x.von)} fehlt` : `Keine Verbindung ${stayName(x.von)} → ${stayName(x.nach)}`,
@@ -1107,8 +1256,12 @@ function render(opt = {}){
   if(V.map){ scr.hidden = true; $("#mapWrap").hidden = false; scr.innerHTML = ""; V.mount?.(null, cur.params || {}); }
   else {
     $("#mapWrap").hidden = true; scr.hidden = false;
-    const nav = hasBack || V.right || V.left ? `<header class="nav"><div>${hasBack ? `<button class="navbtn" data-back aria-label="Zurück">${ic("zurueck")}${esc(V.backLabel || "Zurück")}</button>` : V.left || ""}</div><div class="navtitle">${V.large ? "" : esc(V.title)}</div><div class="right">${V.right || ""}</div></header>` : `<div style="height:calc(var(--safe-t) + 12px)"></div>`;
-    scr.innerHTML = `<div class="page${V.form ? " hasbar" : ""}">${nav}${V.large ? `<div class="head"><h1>${esc(V.title)}</h1>${V.sub ? `<div class="sub">${V.sub}</div>` : ""}</div>` : ""}<div class="content">${V.html}</div></div>${V.bar ? `<div class="formbar">${V.bar}</div>` : ""}${V.fab || ""}`;
+    // V.hero ersetzt Navigationsleiste und große Überschrift (nur auf Startseiten ohne Zurück)
+    const hero = V.hero && !hasBack;
+    const nav = hero ? "" : hasBack || V.right || V.left ? `<header class="nav"><div>${hasBack ? `<button class="navbtn" data-back aria-label="Zurück">${ic("zurueck")}${esc(V.backLabel || "Zurück")}</button>` : V.left || ""}</div><div class="navtitle">${V.large ? "" : esc(V.title)}</div><div class="right">${V.right || ""}</div></header>` : `<div style="height:calc(var(--safe-t) + 12px)"></div>`;
+    const head = hero ? V.hero : V.large ? `<div class="head"><h1>${esc(V.title)}</h1>${V.sub ? `<div class="sub">${V.sub}</div>` : ""}</div>` : "";
+    // V.bar: feste Leiste unten. In Formularen ganz unten, auf Detailseiten über der Tab-Leiste: die Hauptaktion sitzt immer an derselben Stelle
+    scr.innerHTML = `<div class="page${V.bar ? " hasbar" : ""}">${nav}${head}<div class="content">${V.html}</div></div>${V.bar ? `<div class="formbar${V.form ? "" : " overtab"}">${V.bar}</div>` : ""}${V.fab || ""}`;
     V.mount?.(scr, cur.params || {});
     if(V.form) scr.querySelectorAll("input,select,textarea").forEach(x => x.addEventListener("input", () => _formDirty = true));
     if(opt.restore) scr.scrollTop = UI.scroll[scrollKey()] || 0; else if(opt.top) scr.scrollTop = 0;
@@ -1213,10 +1366,10 @@ function armDelete(btn, label, onDelete){
 function keepDraft(root){ const p = current().params; p.draft = {...(p.draft || {}), ...readForm(root)}; return p.draft; }
 
 // Entscheidungszustand als Zeile: gewählt (jade), Konflikt (rot), offen oder leer (bernstein). Konflikt nennt nie eine der Optionen als gewählt.
-const ZUST_FARBE = {gewaehlt:"var(--accent)", konflikt:"var(--konflikt)", offen:"var(--fehlt)", leer:"var(--fehlt)"};
+const ZUST_FARBE = {gewaehlt:"var(--accent)", konflikt:"var(--konflikt)", offen:"var(--offen)", leer:"var(--offen)"};
 function lodgeLine(s){
   const ch = stayChoice(s.id), n = nights(s);
-  if(ch.zustand === "gewaehlt"){ const pr = lodgingPrice(ch.item, n); return {t:esc(ch.item.name), s:[STATUS[ch.item.status], pr.nacht !== null ? money(pr.nacht, ch.item.waehrung) + " pro Nacht" : "Preis unbekannt"].join(" · "), z:ch.zustand}; }
+  if(ch.zustand === "gewaehlt"){ const pr = lodgingPrice(ch.item, n); return {t:esc(ch.item.name), s:[STATUS[ch.item.status], pr.nacht !== null ? money(pr.nacht, ch.item.waehrung) + " pro Nacht" : "ohne Preis", Number.isFinite(ch.item.lat) ? null : "Kartenpunkt fehlt"].filter(Boolean).join(" · "), z:ch.zustand}; }
   if(ch.zustand === "konflikt") return {t:`${ch.alle.length} Unterkünfte gleichzeitig gewählt`, s:"Ungeklärt, bitte eine behalten", z:ch.zustand};
   return {t:ch.aktiv ? `${plural(ch.aktiv, "Option", "Optionen")}, noch keine gewählt` : "Noch keine Unterkunft erfasst", s:ch.aktiv ? "Vergleichen und auswählen" : "Kandidaten sammeln", z:ch.zustand};
 }
@@ -1233,38 +1386,86 @@ function stayCard(s){
     <button class="lodge z-${l.z}" ${attrGo("stay", {id:s.id})}><span class="lead" style="color:${ZUST_FARBE[l.z]}">${ic(l.z === "konflikt" ? "warn" : "hotel")}</span><span class="t">${l.t}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}</button></div>`;
 }
 const linkCard = (inner, attrs, cls = "") => `<div class="tllink"><span class="rail"></span><button class="card ${cls}" ${attrs}>${inner}</button></div>`;
-function connCard(c){ const l = connLine(c); return linkCard(`${ic(l.icon)}<span class="t">${esc(connTitle(c))}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}`, attrGo("conn", {id:c.id}), l.z === "gewaehlt" ? "" : l.z === "konflikt" ? "konflikt" : "warn"); }
+function connCard(c){ const l = connLine(c); return linkCard(`${ic(l.icon)}<span class="t">${esc(connTitle(c))}<small>${esc(l.s)}</small></span>${ic("weiter", "chev")}`, attrGo("conn", {id:c.id}), l.z === "gewaehlt" ? (connOpt(c.id)?.status === "gebucht" ? "gebucht" : "") : l.z === "konflikt" ? "konflikt" : "offen"); } // Lücken haben eigenes Aussehen (warn)
 const isZeitraumIssue = i => i.ziel?.[0] === "zeitraum";
-// Eine Hinzufügen-Aktion für den ganzen Bereich: Aufenthalt oder Verbindung. Ein neuer Aufenthalt beginnt an der ersten Lücke.
+// Kartenpunkt einer Unterkunft: gesetzt (jade) oder fehlt. Bernstein nur, wenn die Prüfung es meldet (eindeutig gewählte Unterkunft),
+// sonst neutral: bei einem bloßen Kandidaten ist ein fehlender Punkt noch kein Problem.
+const pinState = (l, relevant) => Number.isFinite(l.lat) ? `<span class="pt ok">${ic("pin")}Kartenpunkt gesetzt</span>` : `<span class="pt${relevant ? " fehlt" : ""}">${ic("pin")}Kartenpunkt fehlt</span>`;
+const pinBtn = l => `<button class="pinbtn${Number.isFinite(l.lat) ? "" : " leer"}" data-pin="${l.id}" aria-label="${pinLabel(l)}: ${esc(l.name)}">${ic("pin")}</button>`;
+const bindPins = el => el.querySelectorAll("[data-pin]").forEach(b => b.onclick = e => { e.stopPropagation(); go("ortWahl", {lodgingId:b.dataset.pin}); });
+// Eine Hinzufügen-Aktion für den ganzen Bereich. Ein neuer Aufenthalt beginnt an der ersten Lücke. Fehlende Verbindungen aus dem
+// Ablauf stehen direkt zur Wahl, dann sind Start und Ziel schon gesetzt. „Andere Verbindung“ bleibt ohne Vorbelegung.
 function addToTrip(){
-  const lk = overview().items.find(x => x.art === "luecke"), last = datedStays().filter(s => s.bis > s.von).pop();
+  const items = overview().items, lk = items.find(x => x.art === "luecke"), last = datedStays().filter(s => s.bis > s.von).pop();
+  const fehlend = items.filter(x => x.art === "connFehlt");
   pickSheet({title:"Hinzufügen", items:[
     {label:"Aufenthalt", sub:lk ? `Ort mit An- und Abreise, Anreise vorbelegt mit ${fmtDate(lk.von)}` : "Ort mit An- und Abreise, danach Unterkünfte sammeln", icon:"hotel", value:"stay"},
-    {label:"Verbindung", sub:"Flug, Zug, Bus oder Fähre zwischen zwei Orten", icon:"reise", value:"conn"},
-  ]}).then(v => v === "stay" ? go("neuStay", lk ? {von:lk.von, luecke:lk.bis} : last ? {von:last.bis} : {}) : v === "conn" ? go("neuConn", {}) : null);
+    ...fehlend.slice(0, 4).map((x, i) => ({label:gapTitle(x), sub:"Verbindung fehlt im Ablauf", icon:"reise", value:"gap" + i})),
+    {label:fehlend.length ? "Andere Verbindung" : "Verbindung", sub:"Flug, Zug, Bus oder Fähre, Start und Ziel wählt ihr selbst", icon:"reise", value:"conn"},
+  ]}).then(v => v === "stay" ? go("neuStay", lk ? {von:lk.von, luecke:lk.bis} : last ? {von:last.bis} : {}) : v === "conn" ? go("neuConn", {}) : v?.startsWith("gap") ? fillGap(fehlend[+v.slice(3)]) : null);
 }
-// Platzhalter „Verbindung fehlt“: eine vorhandene zuordnen (z. B. einen schon erfassten Flug) oder eine neue anlegen
+const gapTitle = x => x.von && x.nach ? `${stayName(x.von)} → ${stayName(x.nach)}` : x.nach ? `Anreise nach ${stayName(x.nach)}` : `Abreise ab ${stayName(x.von)}`;
+// Platzhalter „Verbindung fehlt“: eine vorhandene zuordnen (z. B. einen schon erfassten Flug) oder eine neue anlegen.
+// Die neue Verbindung bekommt genau die Aufenthalte des Platzhalters, nichts darüber hinaus.
 function fillGap(x){
   const neu = () => go("neuConn", {vonStay:x.von?.id || null, nachStay:x.nach?.id || null});
   const cands = connCandidates(x); if(!cands.length) return neu();
-  pickSheet({title:x.richtung === "anreise" ? `Anreise nach ${stayName(x.nach)}` : x.richtung === "abreise" ? `Abreise ab ${stayName(x.von)}` : `${stayName(x.von)} → ${stayName(x.nach)}`,
+  pickSheet({title:gapTitle(x),
     text:"Eine schon erfasste Verbindung zuordnen oder eine neue anlegen.",
     items:[...cands.map(c => ({label:connTitle(c), sub:connLine(c).s, icon:connLine(c).icon, value:c.id})), {label:"Neue Verbindung anlegen", icon:"plus", value:"neu"}]})
     .then(v => { if(!v) return; if(v === "neu") return neu(); linkConn(v, x); commit("Verbindung zugeordnet"); });
 }
 
+// Kopfbild: eigene, ruhige Küstenillustration (Inline-SVG, offline, kein Foto, zeigt keinen bestimmten Ort).
+// Farben kommen aus CSS-Variablen der .trip-hero, damit Hell- und Dunkelmodus stimmen.
+const HERO_SCENE = `<svg class="scene" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs><linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--h-sky1)"/><stop offset="1" style="stop-color:var(--h-sky2)"/></linearGradient>
+  <linearGradient id="hSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--h-sea1)"/><stop offset="1" style="stop-color:var(--h-sea2)"/></linearGradient>
+  <linearGradient id="hFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--bg);stop-opacity:0"/><stop offset="1" style="stop-color:var(--bg);stop-opacity:1"/></linearGradient></defs>
+  <rect width="400" height="220" fill="url(#hSky)"/>
+  <circle cx="268" cy="96" r="38" style="fill:var(--h-sun)" opacity=".28"/><circle cx="268" cy="96" r="23" style="fill:var(--h-sun)" opacity=".6"/>
+  <path d="M206 150c4-22 9-31 15-28 3-17 13-21 17-8 4-6 11-3 12 10 3 9 6 18 12 26z" style="fill:var(--h-isle2)"/>
+  <path d="M268 152c3-30 10-44 18-40 4-24 18-30 24-12 6-9 15-5 17 14 4 13 9 26 17 38z" style="fill:var(--h-isle)"/>
+  <path d="M0 150c40-6 86-8 140-4 60 4 120 6 180 1 30-2 58-2 80 0v73H0z" fill="url(#hSea)"/>
+  <path d="M28 168c18-3 34-3 52 0M150 176c22-3 40-3 60 0M262 166c16-2 30-2 44 0M90 190c20-3 38-3 58 0M300 186c18-2 34-2 50 0" style="stroke:var(--h-wave)" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>
+  <rect y="170" width="400" height="50" fill="url(#hFade)"/></svg>`;
+function tripHero(sub){
+  return `<div class="trip-hero">${HERO_SCENE}<button class="hadd" data-act="add" aria-label="Aufenthalt oder Verbindung hinzufügen">${ic("plus")}</button>
+    <div class="ht"><h1>Thailand 2027</h1><div class="sub">${sub}</div></div></div>`;
+}
+// Planung im Überblick: vier Bereiche, Zahlen nur aus euren Daten. Markierung nur bei Konflikt, Fehlendem oder Offenem.
+function planOverview(ov){
+  const ds = datedStays().filter(s => s.bis > s.von), alleStays = stays(), cs = conns(), b = tripBounds();
+  const flag = (lvl, txt) => `<span class="flag ${lvl}">${ic(lvl === "konflikt" ? "warn" : lvl === "ok" ? "haken" : lvl === "offen" ? "uhr" : "info")}${esc(txt)}</span>`;
+  const lueckeN = ov.items.filter(x => x.art === "luecke").reduce((a, x) => a + x.n, 0), naechte = b ? dayDiff(b.end, b.start) : 0;
+  const lz = ds.map(s => stayChoice(s.id).zustand), cz = cs.map(c => connChoice(c.id).zustand), fehlendeConns = ov.items.filter(x => x.art === "connFehlt").length;
+  const n = (arr, z) => arr.filter(x => x === z).length;
+  const tage = tripDays(), mitSpots = typeof planCount === "function" ? tage.filter(d => planCount(d)).length : 0;
+  const rows = [
+    {icon:"pin", t:"Aufenthalte", s:alleStays.length ? `<b>${alleStays.length}</b> ${alleStays.length === 1 ? "Ort" : "Orte"}${b ? ` · ${naechte - lueckeN} von ${plural(naechte, "Nacht", "Nächten")} geplant` : ""}` : "Noch keine angelegt",
+      end:lueckeN ? flag("fehlt", plural(lueckeN, "Nacht", "Nächte") + " frei") : alleStays.length && b ? flag("ok", "lückenlos") : "", go:"liste", p:{art:"stays"}},
+    {icon:"hotel", t:"Unterkünfte", s:ds.length ? `<b>${n(lz, "gewaehlt")}</b> von ${ds.length} gewählt` : "Erst Aufenthalte anlegen",
+      end:n(lz, "konflikt") ? flag("konflikt", plural(n(lz, "konflikt"), "Konflikt", "Konflikte")) : n(lz, "offen") + n(lz, "leer") ? flag("offen", `${n(lz, "offen") + n(lz, "leer")} offen`) : ds.length ? flag("ok", "entschieden") : "", go:"liste", p:{art:"lodgings"}},
+    {icon:"reise", t:"Verbindungen", s:cs.length || fehlendeConns ? `<b>${n(cz, "gewaehlt")}</b> von ${cs.length} gewählt${fehlendeConns ? ` · ${fehlendeConns} fehlen` : ""}` : "Noch keine angelegt",
+      end:n(cz, "konflikt") ? flag("konflikt", plural(n(cz, "konflikt"), "Konflikt", "Konflikte")) : fehlendeConns ? flag("fehlt", `${fehlendeConns} fehlen`) : n(cz, "offen") + n(cz, "leer") ? flag("offen", `${n(cz, "offen") + n(cz, "leer")} offen`) : cs.length ? flag("ok", "entschieden") : "", go:"liste", p:{art:"conns"}},
+    {icon:"kalender", t:"Tagespläne", s:b ? `<b>${mitSpots}</b> von ${plural(tage.length, "Tag", "Tagen")} mit Spots` : mitSpots ? `<b>${mitSpots}</b> Tage mit Spots` : "Noch keine Spots eingeplant", end:"", act:"tage"},
+  ];
+  return sect("Planung im Überblick", `<div class="group ovw">${rows.map(r => row({...r, end:r.end})).join("")}</div>`);
+}
+
 VIEWS.reise = () => {
   const r = tripRange(), b = tripBounds(), all = stays(), cs = conns(), iss = planIssues().filter(i => !isZeitraumIssue(i));
-  const add = `<button class="navbtn" data-act="add" aria-label="Aufenthalt oder Verbindung hinzufügen">${ic("plus")}</button>`;
-  // Der Zeitraum steht genau einmal da: festgelegt als tippbare Zeile unter der Überschrift, sonst als Karte mit einer Hauptaktion
-  const sub = r ? `<button class="subbtn" ${attrGo("zeitraum")}>${esc(fmtRange(r.start, r.end))} · ${plural(dayDiff(r.end, r.start), "Nacht", "Nächte")}${ic("weiter")}</button>` : "";
-  const setup = r ? "" : `<div class="setup"><div class="setup-t">${ic("zeitraum")}<span><b>Reisezeitraum festlegen</b><small>${b ? `Eure Planung reicht bisher vom ${esc(fmtDateLong(b.start))} bis ${esc(fmtDateLong(b.end))}. Legt ihn fest, dann prüft die App jede Nacht darin.` : "Erster und letzter Reisetag. Danach prüft die App jede Nacht darin. Kann offen bleiben, bis er feststeht."}</small></span></div><button class="btn primary block" ${attrGo("zeitraum")}>Zeitraum festlegen</button></div>`;
-  if(!all.length && !cs.length) return {title:"Reise", large:true, sub,
+  // Der Zeitraum steht genau einmal da: festgelegt als tippbare Zeile im Kopf, sonst als Karte mit einer Hauptaktion
+  const sub = r ? `<button class="subbtn" ${attrGo("zeitraum")}>${esc(fmtRange(r.start, r.end))} · ${plural(dayDiff(r.end, r.start), "Nacht", "Nächte")}${ic("weiter")}</button>`
+    : `<span>Unsere Reise${all.length ? ` · ${plural(all.length, "Ort", "Orte")}` : ""}</span>`;
+  const setup = r ? "" : `<div class="setup"><div class="setup-t">${ic("zeitraum")}<span><b>Reisezeitraum festlegen</b><small>${b ? `Eure Planung reicht bisher vom ${esc(fmtDateLong(b.start))} bis ${esc(fmtDateLong(b.end))}. Legt ihn fest, dann prüft die App jede Nacht darin.` : "Erster und letzter Reisetag. Danach prüft die App jede Nacht darin. Kann offen bleiben, bis er feststeht."}</small></span></div><button class="btn primary block" ${attrGo("zeitraum")}>Zeitraum festlegen${ic("weiter")}</button></div>`;
+  const mountAdd = el => el.querySelector('[data-act="add"]')?.addEventListener("click", addToTrip);
+  if(!all.length && !cs.length) return {title:"Reise", hero:tripHero(sub),
     html:`${empty("reise", "Plant eure Reise", "Aufenthaltsorte anlegen, je Ort Unterkünfte sammeln und eine wählen, dann die Verbindungen dazwischen. Die App wählt nichts selbst aus.",
       `<div class="btns" style="width:100%"><button class="btn primary" ${attrGo("neuStay", {})}>${ic("plus")}Ersten Aufenthalt anlegen</button><button class="btn" ${attrGo("neuConn", {})}>${ic("flug")}Flug oder Verbindung</button></div>`)}
       ${setup}
       ${sect("Schon vorhanden", group([row({icon:"karte", t:"Spots auf der Karte", s:"Eure Sammlung, unabhängig von der Reiseplanung", act:"zurKarte"})]))}`,
-    mount(el){ el.querySelector('[data-act="zurKarte"]').onclick = () => switchTab("karte"); }};
+    mount(el){ mountAdd(el); el.querySelector('[data-act="zurKarte"]').onclick = () => switchTab("karte"); }};
   const ov = overview(), cnt = lvl => iss.filter(i => i.lvl === lvl).length;
   const tally = ["konflikt","fehlt","offen"].filter(cnt).map(l => `<span class="tal ${l}">${cnt(l)} ${l === "konflikt" ? (cnt(l) === 1 ? "Konflikt" : "Konflikte") : l}</span>`).join("");
   // Oben steht nur der nächste Schritt (alle Konflikte, sonst der früheste Punkt), der Rest ist im Ablauf und in „Prüfung“
@@ -1274,15 +1475,35 @@ VIEWS.reise = () => {
   const tl = ov.items.map((x, i) => x.art === "stay" ? stayCard(x.s) : x.art === "conn" ? connCard(x.c)
     : x.art === "luecke" ? linkCard(`${ic("warn")}<span class="t">${plural(x.n, "Nacht", "Nächte")} ohne Aufenthalt<small>${esc(fmtRange(x.von, x.bis))} · Aufenthalt anlegen</small></span>${ic("plus")}`, attrGo("neuStay", {von:x.von, luecke:x.bis}), "warn")
     : linkCard(`${ic("plus")}<span class="t">${x.richtung === "anreise" ? "Anreise nach " + esc(stayName(x.nach)) : x.richtung === "abreise" ? "Abreise ab " + esc(stayName(x.von)) : esc(stayName(x.von)) + " → " + esc(stayName(x.nach))}<small>Verbindung fehlt · zuordnen oder anlegen</small></span>`, `data-gap="${i}"`, "dashed")).join("");
-  return {title:"Reise", large:true, sub, right:add,
-    html:`${setup}${status}
-      ${sect("Ablauf", ov.items.length ? `<div class="tl">${tl}</div>` : `<p class="hint">Noch nichts mit Datum. Tippt oben auf +.</p>`)}
+  return {title:"Reise", hero:tripHero(sub),
+    html:`${setup}${status}${planOverview(ov)}
+      ${sect("Reiseverlauf", ov.items.length ? `<div class="tl">${tl}</div>` : `<p class="hint">Noch nichts mit Datum. Tippt oben auf +.</p>`)}
       ${ov.ohneDatum.length ? sect("Ohne gültiges Datum", ov.ohneDatum.map(stayCard).join("")) : ""}
       ${ov.rest.length ? sect("Noch ohne Datum", `<p class="hint">Verbindungen ohne gewählte Option und ohne verknüpften Aufenthalt.</p>` + group(ov.rest.map(c => { const l = connLine(c); return row({icon:l.icon, t:esc(connTitle(c)), s:esc(l.s), go:"conn", p:{id:c.id}}); }))) : ""}`,
     mount(el){
+      mountAdd(el);
+      el.querySelector('[data-act="tage"]')?.addEventListener("click", () => switchTab("tage"));
       el.querySelectorAll("[data-gap]").forEach(b => b.onclick = () => fillGap(ov.items[+b.dataset.gap]));
-      el.querySelector('.nav [data-act="add"]')?.addEventListener("click", addToTrip);
     }};
+};
+
+// Bereichslisten aus dem Überblick: Aufenthalte, Unterkünfte (je Aufenthalt die Entscheidung), Verbindungen samt fehlenden
+VIEWS.liste = ({art}) => {
+  const ov = overview(), alle = [...ov.items.filter(x => x.art === "stay").map(x => x.s), ...ov.ohneDatum];
+  const nRow = s => { const n = nights(s); return `${esc(fmtRange(s.von, s.bis))}${n !== null && n > 0 ? " · " + plural(n, "Nacht", "Nächte") : ""}`; };
+  if(art === "stays") return {title:"Aufenthalte", large:true, sub:plural(alle.length, "Ort", "Orte") + " · chronologisch",
+    html:group([...alle.map(s => row({icon:"pin", t:esc(stayName(s)), s:nRow(s), end:pill(s.status), go:"stay", p:{id:s.id}})), row({icon:"plus", t:"Aufenthalt hinzufügen", go:"neuStay", p:{}, cls:"addrow", chev:false})])
+      + (ov.items.some(x => x.art === "luecke") ? `<p class="hint">Nächte ohne Aufenthalt stehen im Reiseverlauf und lassen sich dort direkt füllen.</p>` : "")};
+  if(art === "lodgings") return {title:"Unterkünfte", large:true, sub:"Je Aufenthalt eure Entscheidung",
+    html:alle.length ? group(alle.map(s => { const l = lodgeLine(s); return row({icon:l.z === "konflikt" ? "warn" : "hotel", c:l.z === "gewaehlt" ? "--accent" : l.z === "konflikt" ? "--konflikt" : null, t:esc(stayName(s)), s:l.t + " · " + esc(l.s), go:"stay", p:{id:s.id}}); }))
+      : empty("hotel", "Noch keine Aufenthalte", "Unterkünfte gehören immer zu einem Aufenthalt. Legt zuerst einen Ort mit An- und Abreise an.", `<button class="btn primary" ${attrGo("neuStay", {})}>${ic("plus")}Aufenthalt anlegen</button>`)};
+  const items = ov.items.filter(x => x.art === "conn" || x.art === "connFehlt");
+  return {title:"Verbindungen", large:true, sub:"In der Reihenfolge der Reise",
+    html:(items.length || ov.rest.length ? group([...items.map((x, i) => x.art === "conn" ? (l => row({icon:l.icon, c:l.z === "gewaehlt" ? "--accent" : l.z === "konflikt" ? "--konflikt" : null, t:esc(connTitle(x.c)), s:esc(l.s), go:"conn", p:{id:x.c.id}}))(connLine(x.c))
+        : row({icon:"plus", t:esc(gapTitle(x)), s:"Verbindung fehlt · zuordnen oder anlegen", act:"gap", id:String(i), cls:"addrow", chev:false})),
+        ...ov.rest.map(c => (l => row({icon:l.icon, t:esc(connTitle(c)), s:esc(l.s) + " · ohne Datum", go:"conn", p:{id:c.id}}))(connLine(c)))]) : empty("reise", "Noch keine Verbindungen", "Flüge, Fähren, Busse oder Züge zwischen euren Aufenthalten.", ""))
+      + `<button class="btn ghost" ${attrGo("neuConn", {})}>${ic("plus")}Andere Verbindung anlegen</button>`,
+    mount(el){ el.querySelectorAll('[data-act="gap"]').forEach(b => b.onclick = () => fillGap(items[+b.dataset.id])); }};
 };
 
 VIEWS.pruefung = () => {
@@ -1322,9 +1543,9 @@ VIEWS.zeitraum = p => {
 VIEWS.stay = ({id}) => {
   const s = rec("stays", id); if(!s) return {title:"Nicht gefunden", html:empty("info", "Dieser Aufenthalt wurde gelöscht.", "")};
   const n = nights(s), ls = lodgingsOf(id), ch = stayChoice(id), aktiv = ls.filter(l => !RAUS.has(l.status)), raus = ls.filter(l => RAUS.has(l.status));
-  const cin = conns().filter(c => c.nachStay === id), cout = conns().filter(c => c.vonStay === id);
-  const preisText = l => { const pr = lodgingPrice(l, n); return [pr.nacht !== null ? money(pr.nacht, l.waehrung) + " / Nacht" : "Preis unbekannt", pr.gesamt !== null && n ? money(pr.gesamt, l.waehrung) + " gesamt" : null].filter(Boolean).join(" · "); };
-  const lrow = l => row({icon:"hotel", c:ch.zustand === "gewaehlt" && GEWAEHLT.has(l.status) ? "--accent" : null, t:esc(l.name), s:esc([l.art, preisText(l)].filter(Boolean).join(" · ")), s2:!Number.isFinite(l.lat) ? "Kartenpunkt fehlt" : "", end:pill(l.status), go:"lodging", p:{id:l.id}});
+  const cin = conns().filter(c => c.nachStay === id), cout = conns().filter(c => c.vonStay === id), vor = neighborStay(s, "vor"), nach = neighborStay(s, "nach");
+  const preisText = l => { const pr = lodgingPrice(l, n); return [pr.nacht !== null ? money(pr.nacht, l.waehrung) + " / Nacht" : "ohne Preis", pr.gesamt !== null && n ? money(pr.gesamt, l.waehrung) + " gesamt" : null].filter(Boolean).join(" · "); };
+  const lrow = l => { const gew = ch.zustand === "gewaehlt" && GEWAEHLT.has(l.status); return `<div class="row lrow"><button class="rowmain" ${attrGo("lodging", {id:l.id})}><span class="lead${gew ? " c" : ""}"${gew ? ' style="--c:var(--accent)"' : ""}>${ic("hotel")}</span><span class="txt"><span class="t">${esc(l.name)}</span><span class="s">${esc([l.art, preisText(l)].filter(Boolean).join(" · "))}</span>${pinState(l, gew)}</span><span class="end">${pill(l.status)}</span></button>${pinBtn(l)}</div>`; };
   const addRow = row({icon:"plus", t:"Unterkunftsoption hinzufügen", go:"lodgingEdit", p:{stayId:id}, cls:"addrow", chev:false});
   const keepRow = l => `<div class="row"><span class="lead c" style="--c:var(--konflikt)">${ic("hotel")}</span><span class="txt"><button class="t linkish" ${attrGo("lodging", {id:l.id})}>${esc(l.name)}</button><span class="s">${esc(STATUS[l.status] + " · " + preisText(l))}</span></span><button class="btn small" data-keep="${l.id}">Behalten</button></div>`;
   const andere = aktiv.filter(l => !(ch.zustand !== "offen" && GEWAEHLT.has(l.status)));
@@ -1340,13 +1561,15 @@ VIEWS.stay = ({id}) => {
     right:`<button class="navbtn" ${attrGo("stayEdit", {id})}>Bearbeiten</button>`,
     html:`${unterkunft}${optionen}
       ${raus.length ? `<details class="group"><summary class="row"><span class="txt"><span class="s">${plural(raus.length, "verworfene oder stornierte Option", "verworfene oder stornierte Optionen")}</span></span></summary>${raus.map(lrow).join("")}</details>` : ""}
-      ${sect("An- und Weiterreise", group([...cin.map(crow), ...(cin.length ? [] : [row({icon:"plus", t:"Anreise zuordnen oder anlegen", act:"anreise", cls:"addrow", chev:false})]), ...cout.map(crow), ...(cout.length ? [] : [row({icon:"plus", t:"Weiterreise zuordnen oder anlegen", act:"abreise", cls:"addrow", chev:false})])]))}
+      ${sect("An- und Weiterreise", group([...cin.map(crow), ...(cin.length ? [] : [row({icon:"plus", t:vor ? `Anreise von ${esc(stayName(vor))}` : "Anreise zuordnen oder anlegen", s:vor ? "Verbindung fehlt · zuordnen oder anlegen" : "", act:"anreise", cls:"addrow", chev:false})]), ...cout.map(crow), ...(cout.length ? [] : [row({icon:"plus", t:nach ? `Weiterreise nach ${esc(stayName(nach))}` : "Weiterreise zuordnen oder anlegen", s:nach ? "Verbindung fehlt · zuordnen oder anlegen" : "", act:"abreise", cls:"addrow", chev:false})])]))}
       ${days.length ? sect("Tage hier", group(days.map(d => { const pl = dayPlanFor(d), k = pl ? pl.plan.stationen.filter(x => P(x.placeId)).length : 0; return row({icon:"kalender", t:esc(fmtDateLong(d)), s:d === s.von ? "Anreise" : d === s.bis ? "Abreise" : k ? plural(k, "Spot", "Spots") : "noch leer", end:k && d !== s.von && d !== s.bis ? "" : k ? plural(k, "Spot", "Spots") : "", go:"day", p:{d}}); }))) : ""}
       ${s.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(s.notiz)}</p></div>`) : ""}`,
     mount(el){
+      bindPins(el);
       el.querySelectorAll("[data-keep]").forEach(b => b.onclick = () => keepOption("lodgings", b.dataset.keep));
-      el.querySelector('[data-act="anreise"]')?.addEventListener("click", () => fillGap({nach:s, richtung:"anreise"}));
-      el.querySelector('[data-act="abreise"]')?.addEventListener("click", () => fillGap({von:s, richtung:"abreise"}));
+      // Grenzt genau ein Aufenthalt direkt an (gleicher Tag), ist er die andere Seite der neuen Verbindung, sonst bleibt sie offen
+      el.querySelector('[data-act="anreise"]')?.addEventListener("click", () => fillGap(vor ? {von:vor, nach:s} : {nach:s, richtung:"anreise"}));
+      el.querySelector('[data-act="abreise"]')?.addEventListener("click", () => fillGap(nach ? {von:s, nach} : {von:s, richtung:"abreise"}));
     }};
 };
 // Wählen bzw. bei einem Konflikt behalten. Blockiert eine gebuchte Option, sagt die App, was zu tun ist.
@@ -1403,35 +1626,51 @@ function bindStatus(el, col, id){
     commit(`Status: ${STATUS[b.dataset.st]}`);
   });
 }
+// Kleine Karte im Detail: zeigt nur den gespeicherten Punkt, nicht bedienbar. Tippen öffnet die große Karte.
+let miniMap = null;
+function mountMiniMap(box, l){
+  if(miniMap){ try{ miniMap.remove(); }catch(e){} miniMap = null; }
+  if(!box || !window.L || !Number.isFinite(l.lat)) return;
+  miniMap = L.map(box, {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, doubleClickZoom:false, touchZoom:false, boxZoom:false, keyboard:false, tap:false}).setView([l.lat, l.lng], 15);
+  L.tileLayer(TILE_URL, {maxNativeZoom:17, maxZoom:18, crossOrigin:true}).addTo(miniMap);
+  L.marker([l.lat, l.lng], {interactive:false, keyboard:false, icon:L.divIcon({className:"", html:`<div class="hpin${GEWAEHLT.has(l.status) ? "" : " kand"}">${ic("hotel")}</div>`, iconSize:[34,34], iconAnchor:[17,17]})}).addTo(miniMap);
+}
+// Unterkunft: oben Preis und Wertung, dann Lage mit Karte, Notiz, weitere Angaben, Status. Die Entscheidung sitzt in der Leiste unten.
 VIEWS.lodging = ({id}) => {
   const l = rec("lodgings", id); if(!l) return {title:"Nicht gefunden", html:empty("info", "Diese Option wurde gelöscht.", "")};
   const s = rec("stays", l.stayId), n = nights(s), pr = lodgingPrice(l, n), gew = GEWAEHLT.has(l.status);
-  const facts = [
-    pr.nacht !== null && row({icon:"euro", t:money(pr.nacht, l.waehrung) + " pro Nacht", s:pr.gesamt !== null ? money(pr.gesamt, l.waehrung) + ` gesamt für ${plural(n, "Nacht", "Nächte")}` : l.bezug === "nacht" ? "Gesamtpreis, sobald die Nächte feststehen" : ""}),
-    pr.nacht === null && pr.gesamt !== null && row({icon:"euro", t:money(pr.gesamt, l.waehrung) + " gesamt", s:"Nächte noch offen"}),
-    pr.nacht === null && pr.gesamt === null && row({icon:"euro", t:"Preis unbekannt", s:"Im Bearbeiten eintragen"}),
-    (l.checkin || l.checkout) && row({icon:"uhr", t:[l.checkin ? "Check-in " + l.checkin : null, l.checkout ? "Check-out " + l.checkout : null].filter(Boolean).join(" · ")}),
-    l.bewertung && row({icon:"stern", t:"★".repeat(l.bewertung) + "☆".repeat(5 - l.bewertung), s:"Eure Bewertung"}),
-    l.adresse && row({icon:"pin", t:esc(l.adresse)}),
-    Number.isFinite(l.lat) ? row({icon:"karte", t:"Lage auf der Karte", s:`${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}`, act:"karte"}) : row({icon:"pin", t:"Ort fehlt", s:"Ohne Ort hat der Tagesplan keinen Start", go:"lodgingEdit", p:{id}}),
-    l.link && row({icon:"link", t:"Seite der Unterkunft", s:esc(l.link.replace(/^https?:\/\//, "").slice(0, 48)), href:l.link}),
+  const zustand = s ? stayChoice(s.id).zustand : null, konflikt = gew && zustand === "konflikt", relevant = gew && zustand === "gewaehlt";
+  const preis = pr.nacht !== null ? `<b>${money(pr.nacht, l.waehrung)}</b><small>pro Nacht${pr.gesamt !== null ? ` · ${money(pr.gesamt, l.waehrung)} für ${plural(n, "Nacht", "Nächte")}` : ""}</small>`
+    : pr.gesamt !== null ? `<b>${money(pr.gesamt, l.waehrung)}</b><small>gesamt, Nächte noch offen</small>` : `<b class="v-leer">–</b><small>kein Preis eingetragen</small>`;
+  const wertung = l.bewertung ? `<b><span class="stars" aria-label="${l.bewertung} von 5">${"★".repeat(l.bewertung)}<span>${"★".repeat(5 - l.bewertung)}</span></span></b><small>eure Bewertung</small>` : `<b class="v-leer">–</b><small>noch nicht bewertet</small>`;
+  const lage = [
+    l.adresse && row({icon:"pin", t:esc(l.adresse), s:"Adresse laut euren Angaben"}),
+    Number.isFinite(l.lat) ? row({icon:"pin", c:"--accent", t:"Kartenpunkt gesetzt", s:`${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}`, end:`<button class="btn small ghost" data-act="karte">Zeigen</button><button class="btn small" data-pin="${id}">Ändern</button>`, chev:false})
+      : row({icon:"pin", c:relevant ? "--fehlt" : null, t:"Kartenpunkt fehlt", s:gew ? "Ohne Punkt hat der Tagesplan hier keinen Start" : "Für Lage, Karte und Fahrzeiten", end:`<button class="btn small" data-pin="${id}">Setzen</button>`, chev:false}),
   ].filter(Boolean);
-  const konflikt = gew && s && stayChoice(s.id).zustand === "konflikt";
-  const entscheidung = !s ? `<p class="note konflikt">Diese Option gehört zu einem Aufenthalt, der gelöscht wurde. Ordnet sie unter „Bearbeiten“ einem Aufenthalt zu oder löscht sie.</p>`
-    : konflikt ? `<p class="note konflikt">Gleichzeitig mit einer anderen Option gewählt. Bis ihr eine behaltet, gilt keine.</p><button class="btn primary block" data-act="choose">${ic("haken")}Diese behalten</button>`
-    : gew ? `<p class="note ok">${ic("haken")}${l.status === "gebucht" ? "Gebucht" : "Gewählt"} für ${esc(stayName(s))}. Start und Ziel der Tagespläne in dieser Zeit.</p>`
-    : `<button class="btn primary block" data-act="choose">${ic("haken")}Für ${esc(stayName(s))} wählen</button>`;
+  const weitere = [
+    row({icon:"hotel", t:"Art", end:l.art ? esc(l.art) : `<span class="v-leer">–</span>`, chev:false}),
+    row({icon:"uhr", t:"Check-in / Check-out", end:l.checkin || l.checkout ? esc([l.checkin || "–", l.checkout || "–"].join(" / ")) : `<span class="v-leer">–</span>`, chev:false}),
+    l.link ? row({icon:"link", t:"Seite der Unterkunft", s:esc(l.link.replace(/^https?:\/\//, "").slice(0, 48)), href:l.link}) : row({icon:"link", t:"Link", end:`<span class="v-leer">–</span>`, chev:false}),
+  ];
+  const bar = !s ? "" : konflikt ? `<button class="btn primary" data-act="choose">${ic("haken")}Diese behalten</button>`
+    : gew ? `<span class="status">${ic("haken")}${l.status === "gebucht" ? "Gebucht" : "Gewählt"} für ${esc(stayName(s))}</span>`
+    : `<button class="btn primary" data-act="choose">Für ${esc(stayName(s))} wählen</button>`;
   return {title:l.name, large:true, sub:`${esc([l.art, s ? stayName(s) : null].filter(Boolean).join(" · "))} ${pill(l.status)}`,
-    right:`<button class="navbtn" ${attrGo("lodgingEdit", {id})}>Bearbeiten</button>`,
-    html:`${entscheidung}
-      ${sect("Angaben", group(facts))}
-      ${sect("Status", statusChips(l.status) + `<p class="hint">Kandidat und Favorit zum Sammeln, „Ausgewählt“ ist eure Entscheidung, „Gebucht“ wenn bestätigt.</p>`)}
+    right:`<button class="navbtn" ${attrGo("lodgingEdit", {id})}>Bearbeiten</button>`, bar,
+    html:`${!s ? `<p class="note konflikt">Diese Option gehört zu einem Aufenthalt, der gelöscht wurde. Ordnet sie unter „Bearbeiten“ einem Aufenthalt zu oder löscht sie.</p>` : ""}
+      ${konflikt ? `<p class="note konflikt">Gleichzeitig mit einer anderen Option gewählt. Bis ihr eine behaltet, gilt keine.</p>` : relevant ? `<p class="note ok">${ic("haken")}Start und Ziel der Tagespläne in dieser Zeit.</p>` : ""}
+      <div class="dsum"><div><span>Preis</span>${preis}</div><div><span>Wertung</span>${wertung}</div></div>
+      ${sect("Lage", (Number.isFinite(l.lat) ? `<button class="minimap" data-act="karte" aria-label="Auf der Karte zeigen"><div class="mmap"></div></button>` : "") + group(lage))}
       ${l.notiz ? sect("Notiz", `<div class="group rowx"><p class="prose">${esc(l.notiz)}</p></div>`) : ""}
+      ${sect("Weitere Angaben", group(weitere))}
+      ${sect("Status", statusChips(l.status) + `<p class="hint">Kandidat und Favorit zum Sammeln, „Ausgewählt“ ist eure Entscheidung, „Gebucht“ wenn bestätigt.</p>`)}
       ${s && lodgingsOf(s.id).filter(x => !RAUS.has(x.status)).length > 1 ? group([row({icon:"vergleich", t:"Mit anderen Optionen vergleichen", go:"compare", p:{col:"lodgings", parent:s.id}})]) : ""}`,
     mount(el){
-      bindStatus(el, "lodgings", id);
+      bindStatus(el, "lodgings", id); bindPins(el);
+      mountMiniMap(el.querySelector(".mmap"), l);
       el.querySelector('[data-act="choose"]')?.addEventListener("click", () => keepOption("lodgings", id));
-      el.querySelector('[data-act="karte"]')?.addEventListener("click", () => { openInTab("karte"); mapFocus([l.lat, l.lng], 15); });
+      el.querySelectorAll('[data-act="karte"]').forEach(b => b.addEventListener("click", () => { openInTab("karte"); mapFocus([l.lat, l.lng], 15); }));
     }};
 };
 VIEWS.lodgingEdit = p => {
@@ -1444,8 +1683,8 @@ VIEWS.lodgingEdit = p => {
       <div class="fgroup">${fRow(fText("preis", "Betrag", d.preis, {type:"text", im:"decimal", ph:"unbekannt"}), fSelect("waehrung", "Währung", d.waehrung || "THB", WAEHRUNG.map(w => [w, w])))}${fSelect("bezug", "Bezieht sich auf", d.bezug || "nacht", [["nacht", "pro Nacht"], ["gesamt", "gesamten Aufenthalt"]])}</div>
       <p class="fhint">${s && nights(s) ? `Für ${plural(nights(s), "Nacht", "Nächte")} in ${esc(stayName(s))}.` : "Nächte noch offen."} Kein Preis bedeutet unbekannt, es wird nichts geschätzt.</p>
       <div class="flabel">Lage</div>
-      <div class="fgroup">${fText("adresse", "Adresse", d.adresse, {ph:"Optional"})}${fText("coords", "Koordinaten oder Google-Maps-Link", Number.isFinite(d.lat) ? `${d.lat}, ${d.lng}` : "", {ph:"13.7563, 100.5018 oder Link einfügen", ac:false})}</div>
-      <button type="button" class="btn" data-act="pick">${ic("pin")}Auf der Karte setzen</button>
+      <div class="fgroup">${fText("adresse", "Adresse", d.adresse, {ph:"Optional"})}${fText("coords", "Kartenpunkt: Koordinaten oder Google-Maps-Link", Number.isFinite(d.lat) ? `${d.lat}, ${d.lng}` : "", {ph:"13.7563, 100.5018 oder Link einfügen", ac:false})}</div>
+      <button type="button" class="btn" data-act="pick">${ic("pin")}Kartenpunkt auf der Karte setzen</button>
       <p class="fhint" id="gap">Setzt den Punkt an die Einfahrt an der Straße, sonst stimmen die Fahrzeiten nicht.</p>
       <div class="fgroup">${fText("link", "Link zur Unterkunft oder Buchung", d.link, {type:"url", im:"url", ph:"https://…", ac:false})}${fRow(fText("checkin", "Check-in", d.checkin, {type:"time"}), fText("checkout", "Check-out", d.checkout, {type:"time"}))}</div>
       <div class="flabel">Eure Bewertung</div>${fChips("bewertung", [1,2,3,4,5].map(n => [String(n), "★".repeat(n)]), d.bewertung ? String(d.bewertung) : "")}
@@ -1489,73 +1728,128 @@ VIEWS.lodgingEdit = p => {
     }};
 };
 
-/* ---------- Ort auf der Karte wählen (eigene kleine Karte, nimmt den Mittelpunkt) ---------- */
+/* ---------- Kartenpunkt wählen (eine kleine Karte, der Mittelpunkt zählt) ----------
+   Zwei Wege, eine Logik: mit lodgingId speichert „Übernehmen“ den Punkt direkt in der Unterkunftsoption (aus Liste, Detail
+   oder Vergleich), ohne lodgingId geht er als Entwurf zurück ins Formular. Abbrechen ändert nie etwas. Kein Geocoding:
+   den Punkt setzt ihr selbst, „Mein Standort“ nutzt nur das GPS des Handys. */
 let pickMap = null;
-VIEWS.ortWahl = p => ({title:"Ort wählen", form:true,
-  html:`<p class="hint">Karte verschieben, bis die Markierung auf der Einfahrt liegt. ${esc(p.titel || "")}</p>
-    <div class="picker"><div class="pmap" id="pmap"></div><div class="cross">${ic("pin")}</div></div>
-    <div class="btns"><button class="btn" data-act="me">${ic("standort")}Mein Standort</button></div>
-    <p class="hint" id="pc"></p>`,
-  bar:`<button class="btn" data-back>Abbrechen</button><button class="btn primary" data-act="ok">Übernehmen</button>`,
-  mount(el){
-    if(!window.L){ el.querySelector("#pmap").innerHTML = '<p style="padding:20px">Karte nicht geladen. Koordinaten bitte als Text einfügen.</p>'; return; }
-    const prev = stackOf()[stackOf().length - 2]?.params || {};
-    const start = Number.isFinite(p.lat) ? [p.lat, p.lng] : ME?.inArea ? [ME.lat, ME.lng] : VIEW.center;
-    pickMap = L.map(el.querySelector("#pmap"), {zoomControl:false, attributionControl:false, maxBounds:VIEW.bounds, minZoom:5, maxZoom:18}).setView(start, Number.isFinite(p.lat) ? 16 : ME?.inArea ? 15 : 6);
-    L.tileLayer(TILE_URL, {maxNativeZoom:17, maxZoom:18, crossOrigin:true}).addTo(pickMap);
-    const show = () => { const c = pickMap.getCenter(); el.querySelector("#pc").textContent = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; };
-    pickMap.on("move", show); show();
-    el.querySelector('[data-act="me"]').onclick = () => navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => pickMap.setView([pos.coords.latitude, pos.coords.longitude], 16), () => toast("Standort nicht freigegeben", "warn", 2600, true), {enableHighAccuracy:true, timeout:8000}) : toast("Standort nicht verfügbar", "warn", 2600, true);
-    el.querySelector('[data-act="ok"]').onclick = () => {
-      const c = pickMap.getCenter();
-      if(pickMap.getZoom() < 13) return toast("Bitte näher heranzoomen, damit der Punkt genau sitzt", "info", 3000);
-      prev.draft = {...(prev.draft || {}), coords:`${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`};
-      pickMap.remove(); pickMap = null; back(); toast("Ort übernommen", "pin");
-    };
-  }});
+// Start der Karte: eigener Punkt, sonst ein Punkt einer anderen Option desselben Aufenthalts (nur als Kartenausschnitt), sonst Standort oder Thailand
+function pickStart(p, l){
+  if(l && Number.isFinite(l.lat)) return [[l.lat, l.lng], 16];
+  if(Number.isFinite(p.lat)) return [[p.lat, p.lng], 16];
+  const nb = l ? lodgingsOf(l.stayId).find(x => x.id !== l.id && Number.isFinite(x.lat)) : null;
+  if(nb) return [[nb.lat, nb.lng], 14];
+  return ME?.inArea ? [[ME.lat, ME.lng], 15] : [VIEW.center, 6];
+}
+const pinLabel = l => Number.isFinite(l?.lat) ? "Kartenpunkt ändern" : "Kartenpunkt setzen";
+VIEWS.ortWahl = p => {
+  const l = p.lodgingId ? rec("lodgings", p.lodgingId) : null, name = l ? l.name : p.titel || "";
+  if(p.lodgingId && !l) return {title:"Nicht gefunden", html:empty("info", "Diese Option wurde gelöscht.", "")};
+  return {title:l ? pinLabel(l) : "Ort wählen", form:true,
+    html:`<p class="hint">Karte verschieben und zoomen, bis die Markierung auf der Einfahrt ${name ? "von " + esc(name) : "der Unterkunft"} liegt.${l?.adresse ? ` Eure Adressangabe: ${esc(l.adresse)}.` : ""}</p>
+      <div class="picker"><div class="pmap" id="pmap"></div><div class="cross">${ic("pin")}</div></div>
+      <div class="pickrow"><span class="hint" id="pc"></span><button class="btn small" data-act="me">${ic("standort")}Mein Standort</button></div>`,
+    bar:`<button class="btn" data-back>Abbrechen</button><button class="btn primary" data-act="ok">Übernehmen</button>`,
+    mount(el){
+      if(pickMap){ try{ pickMap.remove(); }catch(e){} pickMap = null; } // Rest einer abgebrochenen Auswahl
+      if(!window.L){ el.querySelector("#pmap").innerHTML = '<p style="padding:20px">Karte nicht geladen. Koordinaten bitte im Formular als Text einfügen.</p>'; el.querySelector('[data-act="ok"]').disabled = true; return; }
+      const prev = stackOf()[stackOf().length - 2]?.params || {}, [start, zoom] = pickStart(p, l);
+      pickMap = L.map(el.querySelector("#pmap"), {zoomControl:false, attributionControl:false, maxBounds:VIEW.bounds, minZoom:5, maxZoom:18}).setView(start, zoom);
+      L.tileLayer(TILE_URL, {maxNativeZoom:17, maxZoom:18, crossOrigin:true}).addTo(pickMap);
+      // Nach Abbrechen oder Zurück ist die Ansicht weg: Karte dann abräumen statt ins Leere zu schreiben (Nachlauf beim Ziehen)
+      const pc = el.querySelector("#pc"), mapNow = pickMap;
+      const show = () => { if(!pc.isConnected){ setTimeout(() => { try{ mapNow.remove(); }catch(e){} if(pickMap === mapNow) pickMap = null; }); return; } const c = mapNow.getCenter(); pc.textContent = mapNow.getZoom() < 13 ? "Zum Setzen näher heranzoomen" : `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; };
+      pickMap.on("move zoomend", show); show();
+      el.querySelector('[data-act="me"]').onclick = () => navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => pickMap.setView([pos.coords.latitude, pos.coords.longitude], 16), () => toast("Standort nicht freigegeben", "warn", 2600, true), {enableHighAccuracy:true, timeout:8000}) : toast("Standort nicht verfügbar", "warn", 2600, true);
+      el.querySelector('[data-act="ok"]').onclick = () => {
+        const c = pickMap.getCenter();
+        if(pickMap.getZoom() < 13) return toast("Bitte näher heranzoomen, damit der Punkt genau sitzt", "info", 3000);
+        const lat = +c.lat.toFixed(6), lng = +c.lng.toFixed(6);
+        pickMap.remove(); pickMap = null;
+        if(!l){ prev.draft = {...(prev.draft || {}), coords:`${lat}, ${lng}`}; back(); return toast("Ort übernommen", "pin"); }
+        // Nur lat und lng ändern sich, mit eigenem Zeitstempel je Feld: der Abgleich führt das feldweise zusammen.
+        // Routen- und Kachel-Cache hängen an den Koordinaten, ein verschobener Punkt bekommt also nie eine alte Route.
+        const neu = !Number.isFinite(l.lat);
+        setRec("lodgings", l.id, {lat, lng}); persist(); back(); onDataChanged();
+        toast(neu ? "Kartenpunkt gesetzt" : "Kartenpunkt geändert", "pin");
+        if(typeof prefetchTiles === "function") prefetchTiles();
+        if(navigator.onLine !== false) roadGap(lat, lng).then(m => { if(m > 150) toast(`${m} m bis zur nächsten Straße. Liegt der Punkt an der Einfahrt?`, "warn", 4200, true); }).catch(() => {});
+      };
+    }};
+};
 
-/* ---------- Vergleich (Unterkünfte oder Transportoptionen) ---------- */
-VIEWS.compare = ({col, parent, alle}) => {
+/* ---------- Vergleich (Unterkünfte oder Transportoptionen) ----------
+   Karten untereinander, in jeder Karte dieselben Zeilen an derselben Stelle. Vier Arten von Leere, nie vermischt:
+   –                    optionales Feld, nicht ausgefüllt (Art, Adresse, Wertung, Check-in, Anbieter, Nummer, Dauer, Link)
+   „nicht eingetragen“  wichtige Angabe fehlt, ist für einen bloßen Kandidaten aber noch kein Problem (neutral)
+   „… fehlt“            dieselbe Angabe fehlt bei der eindeutig gewählten Option: das meldet auch die Prüfung (bernstein)
+   Konflikt             mehrere gewählt, Karte rot, „Behalten“
+   Die App setzt nie Standardwerte ein, Unbekanntes bleibt sichtbar unbekannt. */
+const V_LEER = `<span class="v-leer" aria-label="keine Angabe">–</span>`;
+const vOpt = v => v === null || v === undefined || v === "" ? V_LEER : v;
+const V_NICHT = `<span class="v-nicht">nicht eingetragen</span>`;
+const vFehlt = was => `<span class="v-fehlt">${ic("info")}${esc(was)} fehlt</span>`;
+VIEWS.compare = ({col, parent, alle, f}) => {
   const isL = col === "lodgings", owner = isL ? rec("stays", parent) : rec("conns", parent);
   if(!owner) return {title:"Vergleich", html:empty("info", "Nicht mehr vorhanden.", "")};
   // feste Reihenfolge nach Erfassung: nach dem Wählen springt keine Karte unter dem Finger weg
   const n = isL ? nights(owner) : null, listAll = (isL ? lodgingsOf(parent) : optsOf(parent)).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0) || a.id.localeCompare(b.id)), list = alle ? listAll : listAll.filter(o => !RAUS.has(o.status));
   if(list.length < 1) return {title:"Vergleich", html:empty("vergleich", "Nichts zu vergleichen", "Legt mindestens zwei Optionen an.")};
-  const ch = chosenOf(list), unb = `<span class="muted">unbekannt</span>`, val = v => v === null || v === undefined || v === "" ? unb : v;
+  const ch = chosenOf(list), relevant = o => GEWAEHLT.has(o.status) && !ch.mehrere; // genau die Option, die die Prüfung prüft
+  // Filter nur über vorhandene Status. Konflikt, Preise und „günstigste“ gelten immer über alle aktiven Optionen.
+  const FILTER = [["alle", "Alle", () => true], ["kandidat", "Kandidaten", o => o.status === "kandidat"], ["favorit", "Favoriten", o => o.status === "favorit"], ["gewaehlt", "Gewählt", o => GEWAEHLT.has(o.status)]];
+  const fk = FILTER.some(x => x[0] === f) ? f : "alle", shown = list.filter(FILTER.find(x => x[0] === fk)[2]);
+  const chips = list.length > 2 ? `<div class="chips scroll" role="group" aria-label="Filter">${FILTER.map(([k, t, fn]) => `<button class="chip" data-filter="${k}" aria-pressed="${k === fk}">${t} <small>${list.filter(fn).length}</small></button>`).join("")}</div>` : "";
   // günstigste je Währung hervorheben, Währungen werden nie umgerechnet. Unterkünfte nach Gesamtpreis, solange die Nächte feststehen.
   const priceOf = o => isL ? (n ? lodgingPrice(o, n).gesamt : lodgingPrice(o, n).nacht) : o.preis;
   const best = {}; list.forEach(o => { const v = priceOf(o); if(Number.isFinite(v)) best[o.waehrung || "THB"] = Math.min(best[o.waehrung || "THB"] ?? Infinity, v); });
   const isBest = o => { const v = priceOf(o); return Number.isFinite(v) && best[o.waehrung || "THB"] === v && list.filter(x => Number.isFinite(priceOf(x)) && (x.waehrung || "THB") === (o.waehrung || "THB")).length > 1; };
-  // Jede Karte hat dieselben Zeilen in derselben Reihenfolge, Unbekanntes steht als „unbekannt“ da statt zu fehlen
-  const price = o => { if(!isL) return Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : null; const pr = lodgingPrice(o, n); return pr.nacht === null && pr.gesamt === null ? null : [pr.nacht !== null ? money(pr.nacht, o.waehrung) + " / Nacht" : null, pr.gesamt !== null ? money(pr.gesamt, o.waehrung) + " gesamt" : null].filter(Boolean).join(" · "); };
+  const preis = o => {
+    // wie in der Prüfung: bei der gewählten Transportoption fehlt ein Preis, bei einer gebuchten nicht (steht in der Buchung)
+    if(!isL) return Number.isFinite(o.preis) ? `<b>${money(o.preis, o.waehrung)}</b>` : relevant(o) && o.status !== "gebucht" ? vFehlt("Preis") : `<span class="cp-leer">Preis ${V_NICHT}</span>`;
+    const pr = lodgingPrice(o, n);
+    if(pr.nacht === null && pr.gesamt === null) return `<span class="cp-leer">Preis ${V_NICHT}</span>`;
+    return `<b>${pr.nacht !== null ? money(pr.nacht, o.waehrung) + " / Nacht" : money(pr.gesamt, o.waehrung) + " gesamt"}</b>${pr.nacht !== null ? `<small>${pr.gesamt !== null ? money(pr.gesamt, o.waehrung) + ` gesamt für ${plural(n, "Nacht", "Nächte")}` : "Gesamtpreis, sobald die Nächte feststehen"}</small>` : `<small>für den ganzen Aufenthalt, Nächte noch offen</small>`}`;
+  };
+  const link = o => o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">${ic("extern")}öffnen</a>` : V_LEER;
+  // Zeiten sind wichtig, aber erst bei der gewählten Option Pflicht (Prüfung: Datum, Abfahrt, Ankunft)
+  const zeit = (o, datum, uhr, brauchtDatum) => {
+    const t = esc([datum ? fmtDate(datum) : null, uhr].filter(Boolean).join(" ")), fehlt = [brauchtDatum && !datum && "Datum", !uhr && "Uhrzeit"].filter(Boolean);
+    return relevant(o) && fehlt.length ? (t ? t + " · " : "") + vFehlt(fehlt.join(", ")) : t || V_NICHT;
+  };
   const facts = o => isL ? [
-    ["Lage", esc(o.adresse || "") || (Number.isFinite(o.lat) ? "auf der Karte gesetzt" : null)],
-    ["Art", esc(o.art || "")],
-    ["Eure Wertung", o.bewertung ? "★".repeat(o.bewertung) : null],
-    ["Check-in/out", [o.checkin, o.checkout].filter(Boolean).join(" / ")],
+    ["Art", vOpt(esc(o.art || ""))],
+    ["Lage", vOpt(esc(o.adresse || ""))],
+    ["Karte", `<span class="kp">${pinState(o, relevant(o))}<button class="btn small" data-pin="${o.id}">${Number.isFinite(o.lat) ? "Ändern" : "Setzen"}</button></span>`],
+    ["Wertung", o.bewertung ? `<span class="stars" aria-label="${o.bewertung} von 5">${"★".repeat(o.bewertung)}<span>${"★".repeat(5 - o.bewertung)}</span></span>` : V_LEER],
+    ["Check-in/out", vOpt([o.checkin, o.checkout].filter(Boolean).join(" / "))],
+    ["Link", link(o)],
   ] : [
-    ["Abfahrt", [o.datum ? fmtDate(o.datum) : null, o.ab].filter(Boolean).join(" ")],
-    ["Ankunft", [o.anDatum && o.anDatum !== o.datum ? fmtDate(o.anDatum) : null, o.an].filter(Boolean).join(" ")],
-    ["Dauer", o.dauerMin ? esc(optDauer(o)) + (o.dauerOk ? "" : " (geschätzt)") : null],
-    ["Anbieter", esc([o.anbieter, o.nummer].filter(Boolean).join(" "))],
+    ["Anbieter", vOpt(esc(o.anbieter || ""))],
+    ["Nummer", vOpt(esc(o.nummer || ""))],
+    ["Abfahrt", zeit(o, o.datum, o.ab, true)],
+    ["Ankunft", zeit(o, o.anDatum && o.anDatum !== o.datum ? o.anDatum : null, o.an, false)],
+    ["Dauer", o.dauerMin ? esc(legTxt(o.dauerMin)) + `<span class="v-nicht"> · ${o.dauerOk ? "laut Fahrplan" : "geschätzt"}</span>` : V_LEER],
+    ["Link", link(o)],
   ];
-  const head = o => isL ? esc(o.name) : esc([TRANSPORT[o.art]?.[0], o.anbieter].filter(Boolean).join(" · ") || "Option");
+  // Kein Bildfeld im Datenmodell: statt erfundener Hotelfotos eine ruhige Fläche mit Symbol
+  const head = o => isL ? `<span class="who"><span class="thumb">${ic("hotel")}</span><span class="tt"><span class="t">${esc(o.name)}</span></span></span>` : `<span class="who"><span class="thumb">${ic(TRANSPORT[o.art]?.[1] || "reise")}</span><span class="tt"><span class="t">${esc(TRANSPORT[o.art]?.[0] || "Option")}</span></span></span>`;
   const action = o => GEWAEHLT.has(o.status) && ch.mehrere ? `<button class="btn primary" data-choose="${o.id}">Behalten</button>`
     : GEWAEHLT.has(o.status) ? `<span class="chosen">${ic("haken")}${o.status === "gebucht" ? "Gebucht" : "Gewählt"}</span>`
     : RAUS.has(o.status) ? "" : `<button class="btn" data-choose="${o.id}">Wählen</button>`;
   const card = o => `<article class="ccard${GEWAEHLT.has(o.status) ? (ch.mehrere ? " konflikt" : " on") : ""}">
-      <header><button class="t" ${attrGo(isL ? "lodging" : "opt", {id:o.id})}>${head(o)}</button>${pill(o.status)}</header>
-      <div class="cprice${isBest(o) ? " best" : ""}">${val(price(o))}${isBest(o) ? `<span class="tag">günstigste</span>` : ""}</div>
-      <dl>${facts(o).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${val(v)}</dd>`).join("")}</dl>
+      <header>${head(o)}${pill(o.status)}</header>
+      <div class="cprice${isBest(o) ? " best" : ""}"><div>${preis(o)}</div>${isBest(o) ? `<span class="tag">günstigste</span>` : ""}</div>
+      <dl>${facts(o).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>
       ${o.notiz ? `<p class="cnote">${esc(o.notiz.slice(0, 140))}${o.notiz.length > 140 ? " …" : ""}</p>` : ""}
-      <footer>${o.link ? `<a class="btn ghost" href="${esc(o.link)}" target="_blank" rel="noopener">${ic("extern")}Seite</a>` : ""}${action(o)}</footer>
+      <footer><button class="btn ghost" ${attrGo(isL ? "lodging" : "opt", {id:o.id})}>Details</button>${action(o)}</footer>
     </article>`;
   return {title:"Vergleich", large:true, sub:esc(isL ? stayName(owner) + (n ? " · " + plural(n, "Nacht", "Nächte") : "") : connTitle(owner)),
     html:`${ch.mehrere ? `<p class="note konflikt">${ch.alle.length} Optionen sind gleichzeitig gewählt. Behaltet eine, die andere wird Favorit.</p>` : ""}
-      <div class="ccards">${list.map(card).join("")}</div>
-      <p class="hint">Hervorgehoben ist der niedrigste ${isL && n ? "Gesamtpreis" : "Preis"} innerhalb derselben Währung. Euro und Baht werden nicht umgerechnet, Unbekanntes bleibt unbekannt.</p>
+      ${chips}<div class="ccards">${shown.length ? shown.map(card).join("") : `<p class="hint">Keine Option mit diesem Status.</p>`}</div>
+      <p class="hint">„–“ heißt: nicht ausgefüllt, optional. „fehlt“ steht nur bei der gewählten Option, wenn die Angabe für die Planung nötig ist. Hervorgehoben ist der niedrigste ${isL && n ? "Gesamtpreis" : "Preis"} je Währung, Euro und Baht werden nicht umgerechnet.</p>
       ${listAll.length > list.length || alle ? `<button class="btn ghost" ${attrGo("compare", {col, parent, alle:!alle})}>${alle ? "Verworfene ausblenden" : "Auch verworfene zeigen"}</button>` : ""}`,
-    mount(el){ el.querySelectorAll("[data-choose]").forEach(b => b.onclick = () => keepOption(col, b.dataset.choose)); }};
+    mount(el){ bindPins(el); el.querySelectorAll("[data-choose]").forEach(b => b.onclick = () => keepOption(col, b.dataset.choose)); el.querySelectorAll("[data-filter]").forEach(b => b.onclick = () => replaceView("compare", {col, parent, alle, f:b.dataset.filter})); }};
 };
 
 /* ---------- Verbindung und Transportoptionen ---------- */
@@ -1564,7 +1858,7 @@ VIEWS.conn = ({id}) => {
   const os = optsOf(id), ch = connChoice(id), aktiv = os.filter(o => !RAUS.has(o.status)), raus = os.filter(o => RAUS.has(o.status));
   const v = c.vonStay && rec("stays", c.vonStay), n = c.nachStay && rec("stays", c.nachStay);
   const optLabel = o => [TRANSPORT[o.art]?.[0], o.anbieter, o.nummer].filter(Boolean).join(" · ");
-  const optInfo = o => [optWhen(o) || "Zeit unbekannt", optDauer(o), Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "Preis unbekannt"].filter(Boolean).join(" · ");
+  const optInfo = o => [optWhen(o) || "ohne Zeit", optDauer(o), Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "ohne Preis"].filter(Boolean).join(" · ");
   const orow = o => row({icon:TRANSPORT[o.art]?.[1] || "reise", c:ch.zustand === "gewaehlt" && GEWAEHLT.has(o.status) ? "--accent" : null, t:esc(optLabel(o)), s:esc(optInfo(o)), end:pill(o.status), go:"opt", p:{id:o.id}});
   const keepRow = o => `<div class="row"><span class="lead c" style="--c:var(--konflikt)">${ic(TRANSPORT[o.art]?.[1] || "reise")}</span><span class="txt"><button class="t linkish" ${attrGo("opt", {id:o.id})}>${esc(optLabel(o))}</button><span class="s">${esc(STATUS[o.status] + " · " + optInfo(o))}</span></span><button class="btn small" data-keep="${o.id}">Behalten</button></div>`;
   const addRow = row({icon:"plus", t:"Transportoption hinzufügen", go:"optEdit", p:{connId:id}, cls:"addrow", chev:false});
@@ -1585,21 +1879,52 @@ VIEWS.conn = ({id}) => {
 };
 const endOptions = () => [["", "Anderer Ort (Text)"], ...stays().map(s => ["st:" + s.id, `${stayName(s)}${s.von ? " · " + fmtRange(s.von, s.bis) : ""}`])];
 VIEWS.neuConn = p => VIEWS.connEdit({...p, neu:true});
+// Kopf des Verbindungsformulars: welche Orte verbunden werden und an welchen Tagen die Aufenthalte enden bzw. beginnen
+function routeSummary(f){
+  const v = f.von ? rec("stays", f.von.slice(3)) : null, n = f.nach ? rec("stays", f.nach.slice(3)) : null;
+  const seite = (s, txt, wann, leer) => s ? `<b>${esc(stayName(s))}</b><small>${s[wann] ? (wann === "bis" ? "Abreise " : "Anreise ") + esc(fmtDate(s[wann])) : "ohne Datum"}</small>` : txt ? `<b>${esc(txt)}</b><small>freier Ort, ohne Datumsprüfung</small>` : `<b class="offen">${leer}</b><small>noch nicht gewählt</small>`;
+  return `<div class="rs-end">${seite(v, f.vonText, "bis", "Start offen")}</div><span class="rs-arrow">${ic("weiter")}</span><div class="rs-end">${seite(n, f.nachText, "von", "Ziel offen")}</div>`;
+}
 VIEWS.connEdit = p => {
   const c = p.neu ? null : rec("conns", p.id);
+  // Neue Verbindung: was der Aufruf mitgibt (Platzhalter, Aufenthalt). Fehlt eine Seite und grenzt genau ein Aufenthalt an, wird sie ergänzt.
+  let auto = null;
+  if(!c && !p.draft && (p.vonStay ? !p.nachStay : p.nachStay)){
+    const s = rec("stays", p.vonStay || p.nachStay), nb = neighborStay(s, p.vonStay ? "nach" : "vor");
+    if(nb){ auto = p.vonStay ? "nach" : "von"; p = {...p, [p.vonStay ? "nachStay" : "vonStay"]:nb.id}; }
+  }
   const d = p.draft || (c ? {von:c.vonStay ? "st:" + c.vonStay : "", vonText:c.vonText, nach:c.nachStay ? "st:" + c.nachStay : "", nachText:c.nachText, notiz:c.notiz} : {von:p.vonStay ? "st:" + p.vonStay : "", nach:p.nachStay ? "st:" + p.nachStay : "", vonText:"", nachText:""});
+  const vorbelegt = !c && !p.draft && (p.vonStay || p.nachStay);
   return {title:c ? "Verbindung bearbeiten" : "Neue Verbindung", form:true,
     html:`<div class="form">
+      <div class="routesum" id="rs">${routeSummary(d)}</div>
+      <p class="fhint" id="rsHint">${vorbelegt ? `Aus euren Aufenthalten vorbelegt${auto ? `, ${auto === "nach" ? "Ziel" : "Start"} ist der direkt angrenzende Aufenthalt` : ""}. Unten änderbar.` : ""}</p>
       <div class="flabel">Von</div><div class="fgroup">${fSelect("von", "Aufenthalt", d.von, endOptions())}${fText("vonText", "oder Ort", d.vonText, {ph:"z. B. Flughafen oder Heimatort"})}</div>
       <div class="flabel">Nach</div><div class="fgroup">${fSelect("nach", "Aufenthalt", d.nach, endOptions())}${fText("nachText", "oder Ort", d.nachText, {ph:"z. B. Flughafen"})}</div>
-      <p class="fhint">Mit einem Aufenthalt verknüpft, prüft die App, ob Abfahrt und Ankunft zu dessen Daten passen.</p>
+      <p class="fhint">Mit einem Aufenthalt verknüpft, prüft die App, ob Abfahrt und Ankunft zu dessen Daten passen. Danach ergänzt ihr die Transportoptionen.</p>
       <div class="fgroup">${fArea("notiz", "Notiz", d.notiz, "Optional")}</div>
       ${c ? `<button class="btn danger block" data-act="del">${ic("muell")}Verbindung löschen</button>` : ""}
     </div>`,
     bar:`<button class="btn" data-back>Abbrechen</button><button class="btn primary" data-act="save">${c ? "Speichern" : "Anlegen"}</button>`,
     mount(el){
-      const sync = side => { const sel = el.querySelector(`[data-f="${side}"]`), t = el.querySelector(`[data-f="${side}Text"]`).closest(".field"); t.hidden = !!sel.value; };
-      ["von", "nach"].forEach(sd => { el.querySelector(`[data-f="${sd}"]`).addEventListener("change", () => sync(sd)); sync(sd); });
+      const sel = sd => el.querySelector(`[data-f="${sd}"]`), txt = sd => el.querySelector(`[data-f="${sd}Text"]`);
+      const sync = sd => { txt(sd).closest(".field").hidden = !!sel(sd).value; el.querySelector("#rs").innerHTML = routeSummary(readForm(el)); };
+      // Was ihr selbst gewählt oder getippt habt, wird nie überschrieben. Nur eine leere, unberührte Gegenseite wird ergänzt.
+      const touched = {von:!!(d.von || d.vonText), nach:!!(d.nach || d.nachText)};
+      ["von", "nach"].forEach(sd => {
+        const other = sd === "von" ? "nach" : "von";
+        txt(sd).addEventListener("input", () => { touched[sd] = true; sync(sd); });
+        sel(sd).addEventListener("change", () => {
+          touched[sd] = true;
+          const s = sel(sd).value ? rec("stays", sel(sd).value.slice(3)) : null, nb = s && neighborStay(s, sd === "von" ? "nach" : "vor");
+          if(nb && !touched[other] && !sel(other).value && !txt(other).value.trim()){
+            sel(other).value = "st:" + nb.id; sync(other);
+            el.querySelector("#rsHint").textContent = `${sd === "von" ? "Ziel" : "Start"} ergänzt: ${stayName(nb)} grenzt direkt an. Änderbar.`;
+          }
+          sync(sd);
+        });
+        sync(sd);
+      });
       el.querySelector('[data-act="save"]').onclick = () => {
         const f = readForm(el);
         const patch = {vonStay:f.von ? f.von.slice(3) : null, vonText:f.von ? null : f.vonText, nachStay:f.nach ? f.nach.slice(3) : null, nachText:f.nach ? null : f.nachText, notiz:f.notiz};
@@ -1618,15 +1943,16 @@ VIEWS.opt = ({id}) => {
   const c = rec("conns", o.connId), gew = GEWAEHLT.has(o.status), st = optStart(o), en = optEnd(o);
   const v = c?.vonStay && rec("stays", c.vonStay), n = c?.nachStay && rec("stays", c.nachStay), anD = o.anDatum || o.datum;
   const warn = [st && en && en < st ? "Ankunft liegt vor der Abfahrt." : null, v?.bis && o.datum && o.datum !== v.bis ? `Abfahrt am ${fmtDate(o.datum)}, Abreise aus ${stayName(v)} ist am ${fmtDate(v.bis)}.` : null, n?.von && anD && o.an && anD !== n.von ? `Ankunft am ${fmtDate(anD)}, Aufenthalt in ${stayName(n)} beginnt am ${fmtDate(n.von)}.` : null].filter(Boolean);
+  const konfliktO = gew && c && connChoice(c.id).zustand === "konflikt";
+  const bar = !c ? "" : konfliktO ? `<button class="btn primary" data-act="choose">${ic("haken")}Diese behalten</button>` : gew ? `<span class="status">${ic("haken")}${o.status === "gebucht" ? "Gebucht" : "Gewählt"} für diese Verbindung</span>` : `<button class="btn primary" data-act="choose">Diese Option wählen</button>`;
   return {title:[TRANSPORT[o.art]?.[0], o.anbieter].filter(Boolean).join(" · ") || "Option", large:true, sub:`${esc(c ? connTitle(c) : "")} ${pill(o.status)}`,
-    right:`<button class="navbtn" ${attrGo("optEdit", {id})}>Bearbeiten</button>`,
+    right:`<button class="navbtn" ${attrGo("optEdit", {id})}>Bearbeiten</button>`, bar,
     html:`${warn.map(w => `<p class="note konflikt">${esc(w)}</p>`).join("")}
       ${!c ? `<p class="note konflikt">Diese Option gehört zu einer Verbindung, die gelöscht wurde. Ordnet sie unter „Bearbeiten“ einer Verbindung zu oder löscht sie.</p>`
-        : gew && connChoice(c.id).zustand === "konflikt" ? `<p class="note konflikt">Gleichzeitig mit einer anderen Option gewählt. Bis ihr eine behaltet, gilt keine.</p><button class="btn primary block" data-act="choose">${ic("haken")}Diese behalten</button>`
-        : gew ? `<p class="note ok">${ic("haken")}${o.status === "gebucht" ? "Gebucht" : "Gewählt"} für diese Verbindung.</p>` : `<button class="btn primary block" data-act="choose">${ic("haken")}Diese Option wählen</button>`}
+        : konfliktO ? `<p class="note konflikt">Gleichzeitig mit einer anderen Option gewählt. Bis ihr eine behaltet, gilt keine.</p>` : ""}
       ${sect("Angaben", group([
-        row({icon:"uhr", t:optWhen(o) ? esc(optWhen(o)) : "Zeiten unbekannt", s:optDauer(o) ? "Dauer " + esc(optDauer(o)) + (o.dauerMin && !o.dauerOk ? " (geschätzt)" : "") : "Ortszeit"}),
-        row({icon:"euro", t:Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "Preis unbekannt"}),
+        row({icon:"uhr", t:optWhen(o) ? esc(optWhen(o)) : "Keine Zeiten eingetragen", s:optDauer(o) ? "Dauer " + esc(optDauer(o)) + (o.dauerMin && !o.dauerOk ? " (geschätzt)" : "") : "Ortszeit"}),
+        row({icon:"euro", t:Number.isFinite(o.preis) ? money(o.preis, o.waehrung) : "Kein Preis eingetragen"}),
         (o.anbieter || o.nummer) && row({icon:TRANSPORT[o.art]?.[1] || "reise", t:esc([o.anbieter, o.nummer].filter(Boolean).join(" · "))}),
         o.link && row({icon:"link", t:"Buchung oder Information", s:esc(o.link.replace(/^https?:\/\//, "").slice(0, 48)), href:o.link}),
       ].filter(Boolean)))}
@@ -1717,7 +2043,8 @@ VIEWS.day = ({d}) => {
   const rahmen = [
     start ? row({icon:"hotel", c:"--accent", t:"Start: " + esc(start.name), s:travel ? "Reisetag, der Plan endet beim letzten Stopp" : end ? "Start und Ziel des Tages" : "Ende beim letzten Stopp", go:"lodging", p:{id:start.id}})
       : zStart === "konflikt" ? row({icon:"warn", c:"--konflikt", t:`Unterkunft in ${esc(stayName(sStart))} ungeklärt`, s:"Mehrere gewählt, behaltet eine. Bis dahin beginnt der Plan beim ersten Stopp.", go:"stay", p:{id:sStart.id}})
-      : row({icon:"hotel", t:sStart ? (zStart === "gewaehlt" ? "Ort der Unterkunft fehlt" : "Noch keine Unterkunft gewählt") : "Kein Aufenthalt an diesem Tag", s:sStart ? "Ohne Startpunkt beginnt der Plan beim ersten Stopp" : "Aufenthalt in „Reise“ anlegen", go:sStart ? "stay" : "neuStay", p:sStart ? {id:sStart.id} : {von:d}}),
+      : zStart === "gewaehlt" ? row({icon:"pin", c:"--fehlt", t:"Kartenpunkt der Unterkunft fehlt", s:`${esc(stayLodging(sStart.id).name)}: ohne Punkt beginnt der Plan beim ersten Stopp. Jetzt setzen`, go:"ortWahl", p:{lodgingId:stayLodging(sStart.id).id}})
+      : row({icon:"hotel", t:sStart ? "Noch keine Unterkunft gewählt" : "Kein Aufenthalt an diesem Tag", s:sStart ? "Ohne Startpunkt beginnt der Plan beim ersten Stopp" : "Aufenthalt in „Reise“ anlegen", go:sStart ? "stay" : "neuStay", p:sStart ? {id:sStart.id} : {von:d}}),
     ...cs.map(({c, o}) => { const z = connChoice(c.id).zustand; return row({icon:o ? TRANSPORT[o.art]?.[1] || "reise" : z === "konflikt" ? "warn" : "reise", c:z === "konflikt" ? "--konflikt" : null, t:esc(connTitle(c)), s:esc(o ? [optWhen(o), STATUS[o.status]].filter(Boolean).join(" · ") : z === "konflikt" ? "Mehrere Optionen gewählt, ungeklärt" : "noch keine Option gewählt"), go:"conn", p:{id:c.id}}); }),
   ];
   let body;
@@ -1733,7 +2060,7 @@ VIEWS.day = ({d}) => {
         if(r.min === null) return `<div class="dlrow leg missing"><span class="time"></span><span class="rail"><i></i></span><div class="body">${ic(M.icon)}<span>${mode === "fuss" && airKm(r.from, r.to) > 25 ? "Zu weit zum Gehen" : (mode === "fuss" ? "Gehzeit" : "Fahrzeit") + " noch nicht berechnet"}</span>${link(r)}</div><span></span></div>`;
         return `<div class="dlrow leg"><span class="time"></span><span class="rail"><i></i></span><div class="body">${ic(M.icon)}<span>ca. ${legTxt(r.min)}${mode === "fuss" ? " zu Fuß" : ""}${r.km >= 1 ? " · " + Math.round(r.km) + " km" : ""}${mode === "fuss" && r.min > 60 ? " · weiter Fußweg" : ""}</span>${link(r)}</div><span></span></div>`;
       }
-      const c = r.place ? TYPES[r.place.typ][1] : "--ink2", icon = r.icon || TIC(r.place.typ);
+      const c = r.place ? TYPES[r.place.typ][1] : "--accent", icon = r.icon || TIC(r.place.typ);
       return `<div class="dlrow"><span class="time">${toHHMM(r.time)}</span><span class="rail"><i style="--c:var(${c})">${ic(icon)}</i></span><div class="body">${r.place ? `<button class="t" ${attrGo("spot", {id:r.place.id})}>${esc(r.name)}</button><div class="mini"><button data-stay="${r.index}" data-dd="-15" aria-label="Kürzer bleiben">−</button><output>${durTxt(r.dauer)}</output><button data-stay="${r.index}" data-dd="15" aria-label="Länger bleiben">+</button></div>` : `<span class="t">${esc(r.name)}</span>`}</div>${r.index !== undefined ? `<span class="tools"><button class="iconbtn" data-del="${r.index}" aria-label="${esc(r.name)} aus dem Tag nehmen">${ic("x")}</button></span>` : "<span></span>"}</div>`;
     }).join("");
     body = `<div class="summary"><span>${ic("pin")}${plural(anz, "Spot", "Spots")}</span>${drive ? `<span>${ic(M.icon)}${mode === "frei" ? "" : "ca. "}${durTxt(drive)} ${M.wort}${km ? " · " + Math.round(km) + " km" : ""}</span>` : ""}<span>${ic("uhr")}${end ? "zurück" : "Ende"} ${toHHMM(endT)}</span></div>
@@ -2141,7 +2468,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.1";
+const APP_VERSION = "Version 2.3";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
