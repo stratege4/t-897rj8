@@ -37,7 +37,7 @@
   --danger-bg:#F4D9CF; --danger:#A93F25;            /* Konflikt */
   --favorit-bg:#FBEFD5; --favorit-ink:#946A12;
   /* Kategorien der Spots */
-  --k-beach:#2E8E9C; --k-food:#CC6A3F; --k-kultur:#B0812C; --k-natur:#5C8C43;
+  --k-beach:#1F8C8E; --k-food:#CC6A3F; --k-kultur:#B0812C; --k-natur:#5C8C43;
   /* Formen, Abstände, Schatten */
   --font:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --r-xl:22px; --r-lg:18px; --r:16px; --r-s:12px; --r-pill:999px;
@@ -365,63 +365,81 @@ button.row:active, a.row:active{background:var(--surface2)}
 .pickrow .btn{flex:none}
 
 /* ---------- Karte ----------
-   Standard ist die helle, warm eingefärbte Karte (Meer Lagune, Land Creme). Satellit ist eine Wahl (#mapWrap.ebene-sat).
-   Oben Ansicht und Filter, unten links die Werkzeuge, rechts „+ Spot“. Ein ausgewählter Marker zeigt unten eine Infokarte. */
-#mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#B8E0D8}
+   Standard ist die illustrierte Reisekarte (Sand, Salbei, Lagune). Satellit ist eine Wahl (#mapWrap.ebene-sat).
+   Oben Ansicht, Filter und Standort, rechts die Werkzeuge und „+ Spot“. Ein ausgewählter Marker zeigt unten eine Infokarte, die Werkzeuge rücken darüber. */
+#mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#A9DFD8}
 #mapWrap.ebene-sat{background:#1E4A52}
 #map{position:absolute;inset:0}
-.leaflet-container{background:#B8E0D8;font-family:var(--font)}
+.leaflet-container{background:#A9DFD8;font-family:var(--font)}
 .ebene-sat .leaflet-container{background:#1E4A52}
-.kref{opacity:.92}
+.kref{opacity:.9}
 @media (prefers-color-scheme: dark){ #mapWrap:not(.ebene-sat) .leaflet-tile-pane{filter:brightness(.84) saturate(.95)} }
-.maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:700;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:700;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .maptop > *{pointer-events:auto}
 .glass{background:color-mix(in srgb, var(--surface) 90%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 2px 10px rgba(70,48,24,.10);border-radius:var(--r)}
-.maptop .seg{align-self:flex-start;min-width:210px}
-.mapfilter{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:3px}
-.mf{min-height:38px;padding:0 6px;border-radius:var(--r-s);border:1px solid transparent;background:none;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;font-weight:650;color:var(--text-faint);white-space:nowrap;min-width:0}
-.mf .ic{width:17px;height:17px;flex:none}
-.mf[aria-pressed="true"]{color:var(--c);background:color-mix(in srgb, var(--c) 14%, var(--surface));border-color:color-mix(in srgb, var(--c) 30%, transparent)}
+.maptop .seg{padding:4px;border-radius:var(--r);background:color-mix(in srgb, var(--surface) 82%, transparent)}
+.maptop .seg button{min-height:40px;font-size:15px}
+.mapfilter{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;pointer-events:none}
+.mf{pointer-events:auto;min-height:42px;padding:0 4px;border-radius:var(--r);border:1px solid color-mix(in srgb, var(--c) 22%, var(--surface));background:color-mix(in srgb, var(--c) 17%, var(--surface));display:flex;align-items:center;justify-content:center;gap:5px;font-size:13.5px;font-weight:650;color:var(--c);white-space:nowrap;min-width:0;box-shadow:0 2px 8px rgba(70,48,24,.10)}
+.mf .ic{width:18px;height:18px;flex:none}
+.mf[aria-pressed="false"]{background:color-mix(in srgb, var(--surface) 88%, transparent);border-color:color-mix(in srgb, var(--border) 85%, transparent);color:var(--text-faint)}
 .mf[aria-pressed="false"] .ic{opacity:.6}
 .mapday{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;font-size:14px;color:var(--text)}
 .mapday > .ic{color:var(--teal);width:18px;height:18px}
 .mapday span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mapday .navbtn{min-height:36px;font-size:15px}
-.mapbar{position:absolute;left:12px;right:12px;bottom:18px;z-index:700;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
-.mapbar > *{pointer-events:auto}
-.maptools{display:flex;padding:3px;gap:2px}
-.maptools button{min-width:44px;height:42px;border:0;background:none;border-radius:var(--r-s);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;color:var(--teal-dark);font-size:14px;font-weight:600}
-.maptools button + button{border-left:1px solid transparent}
-.maptools button[aria-pressed="true"]{background:var(--teal);color:var(--accent-ink)}
-.maptools button.on{color:var(--coral-strong)}
-.mapadd{height:46px;padding:0 18px 0 14px;border-radius:23px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;font-size:16px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(70,48,24,.18)}
-.mapadd .ic{width:20px;height:20px}
-#mapWrap.hascard .mapbar{display:none}
-.mapcard{position:absolute;left:12px;right:12px;bottom:20px;z-index:720;background:color-mix(in srgb, var(--surface) 96%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 20px rgba(70,48,24,.14);animation:up .2s ease-out}
-.mc-head{display:flex;align-items:flex-start;gap:12px}
-.mc-ic{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff}
-.mc-ic.hotel{border-radius:12px;background:#245F59}
-.mc-ic .ic{width:21px;height:21px}
-.mc-t{flex:1;min-width:0}
-.mc-t b{display:block;font-size:17px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
-.mc-t small{display:block;font-size:13px;color:var(--text-muted);margin-top:2px}
-.mc-x{width:36px;height:36px;margin:-4px -4px 0 0;border-radius:50%;border:0;background:var(--surface2);display:grid;place-items:center;color:var(--text-muted);flex:none}
-.mc-x .ic{width:16px;height:16px}
-.mc-facts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.mc-fact{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:var(--r-pill);background:var(--surface2);font-size:13px;color:var(--text-muted)}
-.mc-fact .ic{width:14px;height:14px}
+.mround{width:48px;height:48px;flex:none;align-self:flex-start;border-radius:50%;border:1px solid color-mix(in srgb, var(--border) 85%, transparent);background:color-mix(in srgb, var(--surface) 92%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);display:grid;place-items:center;color:var(--teal-dark);box-shadow:0 3px 12px rgba(70,48,24,.14)}
+.mround .ic{width:23px;height:23px}
+.mround[aria-pressed="true"]{background:var(--teal);color:var(--accent-ink);border-color:var(--teal)}
+.mround.on{color:var(--coral-strong)}
+.mapbar{position:absolute;right:12px;bottom:18px;z-index:700;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;transition:bottom .18s}
+.mapbar > *{pointer-events:auto;align-self:flex-end}
+.mapadd{height:50px;padding:0 20px 0 15px;border-radius:25px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;font-size:17px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(70,48,24,.22)}
+.mapadd .ic{width:21px;height:21px}
+#mapWrap.hascard .mapbar{bottom:calc(var(--mc-h, 150px) + 30px)}
+.mapcard{position:absolute;left:12px;right:12px;bottom:18px;z-index:720;background:color-mix(in srgb, var(--surface) 97%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:var(--r-lg);padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 20px rgba(70,48,24,.16);animation:mcIn .16s ease-out}
+@keyframes mcIn{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion: reduce){ .mapcard{animation:none} .mapbar{transition:none} }
+.mc-main{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--text);min-width:0}
+.mc-main > .ic{width:18px;height:18px;flex:none;color:var(--text-muted);margin-right:2px}
+.mc-bild{width:84px;height:84px;flex:none;border-radius:var(--r);display:grid;place-items:center;color:var(--c);background:color-mix(in srgb, var(--c) 18%, var(--surface))}
+.mc-bild.hotel{--c:#245F59}
+.mc-bild .ic{width:34px;height:34px}
+.mc-ic{width:22px;height:22px;flex:none;border-radius:50%;display:inline-grid;place-items:center;background:var(--c);color:#fff;vertical-align:-5px;margin-right:6px}
+.mc-ic .ic{width:14px;height:14px}
+.mc-t{flex:1;min-width:0;display:block}
+.mc-t b{display:block;font-size:17px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;padding-right:84px}
+.mc-t small{display:block;font-size:13.5px;color:var(--text-muted);margin-top:3px}
+.mc-merk{position:absolute;top:10px;right:10px;height:30px;padding:0 10px 0 8px;border-radius:var(--r-pill);border:0;background:var(--surface2);color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:650}
+.mc-merk .ic{width:15px;height:15px}
+.mc-merk[aria-pressed="true"]{background:color-mix(in srgb, var(--coral-strong) 15%, var(--surface));color:var(--coral-strong)}
+.mc-merk[aria-pressed="true"] .ic{fill:currentColor}
+.mc-facts{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}
+.mc-fact{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:var(--r-pill);background:var(--surface2);font-size:12.5px;color:var(--text-muted)}
+.mc-fact .ic{width:13px;height:13px}
 .mc-acts{display:flex;gap:8px}
-.mc-acts .btn{flex:1;min-height:44px;border-radius:var(--r-s)}
-/* Marker: Spots rund in der Kategoriefarbe, Unterkünfte als Quadrat (gewählt gefüllt, Kandidat hell). Stopps des aktiven Tages mit Nummer. */
-.mpin{position:relative;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;box-shadow:0 0 0 2px #FFFAF2,0 2px 6px rgba(40,25,10,.28);transition:transform .15s}
+.mc-acts .btn{flex:1;min-height:40px;border-radius:var(--r-s)}
+/* Marker: Spots rund in der Kategoriefarbe mit Spitze, Unterkünfte als Quadrat mit Spitze (gewählt gefüllt, Kandidat hell). Stopps des aktiven Tages mit Nummer. */
+.mpin,.hpin{--rand:#FFFAF2;position:relative;display:grid;place-items:center;transform-origin:50% calc(100% + 7px);transition:transform .15s}
+.mpin::after,.hpin::after{content:"";position:absolute;left:50%;bottom:-7px;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--rand)}
+.mpin{border-radius:50%;background:var(--c);color:#fff;box-shadow:0 0 0 2.5px var(--rand),0 3px 8px rgba(40,25,10,.3)}
 .mpin .ic{width:58%;height:58%}
-.mpin.done{background:#FFFAF2;color:var(--c);box-shadow:0 0 0 2px var(--c),0 2px 6px rgba(40,25,10,.2);opacity:.65}
-.mpin.inplan{box-shadow:0 0 0 2px #FFFAF2,0 0 0 4px var(--coral),0 2px 6px rgba(40,25,10,.28)}
+.mpin.done{--rand:var(--c);background:#FFFAF2;color:var(--c);box-shadow:0 0 0 2px var(--c),0 2px 6px rgba(40,25,10,.2);opacity:.65}
+.mpin.inplan{box-shadow:0 0 0 2.5px var(--rand),0 0 0 4.5px var(--coral),0 3px 8px rgba(40,25,10,.3)}
 .mpin .nr{position:absolute;top:-8px;right:-8px;min-width:18px;height:18px;border-radius:9px;padding:0 4px;background:var(--coral-strong);color:#fff;font-size:11px;font-weight:750;line-height:18px;text-align:center;box-shadow:0 0 0 2px #FFFAF2}
-.hpin{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#245F59;color:#fff;box-shadow:0 0 0 2px #FFFAF2,0 3px 10px rgba(40,25,10,.32);transition:transform .15s}
-.hpin .ic{width:20px;height:20px}
-.hpin.kand{background:#FFFAF2;color:#245F59;box-shadow:0 0 0 2px #245F59,0 2px 6px rgba(40,25,10,.22)}
-.mpin.sel,.hpin.sel{transform:scale(1.18);box-shadow:0 0 0 3px #FFFAF2,0 0 0 6px var(--coral),0 4px 12px rgba(40,25,10,.3)}
+.hpin{width:36px;height:36px;border-radius:11px;background:#245F59;color:#fff;box-shadow:0 0 0 2.5px var(--rand),0 3px 10px rgba(40,25,10,.32)}
+.hpin .ic{width:21px;height:21px}
+.hpin.kand{--rand:#245F59;background:#FFFAF2;color:#245F59;box-shadow:0 0 0 2px #245F59,0 2px 6px rgba(40,25,10,.22)}
+.mpin.sel,.hpin.sel{transform:scale(1.2);box-shadow:0 0 0 3px #FFFAF2,0 0 0 6px var(--coral),0 4px 12px rgba(40,25,10,.3)}
+/* Geografische Namen der Übersicht: Länder gesperrt, Meere kursiv, Städte mit Punkt */
+.geo{display:inline-block;white-space:nowrap;pointer-events:none;color:#2C4A46;text-shadow:0 0 2px rgba(255,250,242,.9),0 0 6px rgba(255,250,242,.8)}
+.geo.land{transform:translateX(-50%);font-size:16px;font-weight:650;letter-spacing:.2em;text-transform:uppercase;color:#3C5A55}
+.geo.nachbar{transform:translateX(-50%);font-size:14px;font-weight:600;color:#566F68}
+.geo.see{transform:translateX(-50%);white-space:pre;text-align:center;font-size:13.5px;line-height:1.3;font-style:italic;letter-spacing:.06em;color:#2B686C;text-shadow:0 0 5px rgba(190,236,228,.9)}
+.geo.gross{font-size:15px;font-weight:650;display:inline-flex;align-items:center;gap:6px}
+.geo.stadt{font-size:13px;font-weight:550;display:inline-flex;align-items:center;gap:5px}
+.geo i{width:8px;height:8px;border-radius:50%;background:#24403C;box-shadow:0 0 0 1.5px rgba(255,250,242,.9)}
+.geo.stadt i{width:6px;height:6px}
 .lbl{display:inline-block;transform:translate(-50%,0);white-space:nowrap;font-weight:650;color:#23413E;text-shadow:0 0 2px #FFFAF2,0 0 4px #FFFAF2,0 0 7px #FFFAF2;pointer-events:none}
 .ebene-sat .lbl{color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.6)}
 .lbl.town{font-size:13px}.lbl.town.major{font-size:15px}
@@ -588,6 +606,7 @@ const ICONS = {
   pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
   liste: '<path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01" stroke-width="2.6"/>',
   zeitraum: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 14.5h9"/>',
+  navi: '<path d="M20.5 3.5 3.5 10.6l7 2.9 2.9 7z"/>',
   ebenen: '<path d="M12 3.5 21 8l-9 4.5L3 8z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16 9 4.5 9-4.5"/>',
   rahmen: '<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/><circle cx="12" cy="12" r="2.2"/>',
   extern: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
@@ -1679,7 +1698,7 @@ function mountMiniMap(box, l){
   if(!box || !window.L || !Number.isFinite(l.lat)) return;
   miniMap = L.map(box, {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, doubleClickZoom:false, touchZoom:false, boxZoom:false, keyboard:false, tap:false}).setView([l.lat, l.lng], 13); // helle Karte: Umgebung mit Straßen und Orten statt leerer Fläche
   karteLayers().forEach(x => x.addTo(miniMap)); // dieselbe helle Karte wie im Bereich Karte
-  L.marker([l.lat, l.lng], {interactive:false, keyboard:false, icon:L.divIcon({className:"", html:`<div class="hpin${GEWAEHLT.has(l.status) ? "" : " kand"}">${ic("hotel")}</div>`, iconSize:[34,34], iconAnchor:[17,17]})}).addTo(miniMap);
+  L.marker([l.lat, l.lng], {interactive:false, keyboard:false, icon:L.divIcon({className:"", html:`<div class="hpin${GEWAEHLT.has(l.status) ? "" : " kand"}">${ic("hotel")}</div>`, iconSize:[36,36], iconAnchor:[18,43]})}).addTo(miniMap);
 }
 // Unterkunft: oben Preis und Wertung, dann Lage mit Karte, Notiz, weitere Angaben, Status. Die Entscheidung sitzt in der Leiste unten.
 VIEWS.lodging = ({id}) => {
@@ -2157,45 +2176,115 @@ async function addSpotToDay(id){
 /* ---------- Bereich Karte: Spots, Unterkünfte, Route des aktiven Tages ----------
    Die Karte (Leaflet) wird einmal angelegt und bleibt bestehen, Detailseiten legen sich darüber.
    Zwei Kartenebenen vom selben Anbieter (Esri, server.arcgisonline.com, der Service Worker speichert beide wie bisher):
-   „Karte“  helle Grundkarte (Light Gray Canvas), auf dem Gerät warm eingefärbt, darüber Esris Beschriftung. Standard.
+   „Karte“  illustrierte Reisekarte, auf dem Gerät aus drei Esri-Quellen gemischt, darüber eigene Namen, ab Zoom 9 Esris Beschriftung. Standard.
    „Satellit“ Luftbild wie bisher, wahlweise. Die Wahl gilt nur auf diesem Gerät (localStorage), sie ändert keine Daten.
-   Vorgeladen werden für die Karte die Landesübersicht (Zoom 5 bis 8) und 6 km um jede Unterkunft (Zoom 10 bis 14). */
+   Vorgeladen werden für die Karte die Landesübersicht (bis Zoom 8) und 6 km um jede Unterkunft (Zoom 10 bis 14). */
 let map = null, markerLayer, routeLayer, poiLabelLayer, meLayer;
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 const BASE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
 const REF_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
-const ATTRIB = {karte:"Karte © Esri, HERE, Garmin, OpenStreetMap-Mitwirkende", sat:"Bilder © Esri, Maxar, Earthstar Geographics"};
-const VIEW = {center:[13.0, 101.0], bounds:[[4.5, 96.5], [21.5, 106.5]]};
+const PHYS_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}";
+const TERR_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}";
+const ATTRIB = {karte:"Karte © Esri, USGS, NOAA, NPS, HERE, Garmin, OpenStreetMap", sat:"Bilder © Esri, Maxar, Earthstar Geographics"};
+const VIEW = {center:[13.4, 100.9], zoom:6, bounds:[[4.5, 96.5], [21.5, 106.5]]};
 UI.karteModus = "karte";
 UI.mapSel = null; // ausgewählter Marker {art:"spot"|"lodging", id}
 let ebene = LS.get("thailand2027-ebene") === "sat" ? "sat" : "karte", ebenen = {};
 const zoomBucket = z => z < 11 ? 0 : z < 12 ? 1 : 2;
 let lastBucket = -1;
 
-// Farbtabelle für die helle Karte: Esri liefert Graustufen (Wasser 208, Land 232 bis 239, Linien dunkler).
-// Jede Graustufe bekommt einen warmen Farbton: Wasser Lagune, Küstensaum Salbei, Land Creme. Kantenglättung bleibt erhalten.
-const WARM_LUT = (() => {
-  const st = [[0,[60,82,80]], [150,[132,150,144]], [196,[150,200,192]], [208,[184,224,216]], [220,[208,226,204]], [228,[233,225,206]], [236,[242,234,217]], [250,[252,248,239]], [255,[255,253,248]]];
+// Die Reisekarte entsteht je Kachel auf dem Gerät aus drei Esri-Quellen, damit kein Server und kein Schlüssel nötig sind:
+// Physical (bis Zoom 8) gibt dem Land die Farbe, Terrain (bis Zoom 9, darüber liefert Esri hier nur ein Platzhalterbild) dem Meer die
+// Tiefenstufen und dem Land das Relief, Light Gray (bis Zoom 16) scharfe Küsten und Straßen. Darüber werden die groben Quellen vergrößert
+// und ab Zoom 10 Richtung Sand ausgeblendet, sonst sähe man ihre Pixel.
+const MEER_FLACH = [150,226,216], MEER_TIEF = [46,166,186], SAND = [243,236,205], LINIE = [92,112,104];
+const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+// Physical bestimmt nur die Helligkeit des Landes, die Farbe kommt aus dieser Tabelle: Sand im Flachland, Salbei im Bergland.
+// So bleibt die Karte ruhig und illustriert, statt das bunte Original zu zeigen.
+const LAND_LUT = (() => {
+  const st = [[0,[92,132,96]], [120,[122,166,116]], [165,[158,200,140]], [200,[208,225,170]], [228,[238,234,194]], [255,[246,240,214]]];
   const r = new Uint8ClampedArray(256), g = new Uint8ClampedArray(256), b = new Uint8ClampedArray(256);
-  for(let i = 0; i < 256; i++){ let k = 0; while(k < st.length - 2 && i > st[k + 1][0]) k++; const [a0, c0] = st[k], [a1, c1] = st[k + 1], f = Math.min(1, Math.max(0, (i - a0) / (a1 - a0))); r[i] = c0[0] + (c1[0] - c0[0]) * f; g[i] = c0[1] + (c1[1] - c0[1]) * f; b[i] = c0[2] + (c1[2] - c0[2]) * f; }
+  for(let i = 0; i < 256; i++){ let k = 0; while(k < st.length - 2 && i > st[k + 1][0]) k++; const [a0, c0] = st[k], [a1, c1] = st[k + 1], m = clamp01((i - a0) / (a1 - a0)); r[i] = c0[0] + (c1[0] - c0[0]) * m; g[i] = c0[1] + (c1[1] - c0[1]) * m; b[i] = c0[2] + (c1[2] - c0[2]) * m; }
   return {r, g, b};
 })();
-// Helle Karte als eigene Kachelebene: Bild laden, einfärben, als Canvas zeigen. Geht das Einfärben nicht (fremder Cache), bleibt das Graubild.
+// Light Gray hat bis Zoom 8 englische Namen fest eingezeichnet. Dort kommt die Küste aus dem Terrain (maske), und von Light Gray bleiben
+// nur die feinen Grenzlinien: dunkle Schrift wird samt kleinem Umkreis übergangen.
+function schriftMaske(g){
+  const m = new Uint8Array(65536), r = 3;
+  for(let y = 0; y < 256; y++) for(let x = 0; x < 256; x++){ const i = (y * 256 + x) * 4; if(((g[i] * 77 + g[i+1] * 150 + g[i+2] * 29) >> 8) >= 188) continue;
+    for(let b = Math.max(0, y - r); b <= Math.min(255, y + r); b++) for(let a = Math.max(0, x - r); a <= Math.min(255, x + r); a++) m[b * 256 + a] = 1; }
+  return m;
+}
+function karteMischen(g, ph, te, z, maske){
+  const out = g, relief = z >= 9, schrift = maske ? schriftMaske(g) : null, ruhe = z <= 9 ? 0 : z === 10 ? .35 : z === 11 ? .6 : .8;
+  for(let i = 0; i < out.length; i += 4){
+    const gl = (g[i] * 77 + g[i+1] * 150 + g[i+2] * 29) >> 8;
+    // Meer: im Terrain ist Wasser türkis, Land weiß oder grau. Je stärker das Türkis, desto tiefer.
+    const tr = te ? te[i] : 200, tg = te ? te[i+1] : 230, q = clamp01((tg - tr - 34) / 62) * (1 - ruhe) + .22 * ruhe;
+    const mr = MEER_FLACH[0] + (MEER_TIEF[0] - MEER_FLACH[0]) * q, mg = MEER_FLACH[1] + (MEER_TIEF[1] - MEER_FLACH[1]) * q, mb = MEER_FLACH[2] + (MEER_TIEF[2] - MEER_FLACH[2]) * q;
+    // Land: Helligkeit aus Physical, Wasserpixel der groben Kachel werden Sand
+    let lr = SAND[0], lg = SAND[1], lb = SAND[2];
+    if(ph && ph[i+2] < ph[i+1] + 4){ const l = (ph[i] * 77 + ph[i+1] * 150 + ph[i+2] * 29) >> 8; lr = LAND_LUT.r[l]; lg = LAND_LUT.g[l]; lb = LAND_LUT.b[l]; }
+    if(relief && te){ const sh = .72 + .28 * clamp01((Math.min(te[i], te[i+1], te[i+2]) - 150) / 95); lr *= sh; lg *= sh; lb *= sh; }
+    if(ruhe){ lr += (SAND[0] - lr) * ruhe; lg += (SAND[1] - lg) * ruhe; lb += (SAND[2] - lb) * ruhe; }
+    // Straßen sind in Light Gray heller als das Land, Grenzen und Kanten dunkler
+    if(gl > 241){ const f = clamp01((gl - 241) / 12) * .85; lr += (255 - lr) * f; lg += (252 - lg) * f; lb += (243 - lb) * f; }
+    let w, n;
+    if(maske){ w = clamp01((maske[i+1] - maske[i] - 12) / 16); n = !schrift[i >> 2] && w < .5 && gl < 234 && gl > 214 ? clamp01((234 - gl) / 20) * .6 : 0; }
+    else { w = gl <= 212 ? 1 : gl >= 226 ? 0 : (226 - gl) / 14; n = gl < 200 ? clamp01((200 - gl) / 60) : 0; }
+    out[i] = (mr * w + lr * (1 - w)) * (1 - n) + LINIE[0] * n; out[i+1] = (mg * w + lg * (1 - w)) * (1 - n) + LINIE[1] * n; out[i+2] = (mb * w + lb * (1 - w)) * (1 - n) + LINIE[2] * n;
+  }
+}
+// Grobe Kacheln teilen sich viele Ansichten, deshalb ein kleiner Speicher für geladene Bilder
+const bildSpeicher = new Map();
+function ladeBild(url){
+  if(bildSpeicher.has(url)) return bildSpeicher.get(url);
+  const p = new Promise((res, rej) => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => res(img); img.onerror = rej; img.src = url; });
+  bildSpeicher.set(url, p); p.catch(() => bildSpeicher.delete(url));
+  if(bildSpeicher.size > 80) bildSpeicher.delete(bildSpeicher.keys().next().value);
+  return p;
+}
+const kachelUrl = (tmpl, z, x, y) => tmpl.replace("{z}", z).replace("{y}", y).replace("{x}", x);
+const mischCtx = (() => { let c; return () => { if(!c){ const el = document.createElement("canvas"); el.width = el.height = 256; c = el.getContext("2d", {willReadFrequently:true}); } return c; }; })();
+// Bis Zoom 8 kommen Land und Meer eine Stufe gröber: das glättet die Fläche, die Küste bleibt durch Light Gray scharf
+const physZ = z => Math.min(8, z - 1), terrZ = z => z <= 8 ? Math.max(3, z - 2) : 9;
+// Pixel einer Kachel, bei zu hohem Zoom der passende Ausschnitt der gröberen Kachel
+async function kachelPixel(tmpl, c, maxZ){
+  const dz = Math.max(0, c.z - maxZ), f = 2 ** dz, img = await ladeBild(kachelUrl(tmpl, c.z - dz, Math.floor(c.x / f), Math.floor(c.y / f)));
+  const g = mischCtx(), n = 256 / f; g.imageSmoothingQuality = "high";
+  g.clearRect(0, 0, 256, 256); g.drawImage(img, (c.x % f) * n, (c.y % f) * n, n, n, 0, 0, 256, 256);
+  return g.getImageData(0, 0, 256, 256).data;
+}
+// Fehlt offline eine Quelle, bleibt die Karte benutzbar: dann Sand als Land oder ein gleichmäßiges Meer. Ohne Light Gray gibt es keine Küste, also einen Kachelfehler.
 function warmLayer(opt = {}){
   const W = L.GridLayer.extend({ createTile(c, done){
     const t = document.createElement("canvas"); t.width = t.height = 256;
-    const img = new Image(); img.crossOrigin = "anonymous";
-    img.onload = () => { const g = t.getContext("2d"); g.drawImage(img, 0, 0);
-      try{ const d = g.getImageData(0, 0, 256, 256), a = d.data, {r, g:gg, b} = WARM_LUT; for(let i = 0; i < a.length; i += 4){ const l = (a[i] * 77 + a[i+1] * 150 + a[i+2] * 29) >> 8; a[i] = r[l]; a[i+1] = gg[l]; a[i+2] = b[l]; } g.putImageData(d, 0, 0); }catch(e){}
-      done(null, t); };
-    img.onerror = () => done(new Error("Kachel fehlt"), t);
-    img.src = BASE_URL.replace("{z}", c.z).replace("{y}", c.y).replace("{x}", c.x);
+    (async () => {
+      const [g, ph, te, ma] = await Promise.allSettled([kachelPixel(BASE_URL, c, 16), kachelPixel(PHYS_URL, c, physZ(c.z)), kachelPixel(TERR_URL, c, terrZ(c.z)), c.z <= 8 ? kachelPixel(TERR_URL, c, c.z) : null]);
+      if(g.status !== "fulfilled") return done(new Error("Kachel fehlt"), t);
+      const ctx = t.getContext("2d"), d = new ImageData(new Uint8ClampedArray(g.value), 256, 256);
+      karteMischen(d.data, ph.value || null, te.value || null, c.z, ma.value || null); ctx.putImageData(d, 0, 0); done(null, t);
+    })().catch(() => done(new Error("Kachel fehlt"), t));
     return t; } });
   return new W({maxNativeZoom:16, maxZoom:18, minZoom:5, keepBuffer:3, updateWhenZooming:false, ...opt});
 }
 const refLayer = (opt = {}) => L.tileLayer(REF_URL, {maxNativeZoom:16, maxZoom:18, minZoom:5, crossOrigin:true, updateWhenZooming:false, className:"kref", ...opt});
 // für kleine Karten (Unterkunftsdetail): dieselbe helle Karte mit Beschriftung
-const karteLayers = () => [warmLayer(), refLayer({zIndex:3})];
+const karteLayers = () => [warmLayer(), refLayer({zIndex:3, minZoom:9})];
+// Geografische Namen für die Übersicht, deutsch und als Text gestochen scharf. Reine Orientierung, keine Reiseziele. Ab Zoom 9 beschriftet Esri.
+const GEO_NAMEN = [
+  [15.7, 100.9, "Thailand", "land"], [17.6, 98.0, "Myanmar", "nachbar"], [19.0, 102.5, "Laos", "nachbar"], [13.0, 103.6, "Kambodscha", "nachbar"], [5.6, 101.6, "Malaysia", "nachbar"],
+  [9.6, 97.75, "Andamanen-\nsee", "see"], [11.0, 101.7, "Golf von\nThailand", "see"],
+  [13.756, 100.502, "Bangkok", "gross"], [18.788, 98.985, "Chiang Mai", "gross"], [7.88, 98.39, "Phuket", "gross"], [11.56, 104.92, "Phnom Penh", "gross"], [17.97, 102.63, "Vientiane", "gross"],
+  [8.09, 98.91, "Krabi", "stadt"], [9.51, 100.01, "Ko Samui", "stadt"], [19.91, 99.84, "Chiang Rai", "stadt"], [16.43, 102.84, "Khon Kaen", "stadt"], [12.93, 100.88, "Pattaya", "stadt"], [12.57, 99.96, "Hua Hin", "stadt"], [9.14, 99.33, "Surat Thani", "stadt"], [7.01, 100.47, "Hat Yai", "stadt"], [13.36, 103.86, "Siem Reap", "stadt"]];
+let geoLayer;
+function renderGeo(){
+  if(!geoLayer) return; geoLayer.clearLayers();
+  const z = map.getZoom(); if(ebene === "sat" || z >= 9) return;
+  GEO_NAMEN.forEach(([la, ln, name, art]) => { if(art === "stadt" && z < 7) return;
+    const punkt = art === "gross" || art === "stadt";
+    L.marker([la, ln], {interactive:false, keyboard:false, zIndexOffset:-1000, icon:L.divIcon({className:"", html:punkt ? `<span class="geo ${art}"><i></i>${esc(name)}</span>` : `<span class="geo ${art}">${esc(name)}</span>`, iconSize:null, iconAnchor:punkt ? [4, 8] : [0, 8]})}).addTo(geoLayer); });
+}
 
 function tileUrls(sw, ne, z0, z1, tmpl = TILE_URL){
   const out = [];
@@ -2203,17 +2292,18 @@ function tileUrls(sw, ne, z0, z1, tmpl = TILE_URL){
     for(let x = a.x; x <= b.x; x++) for(let y = a.y; y <= b.y; y++) out.push(tmpl.replace("{z}", z).replace("{y}", y).replace("{x}", x)); }
   return out;
 }
-// Vorladen gilt der Standardkarte (Grundkarte und Beschriftung, beide klein). Satellit wird nicht mehr vorgeladen, nur was ihr anseht, landet im Speicher.
-// Eigene Schlüssel mit „karte:“, damit erledigte Satelliten-Jobs aus älteren Fassungen die neue Ebene nicht blockieren. Die Grenze von 4000 Kacheln im Service Worker gilt unverändert.
-const tileJobKey = u => "karte:uk:" + u.lat.toFixed(3) + "," + u.lng.toFixed(3);
-const beide = (sw, ne, z0, z1) => [...tileUrls(sw, ne, z0, z1, BASE_URL), ...tileUrls(sw, ne, z0, z1, REF_URL)];
+// Vorladen gilt der Standardkarte: Land mit allen drei Quellen, rund um Unterkünfte Grundkarte, Beschriftung und Relief. Satellit wird nicht mehr vorgeladen, nur was ihr anseht, landet im Speicher.
+// Eigene Schlüssel mit „karte2:“, damit erledigte Jobs aus älteren Fassungen die neue Karte nicht blockieren. Die Grenze von 4000 Kacheln im Service Worker gilt unverändert.
+const tileJobKey = u => "karte2:uk:" + u.lat.toFixed(3) + "," + u.lng.toFixed(3);
+const landKacheln = (sw, ne) => [...tileUrls(sw, ne, 5, 8, BASE_URL), ...tileUrls(sw, ne, 4, 8, PHYS_URL), ...tileUrls(sw, ne, 3, 8, TERR_URL)];
+const ortKacheln = (sw, ne) => [...tileUrls(sw, ne, 10, 14, BASE_URL), ...tileUrls(sw, ne, 10, 14, REF_URL), ...tileUrls(sw, ne, 9, 9, TERR_URL)];
 let prefetching = false;
 async function prefetchTiles(){
   const con = navigator.connection;
   if(prefetching || !map || navigator.onLine === false || con?.saveData || !navigator.serviceWorker?.controller) return;
   const done = new Set(LS.get("thailand2027-tiles") || []), jobs = [];
-  if(!done.has("karte:land")) jobs.push(["karte:land", beide(VIEW.bounds[0], VIEW.bounds[1], 5, 8)]);
-  mapLodgings().forEach(u => { const k = tileJobKey(u); if(done.has(k)) return; const dy = 6/111, dx = dy/Math.cos(u.lat*Math.PI/180); jobs.push([k, beide([u.lat-dy, u.lng-dx], [u.lat+dy, u.lng+dx], 10, 14)]); });
+  if(!done.has("karte2:land")) jobs.push(["karte2:land", landKacheln(VIEW.bounds[0], VIEW.bounds[1])]);
+  mapLodgings().forEach(u => { const k = tileJobKey(u); if(done.has(k)) return; const dy = 6/111, dx = dy/Math.cos(u.lat*Math.PI/180); jobs.push([k, ortKacheln([u.lat-dy, u.lng-dx], [u.lat+dy, u.lng+dx])]); });
   if(!jobs.length) return;
   prefetching = true;
   try{
@@ -2232,7 +2322,7 @@ function offlineInfo(){
   const done = new Set(LS.get("thailand2027-tiles") || []), uks = mapLodgings();
   const legs = Object.values(S.plans).filter(pl => pl.datum >= today() && pl.plan.stationen.length).flatMap(pl => planLegs(pl.plan).map(l => ({pl, l})));
   const fehlt = legs.filter(({pl, l}) => modeOf(pl.plan) !== "frei" && legTime(pl.plan, l[0], l[1]).min === null).length;
-  return [["Karte, Landesübersicht", done.has("karte:land") ? "gespeichert" : "noch nicht"],
+  return [["Karte, Landesübersicht", done.has("karte2:land") ? "gespeichert" : "noch nicht"],
     ["Karte rund um Unterkünfte", uks.length ? uks.filter(u => done.has(tileJobKey(u))).length + " von " + uks.length : "keine mit Ort"],
     ["Satellit", "nur angesehene Ausschnitte"],
     ["Fahr- und Gehzeiten geplanter Tage", legs.length ? (fehlt ? fehlt + " fehlen" : "alle da") : "nichts geplant"]];
@@ -2241,7 +2331,7 @@ function setEbene(e){
   ebene = e === "sat" ? "sat" : "karte"; LS.set("thailand2027-ebene", ebene);
   $("#mapWrap").classList.toggle("ebene-sat", ebene === "sat");
   const b = $("#mEbene"); if(b){ b.setAttribute("aria-pressed", ebene === "sat"); }
-  if(map){ Object.entries(ebenen).forEach(([k, g]) => k === ebene ? g.addTo(map) : g.remove()); $("#attrib").textContent = ATTRIB[ebene]; renderMarkers(); }
+  if(map){ Object.entries(ebenen).forEach(([k, g]) => k === ebene ? g.addTo(map) : g.remove()); $("#attrib").textContent = ATTRIB[ebene]; renderGeo(); renderMarkers(); }
 }
 
 function initMap(){
@@ -2249,12 +2339,12 @@ function initMap(){
   const wrap = $("#mapWrap");
   wrap.insertAdjacentHTML("beforeend", `<div class="maptop">
       <div class="seg glass" role="group" aria-label="Ansicht"><button data-km="karte" aria-pressed="true">${ic("karte")}Karte</button><button data-km="liste" aria-pressed="false">${ic("liste")}Liste</button></div>
-      <div class="glass mapfilter" id="mFilter" role="group" aria-label="Kategorien"></div>
-      <div class="glass mapday" id="mDay" hidden></div></div>
-    <div class="mapbar"><div class="glass maptools" role="group" aria-label="Kartenwerkzeuge">
-        <button id="mEbene" aria-pressed="${ebene === "sat"}" aria-label="Satellitenbild ein oder aus">${ic("ebenen")}<span>Satellit</span></button>
-        <button id="mHome" aria-label="Ganze Reise zeigen">${ic("rahmen")}</button>
-        <button id="mLoc" aria-label="Mein Standort">${ic("standort")}</button></div>
+      <div class="mapfilter" id="mFilter" role="group" aria-label="Kategorien"></div>
+      <div class="glass mapday" id="mDay" hidden></div>
+      <button class="mround" id="mLoc" aria-label="Mein Standort">${ic("navi")}</button></div>
+    <div class="mapbar" role="group" aria-label="Kartenwerkzeuge">
+      <button class="mround" id="mEbene" aria-pressed="${ebene === "sat"}" aria-label="Satellitenbild ein oder aus">${ic("ebenen")}</button>
+      <button class="mround" id="mHome" aria-label="Ganze Reise zeigen">${ic("rahmen")}</button>
       <button class="mapadd" id="mAdd">${ic("plus")}Spot</button></div>
     <div class="mapcard" id="mCard" hidden></div>`);
   wrap.classList.toggle("ebene-sat", ebene === "sat");
@@ -2265,7 +2355,7 @@ function initMap(){
   $("#mEbene").onclick = () => setEbene(ebene === "sat" ? "karte" : "sat");
   if(!window.L){ $("#map").innerHTML = '<p style="padding:120px 20px">Karte konnte nicht geladen werden. Alles andere funktioniert.</p>'; return; }
   map = L.map("map", {zoomControl:false, attributionControl:false, zoomSnap:1, zoomDelta:1, wheelPxPerZoomLevel:120, minZoom:5, maxZoom:17, maxBounds:VIEW.bounds, maxBoundsViscosity:0.6, zoomAnimationThreshold:4, tap:true});
-  map.setView(VIEW.center, 5);
+  map.setView(VIEW.center, VIEW.zoom);
   ebenen.karte = L.layerGroup(karteLayers());
   // Satellit: grobe Kacheln (bis Zoom 10) liegen darunter, beim Zoomen erscheint ein unscharfes Bild statt leerer Flächen
   ebenen.sat = L.layerGroup([
@@ -2276,7 +2366,8 @@ function initMap(){
   $("#attrib").textContent = ATTRIB[ebene];
   const townMajor = L.layerGroup().addTo(map), townMinor = L.layerGroup();
   DATA.labels.forEach(([la, ln, name]) => { TOWNNAMES.add(name); const major = MAJOR.has(name); L.marker([la, ln], {interactive:false, keyboard:false, icon:L.divIcon({className:"", html:`<span class="lbl town ${major ? "major" : ""}">${esc(name)}</span>`, iconSize:null, iconAnchor:major ? [20,-14] : [16,-12]})}).addTo(major ? townMajor : townMinor); });
-  map.on("zoomend", () => { if(map.getZoom() >= 11) townMinor.addTo(map); else townMinor.remove(); if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); });
+  geoLayer = L.layerGroup().addTo(map); renderGeo();
+  map.on("zoomend", () => { renderGeo(); if(map.getZoom() >= 11) townMinor.addTo(map); else townMinor.remove(); if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); });
   map.on("click", () => closeMapCard());
   routeLayer = L.layerGroup().addTo(map); poiLabelLayer = L.layerGroup().addTo(map); meLayer = L.layerGroup().addTo(map); markerLayer = L.layerGroup().addTo(map);
   renderMarkers();
@@ -2289,8 +2380,13 @@ function renderFilter(){
 }
 
 /* Infokarte unten: Tippen auf einen Marker wählt ihn aus, statt sofort die Detailseite zu öffnen.
-   Sie zeigt nur, was eingetragen ist, und schließt sich per X oder Tipp auf die freie Karte. */
-function openMapCard(sel){ UI.mapSel = sel; renderMapCard(); renderMarkers(); }
+   Sie zeigt nur, was eingetragen ist. Ein Tipp auf die freie Karte schließt sie, ein Tipp auf die Infokarte öffnet die Details. */
+function openMapCard(sel){
+  UI.mapSel = sel; renderMapCard(); renderMarkers();
+  // Der gewählte Punkt darf nicht hinter der Infokarte liegen
+  const r = sel.art === "spot" ? P(sel.id) : rec("lodgings", sel.id), box = $("#mCard");
+  if(map && r && box && !box.hidden){ const y = map.latLngToContainerPoint([r.lat, r.lng]).y, frei = map.getSize().y - box.offsetHeight - 40; if(y > frei) map.panBy([0, y - frei], {animate:true, duration:.25}); }
+}
 function closeMapCard(){ if(!UI.mapSel) return; UI.mapSel = null; renderMapCard(); renderMarkers(); }
 function renderMapCard(){
   const box = $("#mCard"); if(!box) return;
@@ -2298,42 +2394,48 @@ function renderMapCard(){
   const p = sel?.art === "spot" ? P(sel.id) : null, l = sel?.art === "lodging" ? rec("lodgings", sel.id) : null;
   if(!p && !l){ box.hidden = true; box.innerHTML = ""; wrap.classList.remove("hascard"); UI.mapSel = null; return; }
   const chip = (icon, t) => `<span class="mc-fact">${ic(icon)}${esc(t)}</span>`;
-  let head, facts = [], acts;
+  let bild, kopf, sub, facts = [], acts, merk = "";
   if(p){
-    const pl = dayPlanFor(editDay()), nr = (pl?.plan.stationen || []).findIndex(x => x.placeId === p.id), hm = hotelMin(p);
-    head = `<span class="mc-ic" style="--c:var(${TYPES[p.typ][1]})">${ic(TIC(p.typ))}</span><span class="mc-t"><b>${esc(p.name)}</b><small>${esc([GROUPS[GOF[p.typ]]?.[0], TYPELONG[p.typ], p.region].filter(Boolean).join(" · "))}</small></span>`;
+    const pl = dayPlanFor(editDay()), nr = (pl?.plan.stationen || []).findIndex(x => x.placeId === p.id), hm = hotelMin(p), c = TYPES[p.typ][1];
+    // Es gibt keine Fotos und keine Fremdbewertungen im Datenmodell: statt erfundener Inhalte eine ruhige Fläche in der Kategoriefarbe
+    bild = `<span class="mc-bild" style="--c:var(${c})">${ic(TIC(p.typ))}</span>`;
+    kopf = `<span class="mc-ic" style="--c:var(${c})">${ic(TIC(p.typ))}</span>${esc(p.name)}`;
+    sub = [TYPES[p.typ][0], p.region].filter(Boolean).join(" · ");
     if(nr >= 0) facts.push(chip("kalender", `Stopp ${nr + 1} am ${fmtDate(editDay())}`));
     if(hm !== null) facts.push(chip("hotel", `${hm} min ab Unterkunft`));
     if(p.preis) facts.push(chip("euro", p.preis));
-    if(p.status === "besucht") facts.push(chip("haken", "Schon gesehen")); else if(p.status === "gemerkt") facts.push(chip("stern", "Gemerkt"));
-    acts = `<button class="btn small" data-mc="day">${ic("kalender")}Zu einem Tag</button><button class="btn small teal" data-mc="spot">Details</button>`;
+    if(p.status === "besucht") facts.push(chip("haken", "Schon gesehen"));
+    else merk = `<button class="mc-merk" data-mc="merk" aria-pressed="${p.status === "gemerkt"}">${ic("herz")}${p.status === "gemerkt" ? "Gemerkt" : "Merken"}</button>`;
+    acts = `<button class="btn small" data-mc="day">${ic("kalender")}Zu einem Tag</button>`;
   } else {
     const s = rec("stays", l.stayId), pr = lodgingPrice(l, nights(s));
-    head = `<span class="mc-ic hotel">${ic("hotel")}</span><span class="mc-t"><b>${esc(l.name)}</b><small>${esc([l.art, s ? stayName(s) : null].filter(Boolean).join(" · "))}</small></span>`;
+    bild = `<span class="mc-bild hotel">${ic("hotel")}</span>`;
+    kopf = esc(l.name);
+    sub = [l.art, s ? stayName(s) : null].filter(Boolean).join(" · ");
     facts.push(pill(l.status));
     if(pr.nacht !== null) facts.push(chip("euro", money(pr.nacht, l.waehrung) + " pro Nacht")); else if(pr.gesamt !== null) facts.push(chip("euro", money(pr.gesamt, l.waehrung) + " gesamt"));
-    acts = `<button class="btn small" data-mc="pin">${ic("pin")}Punkt ändern</button><button class="btn small teal" data-mc="lodging">Details</button>`;
+    acts = `<button class="btn small" data-mc="pin">${ic("pin")}Punkt ändern</button>`;
   }
-  box.innerHTML = `<div class="mc-head">${head}<button class="mc-x" data-mc="x" aria-label="Schließen">${ic("x")}</button></div>${facts.length ? `<div class="mc-facts">${facts.join("")}</div>` : ""}<div class="mc-acts">${acts}</div>`;
-  box.hidden = false; wrap.classList.add("hascard");
+  box.innerHTML = `<button class="mc-main" data-mc="${p ? "spot" : "lodging"}" aria-label="Details zu ${esc(p ? p.name : l.name)}">${bild}<span class="mc-t"><b>${kopf}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${facts.length ? `<span class="mc-facts">${facts.join("")}</span>` : ""}</span>${ic("weiter")}</button>${merk}<div class="mc-acts">${acts}</div>`;
+  box.hidden = false; wrap.classList.add("hascard"); wrap.style.setProperty("--mc-h", box.offsetHeight + "px");
   box.querySelectorAll("[data-mc]").forEach(b => b.onclick = e => { e.stopPropagation(); const a = b.dataset.mc, id = sel.id;
-    if(a === "x") return closeMapCard();
+    if(a === "merk"){ setOver(id, {status:p.status === "gemerkt" ? "offen" : "gemerkt"}); persist(); renderMapCard(); return toast(p.status === "gemerkt" ? "Nicht mehr gemerkt" : "Gemerkt", "herz"); }
     UI.mapSel = null; renderMapCard();
     if(a === "spot") go("spot", {id}); else if(a === "lodging") go("lodging", {id}); else if(a === "pin") go("ortWahl", {lodgingId:id}); else if(a === "day") addSpotToDay(id); });
 }
 function renderMarkers(){
   if(!map) return; markerLayer.clearLayers(); routeLayer.clearLayers(); poiLabelLayer.clearLayers();
-  const bucket = lastBucket = zoomBucket(map.getZoom()), size = bucket === 0 ? 24 : 30, sat = ebene === "sat", sel = UI.mapSel;
+  const bucket = lastBucket = zoomBucket(map.getZoom()), size = bucket === 0 ? 32 : 36, sat = ebene === "sat", sel = UI.mapSel;
   const ad = editDay(), pl = dayPlanFor(ad), order = new Map((pl?.plan.stationen || []).filter(x => P(x.placeId)).map((x, i) => [x.placeId, i + 1]));
   const chosenIds = new Set(stays().map(s => stayLodging(s.id)?.id).filter(Boolean));
   mapLodgings().forEach(l => { const gew = chosenIds.has(l.id), on = sel?.art === "lodging" && sel.id === l.id;
-    L.marker([l.lat, l.lng], {zIndexOffset:on ? 5000 : gew ? 3000 : 2000, title:l.name + (gew ? "" : " (Option)"), icon:L.divIcon({className:"", html:`<div class="hpin${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, iconSize:[34,34], iconAnchor:[17,17]})}).addTo(markerLayer).on("click", e => { L.DomEvent.stopPropagation(e); openMapCard({art:"lodging", id:l.id}); }); });
+    L.marker([l.lat, l.lng], {zIndexOffset:on ? 5000 : gew ? 3000 : 2000, title:l.name + (gew ? "" : " (Option)"), icon:L.divIcon({className:"", html:`<div class="hpin${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, iconSize:[36,36], iconAnchor:[18,43]})}).addTo(markerLayer).on("click", e => { L.DomEvent.stopPropagation(e); openMapCard({art:"lodging", id:l.id}); }); });
   Object.values(places()).forEach(p => {
     if(!S.filter.has(GOF[p.typ] || "kultur") || p.status === "abgelehnt") return;
     const done = p.status === "besucht", nr = order.get(p.id), on = sel?.art === "spot" && sel.id === p.id;
-    L.marker([p.lat, p.lng], {keyboard:true, zIndexOffset:on ? 4500 : done ? -300 : nr ? 500 : 0, title:p.name + (done ? ", schon gesehen" : ""), icon:L.divIcon({className:"", html:`<div class="mpin${done ? " done" : ""}${nr ? " inplan" : ""}${on ? " sel" : ""}" style="--c:var(${TYPES[p.typ][1]});width:${size}px;height:${size}px">${ic(TIC(p.typ))}${nr ? `<b class="nr">${nr}</b>` : ""}</div>`, iconSize:[size,size], iconAnchor:[size/2,size/2]})})
+    L.marker([p.lat, p.lng], {keyboard:true, zIndexOffset:on ? 4500 : done ? -300 : nr ? 500 : 0, title:p.name + (done ? ", schon gesehen" : ""), icon:L.divIcon({className:"", html:`<div class="mpin${done ? " done" : ""}${nr ? " inplan" : ""}${on ? " sel" : ""}" style="--c:var(${TYPES[p.typ][1]});width:${size}px;height:${size}px">${ic(TIC(p.typ))}${nr ? `<b class="nr">${nr}</b>` : ""}</div>`, iconSize:[size,size], iconAnchor:[size/2,size+7]})})
       .addTo(markerLayer).on("click", e => { L.DomEvent.stopPropagation(e); openMapCard({art:"spot", id:p.id}); });
-    if(bucket === 2 && !TOWNNAMES.has(p.name)) L.marker([p.lat, p.lng], {interactive:false, keyboard:false, zIndexOffset:-500, icon:L.divIcon({className:"", html:`<span class="lbl poi${done ? " done" : ""}">${esc(p.name)}</span>`, iconSize:null, iconAnchor:[-size/2-4, 10]})}).addTo(poiLabelLayer);
+    if(bucket === 2 && !TOWNNAMES.has(p.name)) L.marker([p.lat, p.lng], {interactive:false, keyboard:false, zIndexOffset:-500, icon:L.divIcon({className:"", html:`<span class="lbl poi${done ? " done" : ""}">${esc(p.name)}</span>`, iconSize:null, iconAnchor:[-size/2-5, size/2+16]})}).addTo(poiLabelLayer);
   });
   const box = $("#mDay");
   if(pl && pl.plan.stationen.some(s => P(s.placeId))){
@@ -2366,7 +2468,7 @@ function mapFocus(ll, z){ initMap(); if(!map) return; setTimeout(() => { map.inv
 function mapFitAll(){
   if(!map) return;
   const pts = [...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])];
-  if(pts.length > 1) map.fitBounds(pts, {padding:[60, 60], maxZoom:13}); else if(pts.length) map.setView(pts[0], 12); else map.setView(VIEW.center, 5);
+  if(pts.length > 1) map.fitBounds(pts, {padding:[60, 60], maxZoom:13}); else if(pts.length) map.setView(pts[0], 12); else map.setView(VIEW.center, VIEW.zoom);
 }
 function mapShowDay(){
   setTimeout(() => { if(!map) return; map.invalidateSize(); const pl = dayPlanFor(editDay()); if(!pl) return; const pts = planLegs(pl.plan).flat().map(p => [p.lat, p.lng]); const st = pl.plan.stationen.map(x => P(x.placeId)).filter(Boolean).map(p => [p.lat, p.lng]); const all = [...pts, ...st]; if(all.length > 1) map.fitBounds(all, {padding:[70, 60], maxZoom:14}); else if(all.length) map.setView(all[0], 13); }, 80);
@@ -2608,7 +2710,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.4";
+const APP_VERSION = "Version 2.5";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
