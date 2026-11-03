@@ -1,10 +1,10 @@
 // Service Worker Thailand 2027. Bei jeder Veröffentlichung APP hochzählen, sonst bekommen installierte Geräte nichts Neues.
-// APP: Seite, Symbole, Leaflet, Schriften. TILES: Kartenkacheln, begrenzt auf MAX_TILES (älteste fliegen zuerst raus).
+// APP: Seite, Symbole, MapLibre, Schriften. TILES: Kartenkacheln und Kartenschriften, begrenzt auf MAX_TILES (älteste fliegen zuerst raus).
 // Fahrzeiten liegen nicht hier, sondern im localStorage der App.
-const APP = "thailand-app-v10", TILES = "thailand-tiles-v1", MAX_TILES = 4000, NET_TIMEOUT = 4000;
+const APP = "thailand-app-v11", TILES = "thailand-tiles-v1", MAX_TILES = 4000, NET_TIMEOUT = 4000;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
-  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css",
-  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"];
+  "https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css",
+  "https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"];
 // einzeln cachen: fällt eine Datei aus, landen die übrigen trotzdem im Cache
 self.addEventListener("install", e => { e.waitUntil(caches.open(APP).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => {}))))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => ![APP,TILES].includes(k)).map(k => caches.delete(k))))); self.clients.claim(); });
@@ -18,7 +18,12 @@ const timed = (p, ms) => new Promise((res, rej) => { const t = setTimeout(() => 
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
   if(e.request.method !== "GET") return;
-  if(url.hostname.endsWith("arcgisonline.com")){ // Kacheln: erst Cache, dann Netz
+  // Beschreibung der Vektorkacheln (ohne Dateiendung): erst Netz, damit ein neuer Datenstand ankommt, offline der gespeicherte
+  if(url.hostname === "tiles.openfreemap.org" && !/\.\w+$/.test(url.pathname)){
+    e.respondWith(caches.open(TILES).then(async c => { try{ const res = await timed(fetch(e.request), NET_TIMEOUT); if(res.ok) await c.put(e.request, res.clone()); return res; } catch(err){ return (await c.match(e.request)) || Response.error(); } }));
+    return;
+  }
+  if(url.hostname.endsWith("arcgisonline.com") || url.hostname === "tiles.openfreemap.org"){ // Kacheln und Kartenschriften: erst Cache, dann Netz
     e.respondWith(caches.open(TILES).then(async c => {
       const hit = await c.match(e.request); if(hit) return hit;
       try{ const res = await fetch(e.request); if(res.ok || res.type === "opaque"){ await c.put(e.request, res.clone()); if(++puts % 50 === 0) trimTiles(c); } return res; }

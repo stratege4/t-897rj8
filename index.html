@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
 <style>
 /* Designsystem Thailand-Planer, Version 3 („warm“)
    Warme Sandflächen, Petrol für Orientierung und Auswahl, Koralle nur für die eine Hauptaktion einer Ansicht.
@@ -93,6 +93,11 @@ a{color:var(--teal)}
 .nav .navtitle{font-weight:650;font-size:17px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
 .navbtn{border:0;background:none;min-height:44px;min-width:44px;padding:0 8px;display:inline-flex;align-items:center;gap:2px;color:var(--teal);font-size:17px;font-weight:500}
 .navbtn .ic{width:22px;height:22px}
+.navbtn.zurueck{padding:0;justify-content:center}
+.navbtn.zurueck .ic{width:26px;height:26px}
+/* Zurück-Wischen: die Seite liegt beim Ziehen sichtbar über dem Hintergrund */
+#screen.wischt > .page{box-shadow:-10px 0 28px rgba(40,25,10,.16)}
+#screen.wischt{overflow-x:hidden}
 .navbtn.strong{font-weight:650}
 .nav .right{justify-self:end;display:flex}
 .head{padding:var(--sp-1) var(--sp-4) var(--sp-4)}
@@ -376,10 +381,13 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 #mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#A9DFD8;overflow:hidden}
 #mapWrap.ebene-sat{background:#1E4A52}
 #map{position:absolute;inset:0}
-.leaflet-container{background:#A9DFD8;font-family:var(--font)}
-.ebene-sat .leaflet-container{background:#1E4A52}
-.kref{opacity:.9}
-@media (prefers-color-scheme: dark){ #mapWrap:not(.ebene-sat) .leaflet-tile-pane{filter:brightness(.84) saturate(.95)} }
+.maplibregl-map{background:#F3EBDC;font-family:var(--font)}
+.ebene-sat .maplibregl-map{background:#1E4A52}
+/* Marker-Halter: MapLibre verschiebt ihn, das gestaltete Element darin darf sich beim Antippen frei skalieren */
+.mk{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mk:focus-visible{outline:none}
+.mk:focus-visible > .mpin,.mk:focus-visible > .hpin{box-shadow:0 0 0 3px #FFFAF2,0 0 0 5px var(--teal)}
+@media (prefers-color-scheme: dark){ #mapWrap:not(.ebene-sat) .maplibregl-canvas{filter:brightness(.8) saturate(.92)} }
 .maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:700;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .maptop > *{pointer-events:auto}
 .glass{background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 2px 10px rgba(70,48,24,.10);border-radius:var(--r)}
@@ -455,15 +463,6 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 .hpin .ic{width:21px;height:21px}
 .hpin.kand{--rand:#245F59;background:#FFFAF2;color:#245F59;box-shadow:0 0 0 2px #245F59,0 2px 6px rgba(40,25,10,.22)}
 .mpin.sel,.hpin.sel{transform:scale(1.2);box-shadow:0 0 0 3px #FFFAF2,0 0 0 6px var(--coral),0 4px 12px rgba(40,25,10,.3)}
-/* Geografische Namen der Übersicht: Länder gesperrt, Meere kursiv, Städte mit Punkt */
-.geo{display:inline-block;white-space:nowrap;pointer-events:none;color:#2C4A46;text-shadow:0 0 2px rgba(255,250,242,.9),0 0 6px rgba(255,250,242,.8)}
-.geo.land{transform:translateX(-50%);font-size:16px;font-weight:650;letter-spacing:.2em;text-transform:uppercase;color:#3C5A55}
-.geo.nachbar{transform:translateX(-50%);font-size:14px;font-weight:600;color:#566F68}
-.geo.see{transform:translateX(-50%);white-space:pre;text-align:center;font-size:13.5px;line-height:1.3;font-style:italic;letter-spacing:.06em;color:#2B686C;text-shadow:0 0 5px rgba(190,236,228,.9)}
-.geo.gross{font-size:15px;font-weight:650;display:inline-flex;align-items:center;gap:6px}
-.geo.stadt{font-size:13px;font-weight:550;display:inline-flex;align-items:center;gap:5px}
-.geo i{width:8px;height:8px;border-radius:50%;background:#24403C;box-shadow:0 0 0 1.5px rgba(255,250,242,.9)}
-.geo.stadt i{width:6px;height:6px}
 .lbl{display:inline-block;transform:translate(-50%,0);white-space:nowrap;font-weight:650;color:#23413E;text-shadow:0 0 2px #FFFAF2,0 0 4px #FFFAF2,0 0 7px #FFFAF2;pointer-events:none}
 .ebene-sat .lbl{color:#fff;text-shadow:0 0 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.6)}
 .lbl.town{font-size:13px}.lbl.town.major{font-size:15px}
@@ -572,7 +571,7 @@ mark{background:var(--warning-bg);color:inherit;border-radius:3px}
 <div id="mapWrap" hidden><div id="map" role="application" aria-label="Karte"></div><div class="attrib" id="attrib"></div></div>
 <main id="screen"></main>
 <nav id="tabbar" aria-label="Bereiche"></nav>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
 <script>
 /* ===== 01-basis.js ===== */
 "use strict";
@@ -1354,7 +1353,7 @@ function render(opt = {}){
     $("#mapWrap").hidden = true; scr.hidden = false;
     // V.hero ersetzt Navigationsleiste und große Überschrift (nur auf Startseiten ohne Zurück)
     const hero = V.hero && !hasBack;
-    const nav = hero ? "" : hasBack || V.right || V.left ? `<header class="nav"><div>${hasBack ? `<button class="navbtn" data-back aria-label="Zurück">${ic("zurueck")}${esc(V.backLabel || "Zurück")}</button>` : V.left || ""}</div><div class="navtitle">${V.large ? "" : esc(V.title)}</div><div class="right">${V.right || ""}</div></header>` : `<div style="height:calc(var(--safe-t) + 12px)"></div>`;
+    const nav = hero ? "" : hasBack || V.right || V.left ? `<header class="nav"><div>${hasBack ? `<button class="navbtn zurueck" data-back aria-label="${esc(V.backLabel || "Zurück")}">${ic("zurueck")}</button>` : V.left || ""}</div><div class="navtitle">${V.large ? "" : esc(V.title)}</div><div class="right">${V.right || ""}</div></header>` : `<div style="height:calc(var(--safe-t) + 12px)"></div>`;
     const head = hero ? V.hero : V.large ? `<div class="head"><h1>${esc(V.title)}</h1>${V.sub ? `<div class="sub">${V.sub}</div>` : ""}</div>` : "";
     // V.bar: feste Leiste unten. In Formularen ganz unten, auf Detailseiten über der Tab-Leiste: die Hauptaktion sitzt immer an derselben Stelle
     scr.innerHTML = `<div class="page${V.bar ? " hasbar" : ""}">${nav}${head}<div class="content">${V.html}</div></div>${V.bar ? `<div class="formbar${V.form ? "" : " overtab"}">${V.bar}</div>` : ""}${V.fab || ""}`;
@@ -1478,6 +1477,68 @@ function seitenWechsel(page, richtung){
   if(RUHIG.matches) return page.animate([{opacity:.4}, {opacity:1}], {duration:140, easing:EASE.aus});
   page.animate([{transform:`translateX(${richtung === "zurueck" ? -18 : 18}px)`, opacity:.5}, {transform:"none", opacity:1}], {duration:200, easing:EASE.aus});
 }
+// Feder ohne feste Dauer (Apple: Dämpfung und Antwortzeit). Startet immer vom aktuellen Wert, lässt sich jederzeit abbrechen.
+function feder(von, nach, v0, {daempfung = 1, antwort = .35} = {}, schritt, fertig){
+  const h = {id:0, stop(){ cancelAnimationFrame(h.id); }};
+  if(RUHIG.matches){ schritt(nach); fertig?.(); return h; }
+  const k = (2 * Math.PI / antwort) ** 2, c = 2 * daempfung * Math.sqrt(k); let x = von, v = v0, t0 = performance.now();
+  const tick = t => {
+    // nach echter Zeit in kleinen Schritten: fallen Bilder aus (Stromsparen), kommt die Feder trotzdem pünktlich an
+    let rest = Math.min(.25, (t - t0) / 1000); t0 = t;
+    while(rest > 0){ const dt = Math.min(1 / 240, rest); v += (-k * (x - nach) - c * v) * dt; x += v * dt; rest -= dt; }
+    if(Math.abs(x - nach) < .5 && Math.abs(v) < 10){ schritt(nach); return fertig?.(); }
+    schritt(x); h.id = requestAnimationFrame(tick);
+  };
+  h.id = requestAnimationFrame(tick);
+  return h;
+}
+// Wohin der Schwung zeigt (Apples Projektion wie beim Scrollen)
+const projektion = v => v / 1000 * .998 / (1 - .998);
+
+/* ---------- Zurück per Wischen vom linken Rand, wie in iOS-Apps ----------
+   Die Seite folgt dem Finger 1:1. Beim Loslassen entscheidet der Schwung: zeigt er über die halbe Breite, geht es zurück,
+   sonst federt die Seite an ihren Platz. Nur wo es ein Zurück gibt, nicht auf der Karte und nicht bei offenem Blatt.
+   Senkrechtes Scrollen bleibt unberührt, erst eine klar waagerechte Bewegung nach rechts übernimmt. */
+const WISCH_RAND = 30;
+let wisch = null, wischX = 0, wischLauf = null;
+const wischTeile = () => [...screenEl().children];
+function wischSetzen(x){
+  wischX = x;
+  wischTeile().forEach(el => el.style.transform = x ? `translateX(${x}px)` : "");
+  screenEl().classList.toggle("wischt", x > 0);
+}
+// Geht es zurück? Schwung nach links bricht ab, auch wenn die Seite schon weit draußen ist
+const zurueckGewischt = (x, v, breite) => v > -150 && x + projektion(v) > breite / 2;
+document.addEventListener("touchstart", e => {
+  wisch = null;
+  if(e.touches.length !== 1 || !stackOf().length || screenEl().hidden || document.querySelector(".sheetbg")) return;
+  const t = e.touches[0]; if(t.clientX > WISCH_RAND) return;
+  wisch = {x0:t.clientX, y0:t.clientY, an:false, verlauf:[[e.timeStamp, t.clientX]]};
+}, {passive:true});
+document.addEventListener("touchmove", e => {
+  if(!wisch) return;
+  const t = e.touches[0], dx = t.clientX - wisch.x0, dy = t.clientY - wisch.y0;
+  if(!wisch.an){
+    if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    if(Math.abs(dy) > Math.abs(dx) || dx < 0){ wisch = null; return; } // das ist Scrollen
+    wisch.an = true; wischLauf?.stop();
+  }
+  e.preventDefault();
+  wisch.verlauf.push([e.timeStamp, t.clientX]); if(wisch.verlauf.length > 5) wisch.verlauf.shift();
+  wischSetzen(Math.max(0, dx));
+}, {passive:false});
+function wischEnde(e){
+  const w = wisch; wisch = null;
+  if(!w?.an) return;
+  const [t0, x0] = w.verlauf[0], [t1, x1] = w.verlauf[w.verlauf.length - 1], v = t1 > t0 ? (x1 - x0) / (t1 - t0) * 1000 : 0, breite = innerWidth;
+  const zurueckFedern = () => { wischLauf = feder(wischX, 0, v, {daempfung:1, antwort:.3}, wischSetzen); };
+  if(e.type === "touchcancel" || !zurueckGewischt(wischX, v, breite)) return zurueckFedern();
+  if(_formDirty){ zurueckFedern(); return confirmSheet({title:"Änderungen verwerfen?", text:"Was ihr hier eingetragen habt, wird nicht gespeichert.", ok:"Verwerfen", danger:true}).then(y => y && back()); }
+  wischLauf = feder(wischX, breite, Math.max(0, v), {daempfung:1, antwort:.28}, wischSetzen, () => { wischSetzen(0); back(); });
+}
+document.addEventListener("touchend", wischEnde);
+document.addEventListener("touchcancel", wischEnde);
+
 // FLIP: Elemente mit data-flip gleiten von der alten an die neue Stelle in ihrer Liste, neue blenden ein.
 // Gemessen wird innerhalb der Liste: verschiebt sich nur der Inhalt darüber (Suchergebnisse klappen zu), bewegt sich nichts.
 const flipLage = el => el.getBoundingClientRect().top - el.parentElement.getBoundingClientRect().top;
@@ -1773,10 +1834,12 @@ function bindStatus(el, col, id){
 let miniMap = null;
 function mountMiniMap(box, l){
   if(miniMap){ try{ miniMap.remove(); }catch(e){} miniMap = null; }
-  if(!box || !window.L || !Number.isFinite(l.lat)) return;
-  miniMap = L.map(box, {zoomControl:false, attributionControl:false, dragging:false, scrollWheelZoom:false, doubleClickZoom:false, touchZoom:false, boxZoom:false, keyboard:false, tap:false}).setView([l.lat, l.lng], 13); // helle Karte: Umgebung mit Straßen und Orten statt leerer Fläche
-  karteLayers().forEach(x => x.addTo(miniMap)); // dieselbe helle Karte wie im Bereich Karte
-  L.marker([l.lat, l.lng], {interactive:false, keyboard:false, icon:L.divIcon({className:"", html:`<div class="hpin${GEWAEHLT.has(l.status) ? "" : " kand"}">${ic("hotel")}</div>`, iconSize:[36,36], iconAnchor:[18,43]})}).addTo(miniMap);
+  if(!box || !window.maplibregl || !Number.isFinite(l.lat)) return;
+  try{ // dieselbe Vektorkarte wie im Bereich Karte, ohne Luftbild und nicht bedienbar: Umgebung mit Straßen und Orten
+    miniMap = new maplibregl.Map({container:box, style:kartenStil(false), center:[l.lng, l.lat], zoom:12, interactive:false, attributionControl:false, fadeDuration:0});
+    const el = document.createElement("div"); el.className = "mk"; el.innerHTML = `<div class="hpin${GEWAEHLT.has(l.status) ? "" : " kand"}">${ic("hotel")}</div>`;
+    new maplibregl.Marker({element:el, anchor:"bottom", offset:[0, -7]}).setLngLat([l.lng, l.lat]).addTo(miniMap);
+  } catch(e){ miniMap = null; }
 }
 // Unterkunft: oben Preis und Wertung, dann Lage mit Karte, Notiz, weitere Angaben, Status. Die Entscheidung sitzt in der Leiste unten.
 VIEWS.lodging = ({id}) => {
@@ -1878,11 +1941,11 @@ VIEWS.lodgingEdit = p => {
 let pickMap = null;
 // Start der Karte: eigener Punkt, sonst ein Punkt einer anderen Option desselben Aufenthalts (nur als Kartenausschnitt), sonst Standort oder Thailand
 function pickStart(p, l){
-  if(l && Number.isFinite(l.lat)) return [[l.lat, l.lng], 16];
-  if(Number.isFinite(p.lat)) return [[p.lat, p.lng], 16];
+  if(l && Number.isFinite(l.lat)) return [[l.lat, l.lng], 15];
+  if(Number.isFinite(p.lat)) return [[p.lat, p.lng], 15];
   const nb = l ? lodgingsOf(l.stayId).find(x => x.id !== l.id && Number.isFinite(x.lat)) : null;
-  if(nb) return [[nb.lat, nb.lng], 14];
-  return ME?.inArea ? [[ME.lat, ME.lng], 15] : [VIEW.center, 6];
+  if(nb) return [[nb.lat, nb.lng], 13];
+  return ME?.inArea ? [[ME.lat, ME.lng], 14] : [VIEW.center, VIEW.zoom];
 }
 const pinLabel = l => Number.isFinite(l?.lat) ? "Kartenpunkt ändern" : "Kartenpunkt setzen";
 VIEWS.ortWahl = p => {
@@ -1895,19 +1958,19 @@ VIEWS.ortWahl = p => {
     bar:`<button class="btn" data-back>Abbrechen</button><button class="btn primary" data-act="ok">Übernehmen</button>`,
     mount(el){
       if(pickMap){ try{ pickMap.remove(); }catch(e){} pickMap = null; } // Rest einer abgebrochenen Auswahl
-      if(!window.L){ el.querySelector("#pmap").innerHTML = '<p style="padding:20px">Karte nicht geladen. Koordinaten bitte im Formular als Text einfügen.</p>'; el.querySelector('[data-act="ok"]').disabled = true; return; }
+      if(!window.maplibregl){ el.querySelector("#pmap").innerHTML = '<p style="padding:20px">Karte nicht geladen. Koordinaten bitte im Formular als Text einfügen.</p>'; el.querySelector('[data-act="ok"]').disabled = true; return; }
       const prev = stackOf()[stackOf().length - 2]?.params || {}, [start, zoom] = pickStart(p, l);
-      pickMap = L.map(el.querySelector("#pmap"), {zoomControl:false, attributionControl:false, maxBounds:VIEW.bounds, minZoom:5, maxZoom:18}).setView(start, zoom);
-      L.tileLayer(TILE_URL, {maxNativeZoom:17, maxZoom:18, crossOrigin:true}).addTo(pickMap); // Satellit: Einfahrt und Gebäude sind darauf erkennbar
-      refLayer({zIndex:3}).addTo(pickMap); // Ortsnamen zur Orientierung
+      // Satellit mit Straßen und Namen der Vektorkarte: Einfahrt und Gebäude sind erkennbar, die Orientierung bleibt
+      pickMap = new maplibregl.Map({container:el.querySelector("#pmap"), style:kartenStil(true), center:[start[1], start[0]], zoom, minZoom:4, maxZoom:19, maxBounds:RAHMEN, attributionControl:false, dragRotate:false, pitchWithRotate:false, touchPitch:false});
+      pickMap.touchZoomRotate.disableRotation();
       // Nach Abbrechen oder Zurück ist die Ansicht weg: Karte dann abräumen statt ins Leere zu schreiben (Nachlauf beim Ziehen)
       const pc = el.querySelector("#pc"), mapNow = pickMap;
-      const show = () => { if(!pc.isConnected){ setTimeout(() => { try{ mapNow.remove(); }catch(e){} if(pickMap === mapNow) pickMap = null; }); return; } const c = mapNow.getCenter(); pc.textContent = mapNow.getZoom() < 13 ? "Zum Setzen näher heranzoomen" : `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; };
-      pickMap.on("move zoomend", show); show();
-      el.querySelector('[data-act="me"]').onclick = () => navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => pickMap.setView([pos.coords.latitude, pos.coords.longitude], 16), () => toast("Standort nicht freigegeben", "warn", 2600, true), {enableHighAccuracy:true, timeout:8000}) : toast("Standort nicht verfügbar", "warn", 2600, true);
+      const show = () => { if(!pc.isConnected){ setTimeout(() => { try{ mapNow.remove(); }catch(e){} if(pickMap === mapNow) pickMap = null; }); return; } const c = mapNow.getCenter(); pc.textContent = mapNow.getZoom() < 12 ? "Zum Setzen näher heranzoomen" : `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; };
+      pickMap.on("move", show); pickMap.on("zoomend", show); show();
+      el.querySelector('[data-act="me"]').onclick = () => navigator.geolocation ? navigator.geolocation.getCurrentPosition(pos => pickMap.jumpTo({center:[pos.coords.longitude, pos.coords.latitude], zoom:15}), () => toast("Standort nicht freigegeben", "warn", 2600, true), {enableHighAccuracy:true, timeout:8000}) : toast("Standort nicht verfügbar", "warn", 2600, true);
       el.querySelector('[data-act="ok"]').onclick = () => {
         const c = pickMap.getCenter();
-        if(pickMap.getZoom() < 13) return toast("Bitte näher heranzoomen, damit der Punkt genau sitzt", "info", 3000);
+        if(pickMap.getZoom() < 12) return toast("Bitte näher heranzoomen, damit der Punkt genau sitzt", "info", 3000);
         const lat = +c.lat.toFixed(6), lng = +c.lng.toFixed(6);
         pickMap.remove(); pickMap = null;
         if(!l){ prev.draft = {...(prev.draft || {}), coords:`${lat}, ${lng}`}; back(); return toast("Ort übernommen", "pin"); }
@@ -2252,155 +2315,153 @@ async function addSpotToDay(id){
 
 /* ===== 13-karte-ui.js ===== */
 /* ---------- Bereich Karte: Spots, Unterkünfte, Route des aktiven Tages ----------
-   Die Karte (Leaflet) wird einmal angelegt und bleibt bestehen, Detailseiten legen sich darüber.
-   Zwei Kartenebenen vom selben Anbieter (Esri, server.arcgisonline.com, der Service Worker speichert beide wie bisher):
-   „Karte“  illustrierte Reisekarte, auf dem Gerät aus drei Esri-Quellen gemischt, darüber eigene Namen, ab Zoom 9 Esris Beschriftung. Standard.
-   „Satellit“ Luftbild wie bisher, wahlweise. Die Wahl gilt nur auf diesem Gerät (localStorage), sie ändert keine Daten.
-   Vorgeladen werden für die Karte die Landesübersicht (bis Zoom 8) und 6 km um jede Unterkunft (Zoom 10 bis 14). */
-let map = null, markerLayer, routeLayer, poiLabelLayer, meLayer;
+   Vektorkarte (MapLibre GL) mit Kacheln von OpenFreeMap: OpenStreetMap-Daten, ohne Schlüssel und Konto. Die Karte wird auf dem Gerät
+   vom Grafikchip gezeichnet, ist in jedem Zoom scharf und hat Ortsnamen als echten Text (deutsch, sonst lateinische Schrift).
+   Die Farben kommen aus der App (KF), nicht aus fremden Kartenbildern.
+   „Satellit“ legt Esris Luftbild unter dieselben Straßen und Namen, wahlweise und nur auf diesem Gerät gemerkt (localStorage).
+   Die Karte wird einmal angelegt und bleibt bestehen, Detailseiten legen sich darüber.
+   Vorgeladen werden die Landesübersicht (bis Zoom 8), 6 km um jede Unterkunft (Zoom 10 bis 14) und die Schriften. */
+let map = null, markers = [], meMarker = null;
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
-const BASE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
-const REF_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
-const PHYS_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}";
-const TERR_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}";
-const ATTRIB = {karte:"Karte © Esri, USGS, NOAA, NPS, HERE, Garmin, OpenStreetMap", sat:"Bilder © Esri, Maxar, Earthstar Geographics"};
-const VIEW = {center:[13.4, 100.9], zoom:6, bounds:[[4.5, 96.5], [21.5, 106.5]]};
+const OFM = "https://tiles.openfreemap.org", VEKTOR_URL = OFM + "/planet", SCHRIFT_URL = OFM + "/fonts/{fontstack}/{range}.pbf";
+const SCHRIFT = {n:["Noto Sans Regular"], b:["Noto Sans Bold"], i:["Noto Sans Italic"]};
+const ATTRIB = {karte:"© OpenFreeMap, OpenMapTiles, Daten © OpenStreetMap-Mitwirkende", sat:"Bilder © Esri, Maxar, Earthstar Geographics · Daten © OpenStreetMap-Mitwirkende"};
+// Zoomstufen nach MapLibre (512er-Kacheln): jede Stufe liegt eine unter der früheren Rasterkarte
+const VIEW = {center:[13.4, 100.9], zoom:5, bounds:[[4.5, 96.5], [21.5, 106.5]]};
+const lngLat = ([lat, lng]) => [lng, lat];
+const RAHMEN = [[VIEW.bounds[0][1] - 2, VIEW.bounds[0][0] - 2], [VIEW.bounds[1][1] + 2, VIEW.bounds[1][0] + 2]]; // etwas Luft zum Verschieben
 UI.karteModus = "karte";
 UI.mapSel = null; // ausgewählter Marker {art:"spot"|"lodging", id}
-let ebene = LS.get("thailand2027-ebene") === "sat" ? "sat" : "karte", ebenen = {};
-const zoomBucket = z => z < 11 ? 0 : z < 12 ? 1 : 2;
+let ebene = LS.get("thailand2027-ebene") === "sat" ? "sat" : "karte";
+const zoomBucket = z => z < 10 ? 0 : z < 11 ? 1 : 2;
 let lastBucket = -1;
 
-// Die Reisekarte entsteht je Kachel auf dem Gerät aus drei Esri-Quellen, damit kein Server und kein Schlüssel nötig sind:
-// Physical (bis Zoom 8) gibt dem Land die Farbe, Terrain (bis Zoom 9, darüber liefert Esri hier nur ein Platzhalterbild) dem Meer die
-// Tiefenstufen und dem Land das Relief, Light Gray (bis Zoom 16) scharfe Küsten und Straßen. Darüber werden die groben Quellen vergrößert
-// und ab Zoom 10 Richtung Sand ausgeblendet, sonst sähe man ihre Pixel.
-const MEER_FLACH = [150,226,216], MEER_TIEF = [46,166,186], SAND = [243,236,205], LINIE = [92,112,104];
-const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
-// Physical bestimmt nur die Helligkeit des Landes, die Farbe kommt aus dieser Tabelle: Sand im Flachland, Salbei im Bergland.
-// So bleibt die Karte ruhig und illustriert, statt das bunte Original zu zeigen.
-const LAND_LUT = (() => {
-  const st = [[0,[92,132,96]], [120,[122,166,116]], [165,[158,200,140]], [200,[208,225,170]], [228,[238,234,194]], [255,[246,240,214]]];
-  const r = new Uint8ClampedArray(256), g = new Uint8ClampedArray(256), b = new Uint8ClampedArray(256);
-  for(let i = 0; i < 256; i++){ let k = 0; while(k < st.length - 2 && i > st[k + 1][0]) k++; const [a0, c0] = st[k], [a1, c1] = st[k + 1], m = clamp01((i - a0) / (a1 - a0)); r[i] = c0[0] + (c1[0] - c0[0]) * m; g[i] = c0[1] + (c1[1] - c0[1]) * m; b[i] = c0[2] + (c1[2] - c0[2]) * m; }
-  return {r, g, b};
-})();
-// Light Gray hat bis Zoom 8 englische Namen fest eingezeichnet. Dort kommt die Küste aus dem Terrain (maske), und von Light Gray bleiben
-// nur die feinen Grenzlinien: dunkle Schrift wird samt kleinem Umkreis übergangen.
-function schriftMaske(g){
-  const m = new Uint8Array(65536), r = 3;
-  for(let y = 0; y < 256; y++) for(let x = 0; x < 256; x++){ const i = (y * 256 + x) * 4; if(((g[i] * 77 + g[i+1] * 150 + g[i+2] * 29) >> 8) >= 188) continue;
-    for(let b = Math.max(0, y - r); b <= Math.min(255, y + r); b++) for(let a = Math.max(0, x - r); a <= Math.min(255, x + r); a++) m[b * 256 + a] = 1; }
-  return m;
+// Farben der Karte aus der App: Sand als Land, Salbei für Wald und Grün, Lagune als Wasser, warme weiße Straßen
+const KF = {land:"#F3EBDC", sand:"#EEDFC0", wald:"#CFE0BE", gruen:"#DDE8CC", wohn:"#ECE1CE", wasser:"#A9DFD8", fluss:"#93D2CA",
+  grenze:"#A08F79", haupt:"#FFF7E8", hauptRand:"#DCC6A4", neben:"#FFFFFF", nebenRand:"#E6D7C1", gebaeude:"#E6D9C5", faehre:"#3E9C94",
+  text:"#2C4A46", leise:"#5F756F", halo:"#FFFAF2", meer:"#2B686C", route:"#2A7A72", routeRand:"#FFFAF2"};
+// Beschreibung, Kacheln und Schriften laufen über ein eigenes Kürzel („kt://“) im Hauptprozess. So gehen sie sicher durch den
+// Service Worker und sind offline da. Anfragen aus MapLibres Hintergrundprozess sieht er auf dem iPhone nicht in jedem Fall.
+const KT = "kt://", ktZuHttps = u => u.replace(KT, "https://"), zuKt = u => u.replace("https://", KT);
+let ktAn = false;
+function ktProtokoll(){
+  if(ktAn || !window.maplibregl?.addProtocol) return; ktAn = true;
+  maplibregl.addProtocol("kt", async (p, ab) => {
+    const res = await fetch(ktZuHttps(p.url), {signal:ab?.signal}); if(!res.ok) throw new Error("Kachel " + res.status);
+    if(p.type === "json"){ const j = await res.json(); if(j.tiles) j.tiles = j.tiles.map(zuKt); return {data:j}; }
+    return {data:await res.arrayBuffer()};
+  });
 }
-function karteMischen(g, ph, te, z, maske){
-  const out = g, relief = z >= 9, schrift = maske ? schriftMaske(g) : null, ruhe = z <= 9 ? 0 : z === 10 ? .35 : z === 11 ? .6 : .8;
-  for(let i = 0; i < out.length; i += 4){
-    const gl = (g[i] * 77 + g[i+1] * 150 + g[i+2] * 29) >> 8;
-    // Meer: im Terrain ist Wasser türkis, Land weiß oder grau. Je stärker das Türkis, desto tiefer.
-    const tr = te ? te[i] : 200, tg = te ? te[i+1] : 230, q = clamp01((tg - tr - 34) / 62) * (1 - ruhe) + .22 * ruhe;
-    const mr = MEER_FLACH[0] + (MEER_TIEF[0] - MEER_FLACH[0]) * q, mg = MEER_FLACH[1] + (MEER_TIEF[1] - MEER_FLACH[1]) * q, mb = MEER_FLACH[2] + (MEER_TIEF[2] - MEER_FLACH[2]) * q;
-    // Land: Helligkeit aus Physical, Wasserpixel der groben Kachel werden Sand
-    let lr = SAND[0], lg = SAND[1], lb = SAND[2];
-    if(ph && ph[i+2] < ph[i+1] + 4){ const l = (ph[i] * 77 + ph[i+1] * 150 + ph[i+2] * 29) >> 8; lr = LAND_LUT.r[l]; lg = LAND_LUT.g[l]; lb = LAND_LUT.b[l]; }
-    if(relief && te){ const sh = .72 + .28 * clamp01((Math.min(te[i], te[i+1], te[i+2]) - 150) / 95); lr *= sh; lg *= sh; lb *= sh; }
-    if(ruhe){ lr += (SAND[0] - lr) * ruhe; lg += (SAND[1] - lg) * ruhe; lb += (SAND[2] - lb) * ruhe; }
-    // Straßen sind in Light Gray heller als das Land, Grenzen und Kanten dunkler
-    if(gl > 241){ const f = clamp01((gl - 241) / 12) * .85; lr += (255 - lr) * f; lg += (252 - lg) * f; lb += (243 - lb) * f; }
-    let w, n;
-    if(maske){ w = clamp01((maske[i+1] - maske[i] - 12) / 16); n = !schrift[i >> 2] && w < .5 && gl < 234 && gl > 214 ? clamp01((234 - gl) / 20) * .6 : 0; }
-    else { w = gl <= 212 ? 1 : gl >= 226 ? 0 : (226 - gl) / 14; n = gl < 200 ? clamp01((200 - gl) / 60) : 0; }
-    out[i] = (mr * w + lr * (1 - w)) * (1 - n) + LINIE[0] * n; out[i+1] = (mg * w + lg * (1 - w)) * (1 - n) + LINIE[1] * n; out[i+2] = (mb * w + lb * (1 - w)) * (1 - n) + LINIE[2] * n;
-  }
+const NAME = ["coalesce", ["get", "name:de"], ["get", "name:en"], ["get", "name_int"], ["get", "name:latin"], ["get", "name"]];
+const zoomBreite = (...st) => ["interpolate", ["exponential", 1.5], ["zoom"], ...st];
+const klasse = (...k) => ["in", ["get", "class"], ["literal", k]];
+const schrift = (font, groesse, farbe = KF.text, extra = {}) => ({layout:{"text-field":NAME, "text-font":font, "text-size":groesse, ...extra.layout}, paint:{"text-color":farbe, "text-halo-color":KF.halo, "text-halo-width":1.4, "text-halo-blur":.4, ...extra.paint}});
+function kartenStil(mitSat = ebene === "sat"){
+  ktProtokoll();
+  const om = {source:"om"}, vis = an => ({visibility:an ? "visible" : "none"});
+  const strasse = (id, klassen, min, rand, innen, breite) => [
+    {id:id + "-rand", type:"line", ...om, "source-layer":"transportation", minzoom:min, filter:["all", klasse(...klassen), ["!=", ["get", "brunnel"], "tunnel"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":rand, "line-width":zoomBreite(...breite.map((w, i) => i % 2 ? w * 1.6 + .6 : w))}},
+    {id, type:"line", ...om, "source-layer":"transportation", minzoom:min, filter:["all", klasse(...klassen), ["!=", ["get", "brunnel"], "tunnel"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":innen, "line-width":zoomBreite(...breite)}}];
+  const layers = [
+    {id:"hintergrund", type:"background", paint:{"background-color":KF.land}},
+    {id:"wald", type:"fill", ...om, "source-layer":"landcover", filter:klasse("wood", "forest"), paint:{"fill-color":KF.wald, "fill-opacity":["interpolate", ["linear"], ["zoom"], 4, .6, 12, .85]}},
+    {id:"gruen", type:"fill", ...om, "source-layer":"landcover", filter:klasse("grass", "farmland", "wetland", "scrub"), paint:{"fill-color":KF.gruen, "fill-opacity":.65}},
+    {id:"sand", type:"fill", ...om, "source-layer":"landcover", filter:klasse("sand", "beach"), paint:{"fill-color":KF.sand}},
+    {id:"wohnen", type:"fill", ...om, "source-layer":"landuse", minzoom:9, filter:klasse("residential", "suburb", "neighbourhood", "commercial", "retail", "industrial"), paint:{"fill-color":KF.wohn, "fill-opacity":.75}},
+    {id:"park", type:"fill", ...om, "source-layer":"park", paint:{"fill-color":KF.gruen, "fill-opacity":.7}},
+    {id:"wasser", type:"fill", ...om, "source-layer":"water", paint:{"fill-color":KF.wasser}},
+    {id:"fluss", type:"line", ...om, "source-layer":"waterway", minzoom:8, layout:{"line-cap":"round"}, paint:{"line-color":KF.fluss, "line-width":zoomBreite(8, .6, 14, 2.4, 18, 6)}},
+    {id:"gebaeude", type:"fill", ...om, "source-layer":"building", minzoom:14, paint:{"fill-color":KF.gebaeude, "fill-opacity":.85}},
+    {id:"satellit", type:"raster", source:"sat", layout:vis(mitSat), paint:{"raster-fade-duration":150}},
+    {id:"grenze", type:"line", ...om, "source-layer":"boundary", filter:["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]], paint:{"line-color":KF.grenze, "line-width":zoomBreite(4, .6, 10, 1.4), "line-dasharray":[3, 2]}},
+    {id:"faehre", type:"line", ...om, "source-layer":"transportation", minzoom:8, filter:klasse("ferry"), paint:{"line-color":KF.faehre, "line-width":zoomBreite(8, .6, 14, 1.6), "line-dasharray":[1, 3], "line-opacity":["interpolate", ["linear"], ["zoom"], 8, .25, 12, .5]}},
+    ...strasse("neben", ["secondary", "tertiary", "minor", "service"], 10, KF.nebenRand, KF.neben, [10, .4, 14, 3, 18, 12]),
+    ...strasse("fern", ["motorway", "trunk", "primary"], 6, KF.hauptRand, KF.haupt, [6, .5, 10, 1.8, 14, 5, 18, 16]),
+    // Route des aktiven Tages: über den Straßen, unter den Namen. Ohne berechnete Route gestrichelt.
+    {id:"route-rand", type:"line", source:"route", layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.routeRand, "line-width":8, "line-opacity":.95}},
+    {id:"route", type:"line", source:"route", filter:["!", ["get", "gestrichelt"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.route, "line-width":4}},
+    {id:"route-offen", type:"line", source:"route", filter:["get", "gestrichelt"], layout:{"line-cap":"round"}, paint:{"line-color":KF.route, "line-width":4, "line-dasharray":[.5, 2.5]}},
+    {id:"ich-genau", type:"fill", source:"ich", paint:{"fill-color":"#1E7BFF", "fill-opacity":.1, "fill-outline-color":"rgba(30,123,255,.5)"}},
+    // Namen: Straßen ab Zoom 13, Orte nach Größe gestaffelt, Meere kursiv, Länder gesperrt
+    {id:"name-strasse", type:"symbol", ...om, "source-layer":"transportation_name", minzoom:13, ...schrift(SCHRIFT.n, 11.5, KF.leise, {layout:{"symbol-placement":"line", "text-letter-spacing":.02}})},
+    {id:"name-meer", type:"symbol", ...om, "source-layer":"water_name", filter:["==", ["geometry-type"], "Point"], ...schrift(SCHRIFT.i, ["interpolate", ["linear"], ["zoom"], 4, 12, 8, 15], KF.meer, {layout:{"text-letter-spacing":.08, "text-max-width":7}})},
+    {id:"name-dorf", type:"symbol", ...om, "source-layer":"place", minzoom:11, filter:klasse("village", "suburb", "neighbourhood", "quarter"), ...schrift(SCHRIFT.n, 12, KF.leise)},
+    {id:"name-insel", type:"symbol", ...om, "source-layer":"place", minzoom:7, filter:klasse("island", "islet"), ...schrift(SCHRIFT.i, ["interpolate", ["linear"], ["zoom"], 7, 11.5, 12, 14], KF.meer)},
+    {id:"name-ort", type:"symbol", ...om, "source-layer":"place", minzoom:8, filter:klasse("town"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 8, 12, 13, 15])},
+    {id:"name-stadt", type:"symbol", ...om, "source-layer":"place", minzoom:4, filter:klasse("city"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 4, 12, 10, 17])},
+    {id:"name-land", type:"symbol", ...om, "source-layer":"place", maxzoom:8, filter:klasse("country"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 4, 12, 7, 15], KF.leise, {layout:{"text-transform":"uppercase", "text-letter-spacing":.18, "text-max-width":8}})},
+  ];
+  return {version:8, glyphs:zuKt(SCHRIFT_URL),
+    sources:{om:{type:"vector", url:zuKt(VEKTOR_URL), attribution:""}, sat:{type:"raster", tiles:[TILE_URL], tileSize:256, maxzoom:18},
+      route:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, ich:{type:"geojson", data:{type:"FeatureCollection", features:[]}}},
+    layers};
 }
-// Grobe Kacheln teilen sich viele Ansichten, deshalb ein kleiner Speicher für geladene Bilder
-const bildSpeicher = new Map();
-function ladeBild(url){
-  if(bildSpeicher.has(url)) return bildSpeicher.get(url);
-  const p = new Promise((res, rej) => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => res(img); img.onerror = rej; img.src = url; });
-  bildSpeicher.set(url, p); p.catch(() => bildSpeicher.delete(url));
-  if(bildSpeicher.size > 80) bildSpeicher.delete(bildSpeicher.keys().next().value);
-  return p;
+// Daten in eine Quelle schreiben. Ist der Stil noch nicht geladen, wartet der Stand und wird beim Laden nachgereicht.
+const wartend = {};
+function quelleSetzen(id, features){
+  const data = {type:"FeatureCollection", features};
+  const q = map?.getSource?.(id); if(q) q.setData(data); else wartend[id] = data;
 }
-const kachelUrl = (tmpl, z, x, y) => tmpl.replace("{z}", z).replace("{y}", y).replace("{x}", x);
-const mischCtx = (() => { let c; return () => { if(!c){ const el = document.createElement("canvas"); el.width = el.height = 256; c = el.getContext("2d", {willReadFrequently:true}); } return c; }; })();
-// Bis Zoom 8 kommen Land und Meer eine Stufe gröber: das glättet die Fläche, die Küste bleibt durch Light Gray scharf
-const physZ = z => Math.min(8, z - 1), terrZ = z => z <= 8 ? Math.max(3, z - 2) : 9;
-// Pixel einer Kachel, bei zu hohem Zoom der passende Ausschnitt der gröberen Kachel
-async function kachelPixel(tmpl, c, maxZ){
-  const dz = Math.max(0, c.z - maxZ), f = 2 ** dz, img = await ladeBild(kachelUrl(tmpl, c.z - dz, Math.floor(c.x / f), Math.floor(c.y / f)));
-  const g = mischCtx(), n = 256 / f; g.imageSmoothingQuality = "high";
-  g.clearRect(0, 0, 256, 256); g.drawImage(img, (c.x % f) * n, (c.y % f) * n, n, n, 0, 0, 256, 256);
-  return g.getImageData(0, 0, 256, 256).data;
+// Marker: ein schlichter Halter, den MapLibre verschiebt, darin das gestaltete Element (so stören sich Position und Antippen-Skalierung nicht)
+function setzeMarker(lat, lng, html, {anchor = "bottom", offset = [0, 0], z = 0, titel, klick} = {}){
+  const el = document.createElement("div"); el.className = "mk"; el.innerHTML = html; if(z) el.style.zIndex = z;
+  if(titel){ el.title = titel; el.setAttribute("aria-label", titel); }
+  if(klick){ el.setAttribute("role", "button"); el.tabIndex = 0; el.addEventListener("click", e => { e.stopPropagation(); klick(); }); el.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); klick(); } }); }
+  const m = new maplibregl.Marker({element:el, anchor, offset}).setLngLat([lng, lat]).addTo(map);
+  markers.push(m); return m;
 }
-// Fehlt offline eine Quelle, bleibt die Karte benutzbar: dann Sand als Land oder ein gleichmäßiges Meer. Ohne Light Gray gibt es keine Küste, also einen Kachelfehler.
-function warmLayer(opt = {}){
-  const W = L.GridLayer.extend({ createTile(c, done){
-    const t = document.createElement("canvas"); t.width = t.height = 256;
-    (async () => {
-      const [g, ph, te, ma] = await Promise.allSettled([kachelPixel(BASE_URL, c, 16), kachelPixel(PHYS_URL, c, physZ(c.z)), kachelPixel(TERR_URL, c, terrZ(c.z)), c.z <= 8 ? kachelPixel(TERR_URL, c, c.z) : null]);
-      if(g.status !== "fulfilled") return done(new Error("Kachel fehlt"), t);
-      const ctx = t.getContext("2d"), d = new ImageData(new Uint8ClampedArray(g.value), 256, 256);
-      karteMischen(d.data, ph.value || null, te.value || null, c.z, ma.value || null); ctx.putImageData(d, 0, 0); done(null, t);
-    })().catch(() => done(new Error("Kachel fehlt"), t));
-    return t; } });
-  return new W({maxNativeZoom:16, maxZoom:18, minZoom:5, keepBuffer:3, updateWhenZooming:false, ...opt});
-}
-const refLayer = (opt = {}) => L.tileLayer(REF_URL, {maxNativeZoom:16, maxZoom:18, minZoom:5, crossOrigin:true, updateWhenZooming:false, className:"kref", ...opt});
-// für kleine Karten (Unterkunftsdetail): dieselbe helle Karte mit Beschriftung
-const karteLayers = () => [warmLayer(), refLayer({zIndex:3, minZoom:9})];
-// Geografische Namen für die Übersicht, deutsch und als Text gestochen scharf. Reine Orientierung, keine Reiseziele. Ab Zoom 9 beschriftet Esri.
-const GEO_NAMEN = [
-  [15.7, 100.9, "Thailand", "land"], [17.6, 98.0, "Myanmar", "nachbar"], [19.0, 102.5, "Laos", "nachbar"], [13.0, 103.6, "Kambodscha", "nachbar"], [5.6, 101.6, "Malaysia", "nachbar"],
-  [9.6, 97.75, "Andamanen-\nsee", "see"], [11.0, 101.7, "Golf von\nThailand", "see"],
-  [13.756, 100.502, "Bangkok", "gross"], [18.788, 98.985, "Chiang Mai", "gross"], [7.88, 98.39, "Phuket", "gross"], [11.56, 104.92, "Phnom Penh", "gross"], [17.97, 102.63, "Vientiane", "gross"],
-  [8.09, 98.91, "Krabi", "stadt"], [9.51, 100.01, "Ko Samui", "stadt"], [19.91, 99.84, "Chiang Rai", "stadt"], [16.43, 102.84, "Khon Kaen", "stadt"], [12.93, 100.88, "Pattaya", "stadt"], [12.57, 99.96, "Hua Hin", "stadt"], [9.14, 99.33, "Surat Thani", "stadt"], [7.01, 100.47, "Hat Yai", "stadt"], [13.36, 103.86, "Siem Reap", "stadt"]];
-let geoLayer;
-function renderGeo(){
-  if(!geoLayer) return; geoLayer.clearLayers();
-  const z = map.getZoom(); if(ebene === "sat" || z >= 9) return;
-  GEO_NAMEN.forEach(([la, ln, name, art]) => { if(art === "stadt" && z < 7) return;
-    const punkt = art === "gross" || art === "stadt";
-    L.marker([la, ln], {interactive:false, keyboard:false, zIndexOffset:-1000, icon:L.divIcon({className:"", html:punkt ? `<span class="geo ${art}"><i></i>${esc(name)}</span>` : `<span class="geo ${art}">${esc(name)}</span>`, iconSize:null, iconAnchor:punkt ? [4, 8] : [0, 8]})}).addTo(geoLayer); });
+const zentrum = () => { const c = map.getCenter(); return [c.lat, c.lng]; };
+const kartenHoehe = () => map.getContainer().clientHeight;
+const punktAufKarte = (lat, lng) => map.project([lng, lat]);
+function zeigePunkte(pts, padding, maxZoom){
+  if(!pts.length) return map.jumpTo({center:lngLat(VIEW.center), zoom:VIEW.zoom});
+  if(pts.length === 1) return map.jumpTo({center:lngLat(pts[0]), zoom:Math.min(maxZoom, 12)});
+  const b = new maplibregl.LngLatBounds(); pts.forEach(p => b.extend(lngLat(p)));
+  map.fitBounds(b, {padding, maxZoom, duration:0});
 }
 
-function tileUrls(sw, ne, z0, z1, tmpl = TILE_URL){
+// Kachelnummern ohne Kartenobjekt (Web-Mercator), für das Vorladen
+const kachelX = (lng, z) => Math.floor((lng + 180) / 360 * 2 ** z);
+const kachelY = (lat, z) => { const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z); };
+function tileUrls(sw, ne, z0, z1, tmpl){
   const out = [];
-  for(let z = z0; z <= z1; z++){ const a = map.project([ne[0], sw[1]], z).divideBy(256).floor(), b = map.project([sw[0], ne[1]], z).divideBy(256).floor();
-    for(let x = a.x; x <= b.x; x++) for(let y = a.y; y <= b.y; y++) out.push(tmpl.replace("{z}", z).replace("{y}", y).replace("{x}", x)); }
+  for(let z = z0; z <= z1; z++) for(let x = kachelX(sw[1], z); x <= kachelX(ne[1], z); x++) for(let y = kachelY(ne[0], z); y <= kachelY(sw[0], z); y++) out.push(tmpl.replace("{z}", z).replace("{y}", y).replace("{x}", x));
   return out;
 }
-// Vorladen gilt der Standardkarte: Land mit allen drei Quellen, rund um Unterkünfte Grundkarte, Beschriftung und Relief. Satellit wird nicht mehr vorgeladen, nur was ihr anseht, landet im Speicher.
-// Eigene Schlüssel mit „karte2:“, damit erledigte Jobs aus älteren Fassungen die neue Karte nicht blockieren. Die Grenze von 4000 Kacheln im Service Worker gilt unverändert.
-const tileJobKey = u => "karte2:uk:" + u.lat.toFixed(3) + "," + u.lng.toFixed(3);
-const landKacheln = (sw, ne) => [...tileUrls(sw, ne, 5, 8, BASE_URL), ...tileUrls(sw, ne, 4, 8, PHYS_URL), ...tileUrls(sw, ne, 3, 8, TERR_URL)];
-const ortKacheln = (sw, ne) => [...tileUrls(sw, ne, 10, 14, BASE_URL), ...tileUrls(sw, ne, 10, 14, REF_URL), ...tileUrls(sw, ne, 9, 9, TERR_URL)];
+// Schriften: Grundlatein, Latein-Erweiterung (ä, ö, ü, Thai-Umschrift) und Satzzeichen, je Schnitt
+const schriftUrls = () => Object.values(SCHRIFT).flatMap(([f]) => ["0-255", "256-511", "8192-8447"].map(r => SCHRIFT_URL.replace("{fontstack}", encodeURIComponent(f)).replace("{range}", r)));
+// Vorladen gilt der Karte, nicht dem Satellitenbild. Eigene Merker „karte3:“, damit erledigte Jobs der Rasterkarte nicht zählen.
+// Die Kachel-Adresse kommt aus der Beschreibung von OpenFreeMap (wechselt mit jedem Datenstand). Die Grenze im Service Worker gilt unverändert.
+const tileJobKey = u => "karte3:uk:" + u.lat.toFixed(3) + "," + u.lng.toFixed(3);
+const landKacheln = vorlage => [VEKTOR_URL, ...schriftUrls(), ...tileUrls(VIEW.bounds[0], VIEW.bounds[1], 4, 8, vorlage)];
+const ortKacheln = (sw, ne, vorlage) => tileUrls(sw, ne, 10, 14, vorlage);
 let prefetching = false;
 async function prefetchTiles(){
   const con = navigator.connection;
   if(prefetching || !map || navigator.onLine === false || con?.saveData || !navigator.serviceWorker?.controller) return;
-  const done = new Set(LS.get("thailand2027-tiles") || []), jobs = [];
-  if(!done.has("karte2:land")) jobs.push(["karte2:land", landKacheln(VIEW.bounds[0], VIEW.bounds[1])]);
-  mapLodgings().forEach(u => { const k = tileJobKey(u); if(done.has(k)) return; const dy = 6/111, dx = dy/Math.cos(u.lat*Math.PI/180); jobs.push([k, ortKacheln([u.lat-dy, u.lng-dx], [u.lat+dy, u.lng+dx])]); });
-  if(!jobs.length) return;
+  const done = new Set(LS.get("thailand2027-tiles") || []), uks = mapLodgings().filter(u => !done.has(tileJobKey(u)));
+  if(done.has("karte3:land") && !uks.length) return;
   prefetching = true;
   try{
+    const vorlage = (await (await fetch(VEKTOR_URL)).json()).tiles[0], jobs = [];
+    if(!done.has("karte3:land")) jobs.push(["karte3:land", landKacheln(vorlage)]);
+    uks.forEach(u => { const dy = 6/111, dx = dy/Math.cos(u.lat*Math.PI/180); jobs.push([tileJobKey(u), ortKacheln([u.lat-dy, u.lng-dx], [u.lat+dy, u.lng+dx], vorlage)]); });
     for(const [k, urls] of jobs){
       let ok = 0;
-      for(let i = 0; i < urls.length; i += 4){
+      for(let i = 0; i < urls.length; i += 6){
         if(navigator.onLine === false) return;
-        const r = await Promise.all(urls.slice(i, i+4).map(u => fetch(u, {mode:"cors"}).then(x => x.ok).catch(() => false)));
-        ok += r.filter(Boolean).length; await new Promise(res => setTimeout(res, 120));
+        const r = await Promise.all(urls.slice(i, i+6).map(u => fetch(u, {mode:"cors"}).then(x => x.ok).catch(() => false)));
+        ok += r.filter(Boolean).length; await new Promise(res => setTimeout(res, 60));
       }
       if(ok >= urls.length * 0.9){ done.add(k); LS.set("thailand2027-tiles", [...done]); }
     }
-  } finally { prefetching = false; }
+  } catch(e){} finally { prefetching = false; }
 }
 function offlineInfo(){
   const done = new Set(LS.get("thailand2027-tiles") || []), uks = mapLodgings();
   const legs = Object.values(S.plans).filter(pl => pl.datum >= today() && pl.plan.stationen.length).flatMap(pl => planLegs(pl.plan).map(l => ({pl, l})));
   const fehlt = legs.filter(({pl, l}) => modeOf(pl.plan) !== "frei" && legTime(pl.plan, l[0], l[1]).min === null).length;
-  return [["Karte, Landesübersicht", done.has("karte2:land") ? "gespeichert" : "noch nicht"],
+  return [["Karte, Landesübersicht", done.has("karte3:land") ? "gespeichert" : "noch nicht"],
     ["Karte rund um Unterkünfte", uks.length ? uks.filter(u => done.has(tileJobKey(u))).length + " von " + uks.length : "keine mit Ort"],
     ["Satellit", "nur angesehene Ausschnitte"],
     ["Fahr- und Gehzeiten geplanter Tage", legs.length ? (fehlt ? fehlt + " fehlen" : "alle da") : "nichts geplant"]];
@@ -2409,7 +2470,7 @@ function setEbene(e){
   ebene = e === "sat" ? "sat" : "karte"; LS.set("thailand2027-ebene", ebene);
   $("#mapWrap").classList.toggle("ebene-sat", ebene === "sat");
   const b = $("#mEbene"); if(b){ b.setAttribute("aria-pressed", ebene === "sat"); }
-  if(map){ Object.entries(ebenen).forEach(([k, g]) => k === ebene ? g.addTo(map) : g.remove()); $("#attrib").textContent = ATTRIB[ebene]; renderGeo(); renderMarkers(); }
+  if(map){ if(map.getLayer("satellit")) map.setLayoutProperty("satellit", "visibility", ebene === "sat" ? "visible" : "none"); $("#attrib").textContent = ATTRIB[ebene]; renderMarkers(); }
 }
 
 function initMap(){
@@ -2433,24 +2494,19 @@ function initMap(){
   $("#mLoc").onclick = centerMe;
   $("#mHome").onclick = mapFitAll;
   $("#mEbene").onclick = () => setEbene(ebene === "sat" ? "karte" : "sat");
-  if(!window.L){ $("#map").innerHTML = '<p style="padding:120px 20px">Karte konnte nicht geladen werden. Alles andere funktioniert.</p>'; return; }
-  map = L.map("map", {zoomControl:false, attributionControl:false, zoomSnap:1, zoomDelta:1, wheelPxPerZoomLevel:120, minZoom:5, maxZoom:17, maxBounds:VIEW.bounds, maxBoundsViscosity:0.6, zoomAnimationThreshold:4, tap:true});
-  map.setView(VIEW.center, VIEW.zoom);
-  ebenen.karte = L.layerGroup(karteLayers());
-  // Satellit: grobe Kacheln (bis Zoom 10) liegen darunter, beim Zoomen erscheint ein unscharfes Bild statt leerer Flächen
-  ebenen.sat = L.layerGroup([
-    L.tileLayer(TILE_URL, {maxNativeZoom:10, maxZoom:17, minZoom:5, zIndex:1, keepBuffer:2, updateWhenZooming:false, updateWhenIdle:true, crossOrigin:true}),
-    L.tileLayer(TILE_URL, {maxNativeZoom:17, maxZoom:17, minZoom:5, zIndex:2, keepBuffer:4, updateWhenZooming:false, updateWhenIdle:false, crossOrigin:true}),
-    refLayer({zIndex:3})]); // Ortsnamen auch auf dem Luftbild
-  ebenen[ebene].addTo(map);
+  const fehlt = () => { $("#map").innerHTML = '<p style="padding:120px 20px">Karte konnte nicht geladen werden. Alles andere funktioniert.</p>'; map = null; };
+  if(!window.maplibregl) return fehlt();
+  try{
+    map = new maplibregl.Map({container:"map", style:kartenStil(), center:lngLat(VIEW.center), zoom:VIEW.zoom, minZoom:4, maxZoom:17, maxBounds:RAHMEN,
+      attributionControl:false, dragRotate:false, pitchWithRotate:false, touchPitch:false, fadeDuration:150});
+  } catch(e){ return fehlt(); }
+  map.touchZoomRotate.disableRotation();
+  DATA.labels.forEach(l => TOWNNAMES.add(l[2])); // eigene Ortsnamen: kein doppeltes Spot-Etikett
+  map.on("load", () => { Object.entries(wartend).forEach(([id, d]) => map.getSource(id)?.setData(d)); Object.keys(wartend).forEach(k => delete wartend[k]); setEbene(ebene); });
   $("#attrib").textContent = ATTRIB[ebene];
-  const townMajor = L.layerGroup().addTo(map), townMinor = L.layerGroup();
-  DATA.labels.forEach(([la, ln, name]) => { TOWNNAMES.add(name); const major = MAJOR.has(name); L.marker([la, ln], {interactive:false, keyboard:false, icon:L.divIcon({className:"", html:`<span class="lbl town ${major ? "major" : ""}">${esc(name)}</span>`, iconSize:null, iconAnchor:major ? [20,-14] : [16,-12]})}).addTo(major ? townMajor : townMinor); });
-  geoLayer = L.layerGroup().addTo(map); renderGeo();
-  map.on("zoomend", () => { renderGeo(); if(map.getZoom() >= 11) townMinor.addTo(map); else townMinor.remove(); if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); });
+  map.on("zoomend", () => { if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); });
   map.on("click", () => closeMapCard());
-  routeLayer = L.layerGroup().addTo(map); poiLabelLayer = L.layerGroup().addTo(map); meLayer = L.layerGroup().addTo(map); markerLayer = L.layerGroup().addTo(map);
-  renderMarkers();
+  renderMarkers(); drawMe();
   setTimeout(prefetchTiles, 5000);
 }
 function renderFilter(){
@@ -2464,23 +2520,7 @@ function renderFilter(){
    übernimmt beim Loslassen den Schwung und landet auf der Stufe, auf die der Schwung zeigt. Nach unten geworfen schließt es.
    Ein Tipp auf die freie Karte schließt es auch. Es zeigt nur, was eingetragen ist. */
 const BLATT = {y:0, H:0, peek:0, zu:0, stufe:"peek", lauf:null, gezogen:false};
-// Feder ohne feste Dauer (Apple: Dämpfung und Antwortzeit). Startet immer vom aktuellen Wert, lässt sich jederzeit abbrechen.
-function feder(von, nach, v0, {daempfung = 1, antwort = .35} = {}, schritt, fertig){
-  const h = {id:0, stop(){ cancelAnimationFrame(h.id); }};
-  if(RUHIG.matches){ schritt(nach); fertig?.(); return h; }
-  const k = (2 * Math.PI / antwort) ** 2, c = 2 * daempfung * Math.sqrt(k); let x = von, v = v0, t0 = performance.now();
-  const tick = t => {
-    // nach echter Zeit in kleinen Schritten: fallen Bilder aus (Stromsparen), kommt die Feder trotzdem pünktlich an
-    let rest = Math.min(.1, (t - t0) / 1000); t0 = t;
-    while(rest > 0){ const dt = Math.min(1 / 240, rest); v += (-k * (x - nach) - c * v) * dt; x += v * dt; rest -= dt; }
-    if(Math.abs(x - nach) < .5 && Math.abs(v) < 10){ schritt(nach); return fertig?.(); }
-    schritt(x); h.id = requestAnimationFrame(tick);
-  };
-  h.id = requestAnimationFrame(tick);
-  return h;
-}
-// Wohin der Schwung zeigt (Apples Projektion wie beim Scrollen), dann die nächste Stufe dazu
-const projektion = v => v / 1000 * .998 / (1 - .998);
+// Feder und Projektion kommen aus 10-ui.js, das Zurück-Wischen nutzt dieselbe Physik
 function blattZiel(y, v, stufen){
   const ziel = y + projektion(v);
   return Object.entries(stufen).reduce((a, b) => Math.abs(b[1] - ziel) < Math.abs(a[1] - ziel) ? b : a)[0];
@@ -2535,7 +2575,7 @@ function openMapCard(sel){
   UI.mapSel = sel; renderMapCard(); renderMarkers();
   // Der gewählte Punkt darf nicht hinter dem Blatt liegen
   const r = sel.art === "spot" ? P(sel.id) : rec("lodgings", sel.id), box = $("#mCard");
-  if(map && r && box && !box.hidden){ const y = map.latLngToContainerPoint([r.lat, r.lng]).y, frei = map.getSize().y - (BLATT.H - BLATT.y) - 40; if(y > frei) map.panBy([0, y - frei], {animate:true, duration:.25}); }
+  if(map && r && box && !box.hidden){ const y = punktAufKarte(r.lat, r.lng).y, frei = kartenHoehe() - (BLATT.H - BLATT.y) - 40; if(y > frei) map.panBy([0, y - frei], {duration:250}); }
 }
 // Schließen per Tipp auf die Karte: Zustand sofort zurücksetzen, ein Abbild des Blatts geht den Weg nach unten
 function closeMapCard(){
@@ -2600,41 +2640,41 @@ function renderMapCard(){
 }
 let letzteWahl = null;
 function renderMarkers(){
-  if(!map) return; markerLayer.clearLayers(); routeLayer.clearLayers(); poiLabelLayer.clearLayers();
+  if(!map) return; markers.forEach(m => m.remove()); markers = [];
   const bucket = lastBucket = zoomBucket(map.getZoom()), size = bucket === 0 ? 32 : 36, sat = ebene === "sat", sel = UI.mapSel;
   const ad = editDay(), pl = dayPlanFor(ad), order = new Map((pl?.plan.stationen || []).filter(x => P(x.placeId)).map((x, i) => [x.placeId, i + 1]));
   const chosenIds = new Set(stays().map(s => stayLodging(s.id)?.id).filter(Boolean));
   mapLodgings().forEach(l => { const gew = chosenIds.has(l.id), on = sel?.art === "lodging" && sel.id === l.id;
-    L.marker([l.lat, l.lng], {zIndexOffset:on ? 5000 : gew ? 3000 : 2000, title:l.name + (gew ? "" : " (Option)"), icon:L.divIcon({className:"", html:`<div class="hpin${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, iconSize:[36,36], iconAnchor:[18,43]})}).addTo(markerLayer).on("click", e => { L.DomEvent.stopPropagation(e); openMapCard({art:"lodging", id:l.id}); }); });
+    setzeMarker(l.lat, l.lng, `<div class="hpin${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, {offset:[0, -7], z:on ? 50 : gew ? 30 : 20, titel:l.name + (gew ? "" : " (Option)"), klick:() => openMapCard({art:"lodging", id:l.id})}); });
   Object.values(places()).forEach(p => {
     if(!S.filter.has(GOF[p.typ] || "kultur") || p.status === "abgelehnt") return;
     const done = p.status === "besucht", nr = order.get(p.id), on = sel?.art === "spot" && sel.id === p.id;
-    L.marker([p.lat, p.lng], {keyboard:true, zIndexOffset:on ? 4500 : done ? -300 : nr ? 500 : 0, title:p.name + (done ? ", schon gesehen" : ""), icon:L.divIcon({className:"", html:`<div class="mpin${done ? " done" : ""}${nr ? " inplan" : ""}${on ? " sel" : ""}" style="--c:var(${TYPES[p.typ][1]});width:${size}px;height:${size}px">${ic(TIC(p.typ))}${nr ? `<b class="nr">${nr}</b>` : ""}</div>`, iconSize:[size,size], iconAnchor:[size/2,size+7]})})
-      .addTo(markerLayer).on("click", e => { L.DomEvent.stopPropagation(e); openMapCard({art:"spot", id:p.id}); });
-    if(bucket === 2 && !TOWNNAMES.has(p.name)) L.marker([p.lat, p.lng], {interactive:false, keyboard:false, zIndexOffset:-500, icon:L.divIcon({className:"", html:`<span class="lbl poi${done ? " done" : ""}">${esc(p.name)}</span>`, iconSize:null, iconAnchor:[-size/2-5, size/2+16]})}).addTo(poiLabelLayer);
+    setzeMarker(p.lat, p.lng, `<div class="mpin${done ? " done" : ""}${nr ? " inplan" : ""}${on ? " sel" : ""}" style="--c:var(${TYPES[p.typ][1]});width:${size}px;height:${size}px">${ic(TIC(p.typ))}${nr ? `<b class="nr">${nr}</b>` : ""}</div>`,
+      {offset:[0, -7], z:on ? 45 : done ? 1 : nr ? 10 : 5, titel:p.name + (done ? ", schon gesehen" : ""), klick:() => openMapCard({art:"spot", id:p.id})});
+    if(bucket === 2 && !TOWNNAMES.has(p.name)) setzeMarker(p.lat, p.lng, `<span class="lbl poi${done ? " done" : ""}">${esc(p.name)}</span>`, {anchor:"left", offset:[size / 2 + 5, -(size / 2 + 7)]});
   });
   // Rückmeldung beim Antippen: der neu gewählte Marker springt kurz auf, Neuzeichnen ohne neue Wahl bleibt ruhig
   const wahl = sel ? sel.art + ":" + sel.id : null;
   if(wahl && wahl !== letzteWahl) requestAnimationFrame(() => bewege(document.querySelector("#map .sel"), [{transform:"scale(1)"}, {transform:"scale(1.3)", offset:.55}, {transform:"scale(1.2)"}], {duration:240, easing:EASE.aus}));
   letzteWahl = wahl;
-  const box = $("#mDay");
+  const box = $("#mDay"), linien = [];
   if(pl && pl.plan.stationen.some(s => P(s.placeId))){
     const legs = planLegs(pl.plan), mode = modeOf(pl.plan);
     ensureRoutes(legs, mode);
-    // Route: auf der hellen Karte petrol mit cremefarbenem Rand, auf dem Satellitenbild hell mit dunklem Rand
-    const [rand, linie] = sat ? ["#0B1411", "#7FE0C6"] : ["#FFFAF2", "#2A7A72"];
     const gezeigt = []; // Beschriftungen, die sich überdecken würden (Hin- und Rückweg auf fast derselben Straße), nur einmal
     legs.forEach(([a, b]) => {
       const r = routeFor(a, b, mode), lt = legTime(pl.plan, a, b);
       const pts = r && r[2] ? decodePoly(r[2]) : [[a.lat, a.lng], [b.lat, b.lng]];
-      const dash = r ? null : "2 10"; // ohne berechnete Route nur gestrichelt, keine Straßenlinie
-      L.polyline(pts, {color:rand, opacity:sat ? .55 : .95, weight:8, lineCap:"round", lineJoin:"round", dashArray:dash, interactive:false}).addTo(routeLayer);
-      L.polyline(pts, {color:linie, opacity:1, weight:4, lineCap:"round", lineJoin:"round", dashArray:dash, interactive:false}).addTo(routeLayer);
-      const mid = midOf(pts), px = map.latLngToContainerPoint(mid), frei = !gezeigt.some(q => Math.abs(q.x - px.x) < 90 && Math.abs(q.y - px.y) < 28);
-      if(lt.min !== null && lt.min >= (bucket === 0 ? 20 : 3) && frei && gezeigt.push(px)) L.marker(mid, {interactive:false, keyboard:false, zIndexOffset:-800, icon:L.divIcon({className:"", html:`<span class="rtlbl">${lt.src === "eigen" ? "" : "ca. "}${lt.min} min${mode === "fuss" ? " zu Fuß" : ""}</span>`, iconSize:null, iconAnchor:[0,0]})}).addTo(routeLayer);
+      linien.push({type:"Feature", properties:{gestrichelt:!r}, geometry:{type:"LineString", coordinates:pts.map(lngLat)}}); // ohne berechnete Route nur gestrichelt
+      const mid = midOf(pts), px = punktAufKarte(mid[0], mid[1]), frei = !gezeigt.some(q => Math.abs(q.x - px.x) < 90 && Math.abs(q.y - px.y) < 28);
+      if(lt.min !== null && lt.min >= (bucket === 0 ? 20 : 3) && frei && gezeigt.push(px)) setzeMarker(mid[0], mid[1], `<span class="rtlbl">${lt.src === "eigen" ? "" : "ca. "}${lt.min} min${mode === "fuss" ? " zu Fuß" : ""}</span>`, {anchor:"center"});
     });
     if(box){ box.hidden = false; box.innerHTML = `${ic("route")}<span>Route ${esc(fmtDate(ad))} · ${plural(order.size, "Stopp", "Stopps")}</span><button class="navbtn" data-openday>Tag öffnen</button>`; box.querySelector("[data-openday]").onclick = () => go("day", {d:ad}); }
   } else if(box) box.hidden = true;
+  quelleSetzen("route", linien);
+  // Route auf dem Satellitenbild hell mit dunklem Rand, auf der Karte petrol mit cremefarbenem Rand
+  if(map.getLayer("route")){ ["route", "route-offen"].forEach(id => map.setPaintProperty(id, "line-color", sat ? "#7FE0C6" : KF.route)); map.setPaintProperty("route-rand", "line-color", sat ? "#0B1411" : KF.routeRand); map.setPaintProperty("route-rand", "line-opacity", sat ? .55 : .95); }
+  if(meMarker) drawMe();
 }
 
 function midOf(pts){
@@ -2644,14 +2684,13 @@ function midOf(pts){
   return pts[0];
 }
 function mapRedraw(){ if(map && !$("#mapWrap").hidden){ renderMapCard(); renderMarkers(); } else lastBucket = -1; }
-function mapFocus(ll, z){ initMap(); if(!map) return; setTimeout(() => { map.invalidateSize(); map.setView(ll, z || 14); }, 60); }
+function mapFocus(ll, z){ initMap(); if(!map) return; setTimeout(() => { map.resize(); map.jumpTo({center:lngLat(ll), zoom:z || 13}); }, 60); }
 function mapFitAll(){
   if(!map) return;
-  const pts = [...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])];
-  if(pts.length > 1) map.fitBounds(pts, {padding:[60, 60], maxZoom:13}); else if(pts.length) map.setView(pts[0], 12); else map.setView(VIEW.center, VIEW.zoom);
+  zeigePunkte([...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])], 60, 12);
 }
 function mapShowDay(){
-  setTimeout(() => { if(!map) return; map.invalidateSize(); const pl = dayPlanFor(editDay()); if(!pl) return; const pts = planLegs(pl.plan).flat().map(p => [p.lat, p.lng]); const st = pl.plan.stationen.map(x => P(x.placeId)).filter(Boolean).map(p => [p.lat, p.lng]); const all = [...pts, ...st]; if(all.length > 1) map.fitBounds(all, {padding:[70, 60], maxZoom:14}); else if(all.length) map.setView(all[0], 13); }, 80);
+  setTimeout(() => { if(!map) return; map.resize(); const pl = dayPlanFor(editDay()); if(!pl) return; const pts = planLegs(pl.plan).flat().map(p => [p.lat, p.lng]); const st = pl.plan.stationen.map(x => P(x.placeId)).filter(Boolean).map(p => [p.lat, p.lng]); const all = [...pts, ...st]; if(all.length) zeigePunkte(all, 70, 13); }, 80);
 }
 
 VIEWS.karte = () => {
@@ -2659,7 +2698,7 @@ VIEWS.karte = () => {
   return {title:"Karte", map:true, mount(){
     initMap(); renderFilter();
     $("#mapWrap").querySelectorAll("[data-km]").forEach(b => b.setAttribute("aria-pressed", b.dataset.km === "karte"));
-    if(map){ setTimeout(() => map.invalidateSize({pan:false}), 30); renderMapCard(); renderMarkers(); }
+    if(map){ setTimeout(() => map.resize(), 30); renderMapCard(); renderMarkers(); }
   }};
 };
 VIEWS.spotListe = () => {
@@ -2711,7 +2750,7 @@ VIEWS.spot = ({id}) => {
         if(!weg && p.status !== "besucht"){ setOver(id, {status:"besucht"}); touchDay(d, {besucht:[...new Set([...(S.days[d]?.besucht || []), id])]}); }
         commit(weg ? "Bewertung entfernt" : "Bewertung gespeichert");
       });
-      el.querySelector('[data-act="karte"]').onclick = () => { openInTab("karte"); mapFocus([p.lat, p.lng], 15); };
+      el.querySelector('[data-act="karte"]').onclick = () => { openInTab("karte"); mapFocus([p.lat, p.lng], 14); };
       el.querySelector('[data-act="hide"]').onclick = () => { const was = p.status === "abgelehnt"; setOver(id, {status:was ? "offen" : "abgelehnt"}); persist(); if(was) commit("Wieder sichtbar", "auge"); else { back(); onDataChanged(); toast("Ausgeblendet, wieder einblenden unter „Mehr“", "ausblenden", 3200); } };
     }};
 };
@@ -2775,14 +2814,21 @@ VIEWS.spotEdit = prm => {
 /* ---------- Eigener Standort ---------- */
 let ME = null, meWatch = null, meError = null, meFollow = false;
 const IN_AREA = (lat, lng) => lat > VIEW.bounds[0][0] && lat < VIEW.bounds[1][0] && lng > VIEW.bounds[0][1] && lng < VIEW.bounds[1][1];
+// Genauigkeit als Kreis in Metern (Vieleck), der Punkt selbst als Marker
+function kreis(lat, lng, m, n = 48){
+  const dy = m / 111320, dx = dy / Math.cos(lat * Math.PI / 180);
+  return {type:"Feature", properties:{}, geometry:{type:"Polygon", coordinates:[Array.from({length:n + 1}, (_, i) => { const a = i / n * 2 * Math.PI; return [lng + dx * Math.cos(a), lat + dy * Math.sin(a)]; })]}};
+}
 function drawMe(){
-  if(!map || !meLayer) return; meLayer.clearLayers(); if(!ME) return;
+  if(!map) return;
+  if(meMarker){ meMarker.remove(); markers = markers.filter(m => m !== meMarker); meMarker = null; }
+  quelleSetzen("ich", ME && ME.acc < 1500 ? [kreis(ME.lat, ME.lng, ME.acc)] : []);
+  if(!ME) return;
   const stale = Date.now() - ME.at > 120000;
-  if(ME.acc < 1500) L.circle([ME.lat, ME.lng], {radius:ME.acc, color:"#1E7BFF", weight:1, opacity:.5, fillOpacity:.1, interactive:false}).addTo(meLayer);
-  L.marker([ME.lat, ME.lng], {zIndexOffset:4000, keyboard:false, title:"Du bist hier", icon:L.divIcon({className:"", html:`<div class="mepin${stale ? " stale" : ""}"></div>`, iconSize:[18,18], iconAnchor:[9,9]})}).addTo(meLayer);
+  meMarker = setzeMarker(ME.lat, ME.lng, `<div class="mepin${stale ? " stale" : ""}"></div>`, {anchor:"center", z:40, titel:"Du bist hier"});
 }
 function centerMe(){
-  if(ME && ME.inArea) return map?.setView([ME.lat, ME.lng], Math.max(map.getZoom(), 14));
+  if(ME && ME.inArea) return map?.easeTo({center:[ME.lng, ME.lat], zoom:Math.max(map.getZoom(), 13), duration:400});
   if(ME) return toast("Du bist gerade nicht in Thailand", "standort");
   if(meError === 1) return toast("Standort nicht freigegeben. In den Einstellungen für diese Seite erlauben.", "warn", 4000, true);
   if(!navigator.geolocation) return toast("Standort nicht verfügbar", "warn", 2600, true);
@@ -2890,7 +2936,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.7";
+const APP_VERSION = "Version 2.9";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
@@ -2900,7 +2946,7 @@ document.addEventListener("visibilitychange", () => { if(document.hidden) stopLo
 setInterval(drawMe, 60000);
 addEventListener("online", () => { onDataChanged(); prefetchTiles(); });
 addEventListener("offline", () => toast("Offline. Alles Gespeicherte bleibt nutzbar.", "info", 3000));
-addEventListener("resize", () => map && map.invalidateSize({pan:false}));
+addEventListener("resize", () => map && map.resize());
 if("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){
   const hadCtrl = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener("controllerchange", () => { if(hadCtrl && !window._reloaded){ window._reloaded = true; location.reload(); } });
