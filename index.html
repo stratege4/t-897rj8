@@ -96,7 +96,11 @@ a{color:var(--teal)}
 .navbtn.zurueck{padding:0;justify-content:center}
 .navbtn.zurueck .ic{width:26px;height:26px}
 /* Zurück-Wischen: die Seite liegt beim Ziehen sichtbar über dem Hintergrund */
-#screen.wischt > .page{box-shadow:-10px 0 28px rgba(40,25,10,.16)}
+#screen.wischt > .page{background:var(--bg);box-shadow:-10px 0 28px rgba(40,25,10,.16)}
+/* Vorige Seite unter der wischenden: gleiche Fläche wie #screen, liegt im Aufbau zwischen Karte und Seite */
+.unterseite{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;overflow:hidden;background:var(--bg);pointer-events:none;will-change:transform}
+.unterseite.formmode{bottom:0}
+.unter-dunkel{position:fixed;inset:0;background:#1B140C;opacity:0;pointer-events:none}
 #screen.wischt{overflow-x:hidden}
 .navbtn.strong{font-weight:650}
 .nav .right{justify-self:end;display:flex}
@@ -1330,7 +1334,7 @@ const stackOf = () => UI.stacks[UI.tab];
 const current = () => stackOf()[stackOf().length - 1] || {view:UI.tab, params:{}};
 const scrollKey = () => UI.tab + ":" + stackOf().length;
 function go(view, params = {}){ UI.scroll[scrollKey()] = screenEl().scrollTop; stackOf().push({view, params}); render({top:true, richtung:"vor"}); }
-function back(){ if(!stackOf().length) return; stackOf().pop(); render({restore:true, richtung:"zurueck"}); }
+function back(opt = {}){ if(!stackOf().length) return; stackOf().pop(); render({restore:true, richtung:opt.still ? undefined : "zurueck"}); }
 function replaceView(view, params = {}, richtung){ stackOf().pop(); stackOf().push({view, params}); render({top:true, richtung}); }
 function switchTab(t){
   if(UI.tab === t){ if(stackOf().length){ UI.stacks[t] = []; render({top:true}); } else screenEl().scrollTo({top:0, behavior:"smooth"}); return; }
@@ -1351,12 +1355,7 @@ function render(opt = {}){
   if(V.map){ scr.hidden = true; $("#mapWrap").hidden = false; scr.innerHTML = ""; V.mount?.(null, cur.params || {}); }
   else {
     $("#mapWrap").hidden = true; scr.hidden = false;
-    // V.hero ersetzt Navigationsleiste und große Überschrift (nur auf Startseiten ohne Zurück)
-    const hero = V.hero && !hasBack;
-    const nav = hero ? "" : hasBack || V.right || V.left ? `<header class="nav"><div>${hasBack ? `<button class="navbtn zurueck" data-back aria-label="${esc(V.backLabel || "Zurück")}">${ic("zurueck")}</button>` : V.left || ""}</div><div class="navtitle">${V.large ? "" : esc(V.title)}</div><div class="right">${V.right || ""}</div></header>` : `<div style="height:calc(var(--safe-t) + 12px)"></div>`;
-    const head = hero ? V.hero : V.large ? `<div class="head"><h1>${esc(V.title)}</h1>${V.sub ? `<div class="sub">${V.sub}</div>` : ""}</div>` : "";
-    // V.bar: feste Leiste unten. In Formularen ganz unten, auf Detailseiten über der Tab-Leiste: die Hauptaktion sitzt immer an derselben Stelle
-    scr.innerHTML = `<div class="page${V.bar ? " hasbar" : ""}">${nav}${head}<div class="content">${V.html}</div></div>${V.bar ? `<div class="formbar${V.form ? "" : " overtab"}">${V.bar}</div>` : ""}${V.fab || ""}`;
+    scr.innerHTML = seitenMarkup(V, hasBack);
     V.mount?.(scr, cur.params || {});
     if(V.form) scr.querySelectorAll("input,select,textarea").forEach(x => x.addEventListener("input", () => _formDirty = true));
     if(opt.restore) scr.scrollTop = UI.scroll[scrollKey()] || 0; else if(opt.top) scr.scrollTop = 0;
@@ -1365,6 +1364,15 @@ function render(opt = {}){
     else if(vorher) flipSpielen(scr, vorher);
   }
   renderTabbar();
+}
+// Markup einer Seite: Navigationsleiste oder Startbild, Überschrift, Inhalt, feste Leiste unten. Auch für die Unterseite beim Zurück-Wischen.
+function seitenMarkup(V, hasBack){
+  // V.hero ersetzt Navigationsleiste und große Überschrift (nur auf Startseiten ohne Zurück)
+  const hero = V.hero && !hasBack;
+  const nav = hero ? "" : hasBack || V.right || V.left ? `<header class="nav"><div>${hasBack ? `<button class="navbtn zurueck" data-back aria-label="${esc(V.backLabel || "Zurück")}">${ic("zurueck")}</button>` : V.left || ""}</div><div class="navtitle">${V.large ? "" : esc(V.title)}</div><div class="right">${V.right || ""}</div></header>` : `<div style="height:calc(var(--safe-t) + 12px)"></div>`;
+  const head = hero ? V.hero : V.large ? `<div class="head"><h1>${esc(V.title)}</h1>${V.sub ? `<div class="sub">${V.sub}</div>` : ""}</div>` : "";
+  // V.bar: feste Leiste unten. In Formularen ganz unten, auf Detailseiten über der Tab-Leiste: die Hauptaktion sitzt immer an derselben Stelle
+  return `<div class="page${V.bar ? " hasbar" : ""}">${nav}${head}<div class="content">${V.html}</div></div>${V.bar ? `<div class="formbar${V.form ? "" : " overtab"}">${V.bar}</div>` : ""}${V.fab || ""}`;
 }
 // Nach Datenänderungen neu zeichnen, ohne ein offenes Formular zu überschreiben
 function refresh(){ const V = VIEWS[current().view]; if(!V) return; const keep = screenEl().scrollTop; render(); screenEl().scrollTop = keep; }
@@ -1502,8 +1510,33 @@ const projektion = v => v / 1000 * .998 / (1 - .998);
 const WISCH_RAND = 30;
 let wisch = null, wischX = 0, wischLauf = null;
 const wischTeile = () => [...screenEl().children];
+// Die vorige Seite liegt beim Wischen schon darunter, wie in iOS: leicht nach links versetzt und abgedunkelt, sie gleitet mit.
+// Sie wird nur gezeichnet (ohne mount) und ist nicht bedienbar. Am Ende baut back() dieselbe Seite an derselben Stelle auf, ohne Sprung.
+let unter = null;
+function unterseiteZeigen(){
+  const st = stackOf(), prev = st.length > 1 ? st[st.length - 2] : {view:UI.tab, params:{}};
+  const V = (VIEWS[prev.view] || VIEWS.reise)(prev.params || {});
+  if(V.map){ $("#mapWrap").hidden = false; map?.resize(); unter = {karte:true}; return; } // Startseite der Karte: die Karte selbst liegt schon darunter
+  const el = document.createElement("div"); el.className = "unterseite" + (V.form ? " formmode" : ""); el.inert = true; el.setAttribute("aria-hidden", "true");
+  el.innerHTML = seitenMarkup(V, st.length > 1) + `<div class="unter-dunkel"></div>`;
+  screenEl().before(el); el.scrollTop = UI.scroll[UI.tab + ":" + (st.length - 1)] || 0;
+  el.querySelector(".nav")?.classList.toggle("scrolled", el.scrollTop > 4);
+  unter = {el, dunkel:el.querySelector(".unter-dunkel")};
+}
+function unterseiteSetzen(x){
+  if(!unter?.el) return;
+  const f = Math.min(1, x / innerWidth);
+  unter.el.style.transform = f < 1 ? `translateX(${-28 * (1 - f)}%)` : "";
+  unter.dunkel.style.opacity = .14 * (1 - f);
+}
+function unterseiteWeg(abgebrochen){
+  if(!unter) return;
+  if(unter.el) unter.el.remove();
+  if(unter.karte && abgebrochen) $("#mapWrap").hidden = true;
+  unter = null;
+}
 function wischSetzen(x){
-  wischX = x;
+  wischX = x; unterseiteSetzen(x);
   wischTeile().forEach(el => el.style.transform = x ? `translateX(${x}px)` : "");
   screenEl().classList.toggle("wischt", x > 0);
 }
@@ -1521,7 +1554,7 @@ document.addEventListener("touchmove", e => {
   if(!wisch.an){
     if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
     if(Math.abs(dy) > Math.abs(dx) || dx < 0){ wisch = null; return; } // das ist Scrollen
-    wisch.an = true; wischLauf?.stop();
+    wisch.an = true; wischLauf?.stop(); if(!unter) unterseiteZeigen();
   }
   e.preventDefault();
   wisch.verlauf.push([e.timeStamp, t.clientX]); if(wisch.verlauf.length > 5) wisch.verlauf.shift();
@@ -1531,10 +1564,10 @@ function wischEnde(e){
   const w = wisch; wisch = null;
   if(!w?.an) return;
   const [t0, x0] = w.verlauf[0], [t1, x1] = w.verlauf[w.verlauf.length - 1], v = t1 > t0 ? (x1 - x0) / (t1 - t0) * 1000 : 0, breite = innerWidth;
-  const zurueckFedern = () => { wischLauf = feder(wischX, 0, v, {daempfung:1, antwort:.3}, wischSetzen); };
+  const zurueckFedern = () => { wischLauf = feder(wischX, 0, v, {daempfung:1, antwort:.3}, wischSetzen, () => unterseiteWeg(true)); };
   if(e.type === "touchcancel" || !zurueckGewischt(wischX, v, breite)) return zurueckFedern();
   if(_formDirty){ zurueckFedern(); return confirmSheet({title:"Änderungen verwerfen?", text:"Was ihr hier eingetragen habt, wird nicht gespeichert.", ok:"Verwerfen", danger:true}).then(y => y && back()); }
-  wischLauf = feder(wischX, breite, Math.max(0, v), {daempfung:1, antwort:.28}, wischSetzen, () => { wischSetzen(0); back(); });
+  wischLauf = feder(wischX, breite, Math.max(0, v), {daempfung:1, antwort:.28}, wischSetzen, () => { wischSetzen(0); back({still:true}); unterseiteWeg(false); });
 }
 document.addEventListener("touchend", wischEnde);
 document.addEventListener("touchcancel", wischEnde);
@@ -2936,7 +2969,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.9";
+const APP_VERSION = "Version 2.10";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();

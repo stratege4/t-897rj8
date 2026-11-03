@@ -1,7 +1,7 @@
 // Service Worker Thailand 2027. Bei jeder Veröffentlichung APP hochzählen, sonst bekommen installierte Geräte nichts Neues.
 // APP: Seite, Symbole, MapLibre, Schriften. TILES: Kartenkacheln und Kartenschriften, begrenzt auf MAX_TILES (älteste fliegen zuerst raus).
 // Fahrzeiten liegen nicht hier, sondern im localStorage der App.
-const APP = "thailand-app-v11", TILES = "thailand-tiles-v1", MAX_TILES = 4000, NET_TIMEOUT = 4000;
+const APP = "thailand-app-v12", TILES = "thailand-tiles-v1", MAX_TILES = 4000, NET_TIMEOUT = 4000;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css",
   "https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"];
