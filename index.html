@@ -22,6 +22,8 @@
    Systemschrift (SF auf dem iPhone, offline vorhanden), keine Webfonts, keine externen Bilder.
    Die alten Variablennamen (--ink, --accent, --fehlt …) sind Aliase, damit Module, die sie im Stil-Attribut nutzen, weiter stimmen. */
 :root{
+  /* Bewegung: kräftiges ease-out für Ein- und Ausblenden, ease-in-out für Verschieben auf dem Schirm, Drawer-Kurve für Blätter */
+  --ease-out:cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out:cubic-bezier(0.77, 0, 0.175, 1); --ease-drawer:cubic-bezier(0.32, 0.72, 0, 1);
   /* Flächen */
   --bg:#F5EEE3; --surface:#FFFAF2; --surface-raised:#FFFFFF; --sand:#E8C39D; --sand-soft:#F0E1CB; --border:#E8DCCB; --border-strong:#DCCAB2;
   /* Meer und Natur */
@@ -120,7 +122,8 @@ a{color:var(--teal)}
 .group{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-soft)}
 .row{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:11px 14px;border:0;background:none;text-align:left;text-decoration:none;color:var(--text)}
 .row + .row, .row + .rowx, .rowx + .row{border-top:1px solid var(--border)}
-button.row:active, a.row:active{background:var(--surface2)}
+button.row, a.row{transition:background-color .12s ease}
+button.row:active, a.row:active{background:var(--surface2);transition:none}
 .row .lead{width:36px;height:36px;border-radius:var(--r-s);display:grid;place-items:center;background:var(--sand-soft);color:var(--teal-dark);flex:none}
 .row .lead.c{background:color-mix(in srgb, var(--c) 15%, var(--surface));color:var(--c)}
 .row .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -201,7 +204,8 @@ button.row:active, a.row:active{background:var(--surface2)}
 
 /* ---------- Knöpfe ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:var(--r-s);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-weight:600;font-size:16px;text-decoration:none}
-.btn:active{transform:scale(.985)}
+.btn{transition:transform .12s var(--ease-out), background-color .15s ease, color .15s ease, border-color .15s ease}
+.btn:active{transform:scale(.97)}
 .btn.primary{background:var(--coral-strong);border-color:var(--coral-strong);color:#fff;font-weight:650;box-shadow:0 4px 14px color-mix(in srgb, var(--coral) 30%, transparent)}
 .btn.teal{background:var(--teal);border-color:var(--teal);color:var(--accent-ink)}
 .btn.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 35%, var(--border))}
@@ -213,8 +217,10 @@ button.row:active, a.row:active{background:var(--surface2)}
 .btns .btn{flex:1 1 140px}
 .fab{position:fixed;right:16px;bottom:calc(var(--tab) + var(--safe-b) + 16px);height:52px;padding:0 20px;border-radius:26px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);z-index:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{min-height:38px;padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--text)}
+.chip{transition:background-color .15s ease, color .15s ease, border-color .15s ease, transform .12s var(--ease-out);min-height:38px;padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--surface);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--text)}
 .chip .ic{width:17px;height:17px}
+.chip:active,.mround:active,.mapadd:active,.mf:active,.fab:active{transform:scale(.96)}
+.mround,.mapadd,.mf,.fab{transition:transform .12s var(--ease-out), background-color .15s ease, color .15s ease}
 .chip small{font-weight:600;color:var(--text-faint)}
 .chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--accent-ink)}
 .chip[aria-pressed="true"] small{color:color-mix(in srgb, var(--accent-ink) 75%, transparent)}
@@ -367,7 +373,7 @@ button.row:active, a.row:active{background:var(--surface2)}
 /* ---------- Karte ----------
    Standard ist die illustrierte Reisekarte (Sand, Salbei, Lagune). Satellit ist eine Wahl (#mapWrap.ebene-sat).
    Oben Ansicht, Filter und Standort, rechts die Werkzeuge und „+ Spot“. Ein ausgewählter Marker zeigt unten eine Infokarte, die Werkzeuge rücken darüber. */
-#mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#A9DFD8}
+#mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#A9DFD8;overflow:hidden}
 #mapWrap.ebene-sat{background:#1E4A52}
 #map{position:absolute;inset:0}
 .leaflet-container{background:#A9DFD8;font-family:var(--font)}
@@ -376,7 +382,7 @@ button.row:active, a.row:active{background:var(--surface2)}
 @media (prefers-color-scheme: dark){ #mapWrap:not(.ebene-sat) .leaflet-tile-pane{filter:brightness(.84) saturate(.95)} }
 .maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:700;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .maptop > *{pointer-events:auto}
-.glass{background:color-mix(in srgb, var(--surface) 90%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 2px 10px rgba(70,48,24,.10);border-radius:var(--r)}
+.glass{background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 2px 10px rgba(70,48,24,.10);border-radius:var(--r)}
 .maptop .seg{padding:4px;border-radius:var(--r);background:color-mix(in srgb, var(--surface) 82%, transparent)}
 .maptop .seg button{min-height:40px;font-size:15px}
 .mapfilter{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;pointer-events:none}
@@ -392,14 +398,29 @@ button.row:active, a.row:active{background:var(--surface2)}
 .mround .ic{width:23px;height:23px}
 .mround[aria-pressed="true"]{background:var(--teal);color:var(--accent-ink);border-color:var(--teal)}
 .mround.on{color:var(--coral-strong)}
-.mapbar{position:absolute;right:12px;bottom:18px;z-index:700;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;transition:bottom .18s}
+.mapbar{position:absolute;right:12px;bottom:18px;z-index:700;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;transition:transform .22s var(--ease-out)}
 .mapbar > *{pointer-events:auto;align-self:flex-end}
 .mapadd{height:50px;padding:0 20px 0 15px;border-radius:25px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;font-size:17px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(70,48,24,.22)}
 .mapadd .ic{width:21px;height:21px}
-#mapWrap.hascard .mapbar{bottom:calc(var(--mc-h, 150px) + 30px)}
-.mapcard{position:absolute;left:12px;right:12px;bottom:18px;z-index:720;background:color-mix(in srgb, var(--surface) 97%, transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:var(--r-lg);padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 20px rgba(70,48,24,.16);animation:mcIn .16s ease-out}
-@keyframes mcIn{from{opacity:0;transform:translateY(8px)}}
-@media (prefers-reduced-motion: reduce){ .mapcard{animation:none} .mapbar{transition:none} }
+#mapWrap.hascard .mapbar{transform:translateY(calc(-1 * var(--mc-h, 150px) - 16px))}
+#mapWrap.ziehen .mapbar{transition:none}
+/* Ebene und Gesamtansicht als eine Kapsel: zusammen, was zusammen gehört */
+.mapctl{display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 3px 12px rgba(70,48,24,.14)}
+.mapctl button{width:48px;height:48px;border:0;background:none;display:grid;place-items:center;color:var(--teal-dark);transition:background-color .15s ease, color .15s ease}
+.mapctl button + button{border-top:1px solid color-mix(in srgb, var(--border) 80%, transparent)}
+.mapctl button:active{background:color-mix(in srgb, var(--teal) 14%, transparent);transition:none}
+.mapctl button[aria-pressed="true"]{background:var(--teal);color:var(--accent-ink)}
+.mapctl .ic{width:23px;height:23px}
+.mapcard{position:absolute;left:10px;right:10px;bottom:22px;z-index:720;background:color-mix(in srgb, var(--surface) 96%, transparent);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--border);border-radius:24px;padding:0 12px 14px;display:flex;flex-direction:column;box-shadow:0 8px 28px rgba(70,48,24,.18);touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
+/* Blatt: der Griff oben, die volle Stufe liegt unter dem Rand und wird hochgezogen */
+.mapcard.aus{z-index:719;pointer-events:none}
+.mc-grab{display:block;width:100%;height:24px;border:0;background:none;padding:0;flex:none;cursor:grab}
+.mc-grab i{display:block;width:38px;height:5px;border-radius:3px;background:var(--border-strong);margin:9px auto 0}
+.mc-kopf{position:relative;display:flex;flex-direction:column;gap:10px}
+.mc-mehr{display:flex;flex-direction:column;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);max-height:42vh;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;user-select:text;-webkit-user-select:text}
+.mc-abs h4{margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted)}
+.mc-abs p{margin:0;font-size:15px;line-height:1.45;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
+@media (prefers-reduced-motion: reduce){ .mapbar{transition:none} }
 .mc-main{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--text);min-width:0}
 .mc-main > .ic{width:18px;height:18px;flex:none;color:var(--text-muted);margin-right:2px}
 .mc-bild{width:84px;height:84px;flex:none;border-radius:var(--r);display:grid;place-items:center;color:var(--c);background:color-mix(in srgb, var(--c) 18%, var(--surface))}
@@ -408,9 +429,9 @@ button.row:active, a.row:active{background:var(--surface2)}
 .mc-ic{width:22px;height:22px;flex:none;border-radius:50%;display:inline-grid;place-items:center;background:var(--c);color:#fff;vertical-align:-5px;margin-right:6px}
 .mc-ic .ic{width:14px;height:14px}
 .mc-t{flex:1;min-width:0;display:block}
-.mc-t b{display:block;font-size:17px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;padding-right:84px}
+.mc-t b{display:block;font-size:18px;font-weight:700;line-height:1.22;letter-spacing:-.01em;overflow-wrap:anywhere;padding-right:84px}
 .mc-t small{display:block;font-size:13.5px;color:var(--text-muted);margin-top:3px}
-.mc-merk{position:absolute;top:10px;right:10px;height:30px;padding:0 10px 0 8px;border-radius:var(--r-pill);border:0;background:var(--surface2);color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:650}
+.mc-merk{position:absolute;top:0;right:0;height:30px;padding:0 10px 0 8px;border-radius:var(--r-pill);border:0;background:var(--surface2);color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:650}
 .mc-merk .ic{width:15px;height:15px}
 .mc-merk[aria-pressed="true"]{background:color-mix(in srgb, var(--coral-strong) 15%, var(--surface));color:var(--coral-strong)}
 .mc-merk[aria-pressed="true"] .ic{fill:currentColor}
@@ -420,7 +441,10 @@ button.row:active, a.row:active{background:var(--surface2)}
 .mc-acts{display:flex;gap:8px}
 .mc-acts .btn{flex:1;min-height:40px;border-radius:var(--r-s)}
 /* Marker: Spots rund in der Kategoriefarbe mit Spitze, Unterkünfte als Quadrat mit Spitze (gewählt gefüllt, Kandidat hell). Stopps des aktiven Tages mit Nummer. */
-.mpin,.hpin{--rand:#FFFAF2;position:relative;display:grid;place-items:center;transform-origin:50% calc(100% + 7px);transition:transform .15s}
+.mpin,.hpin{--rand:#FFFAF2;position:relative;display:grid;place-items:center;transform-origin:50% calc(100% + 7px);transition:transform .1s var(--ease-out)}
+/* Rückmeldung schon beim Aufsetzen des Fingers, nicht erst beim Loslassen */
+.mpin:active,.hpin:active{transform:scale(.9)}
+.mpin.sel:active,.hpin.sel:active{transform:scale(1.1)}
 .mpin::after,.hpin::after{content:"";position:absolute;left:50%;bottom:-7px;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--rand)}
 .mpin{border-radius:50%;background:var(--c);color:#fff;box-shadow:0 0 0 2.5px var(--rand),0 3px 8px rgba(40,25,10,.3)}
 .mpin .ic{width:58%;height:58%}
@@ -505,18 +529,20 @@ mark{background:var(--warning-bg);color:inherit;border-radius:3px}
 .prose{margin:0;font-size:16px;line-height:1.5;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
 
 /* ---------- Blätter, Hinweise ---------- */
-.sheetbg{position:fixed;inset:0;background:rgba(40,28,16,.38);z-index:1000;display:flex;align-items:flex-end;animation:fade .18s ease-out}
-.sheet{width:100%;max-height:86vh;overflow-y:auto;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:8px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:14px;animation:up .24s cubic-bezier(.32,.72,0,1)}
-.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--border-strong);margin:0 auto 2px}
-.sheet h3{margin:0;font-size:20px;font-weight:700}
-.sheet p{margin:0;color:var(--text-muted)}
+.sheetbg{position:fixed;inset:0;background:rgba(40,28,16,.38);z-index:1000;display:flex;align-items:flex-end;animation:fade .18s var(--ease-out)}
+.sheetbg-aus{position:fixed;inset:0;background:rgba(40,28,16,.38);z-index:1000;display:flex;align-items:flex-end;pointer-events:none}
+.sheet{width:100%;max-height:86vh;overflow-y:auto;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:8px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:14px;animation:up .26s var(--ease-drawer)}
+.sheet-aus{width:100%;max-height:86vh;overflow:hidden;background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:8px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:14px}
+.sheet-aus .grab,.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--border-strong);margin:0 auto 2px}
+.sheet-aus h3,.sheet h3{margin:0;font-size:20px;font-weight:700}
+.sheet-aus p,.sheet p{margin:0;color:var(--text-muted)}
 @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.toast{position:fixed;left:50%;top:calc(var(--safe-t) + 10px);transform:translateX(-50%);z-index:1200;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:var(--r);background:#245F59;color:#fff;font-size:15px;font-weight:600;box-shadow:var(--shadow);animation:down .2s ease-out}
+.toast{position:fixed;left:50%;top:calc(var(--safe-t) + 10px);transform:translateX(-50%);z-index:1200;display:flex;align-items:center;gap:8px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:var(--r);background:#245F59;color:#fff;font-size:15px;font-weight:600;box-shadow:var(--shadow);animation:down .22s var(--ease-out)}
 .toast .ic{width:18px;height:18px}
 .toast.warn{background:var(--danger);color:#fff}
 @media (prefers-color-scheme: dark){ .toast{background:#2F5D57} .toast.warn{background:#8E3420} }
-@keyframes down{from{transform:translate(-50%,-14px);opacity:.3}to{transform:translate(-50%,0);opacity:1}}
+@keyframes down{from{transform:translate(-50%,-14px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
 .offline{position:fixed;top:calc(var(--safe-t) + 6px);left:50%;transform:translateX(-50%);z-index:1100;font-size:12px;font-weight:650;padding:4px 10px;border-radius:var(--r-pill);background:var(--text);color:var(--bg)}
 .code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;word-break:break-all;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-s);padding:10px;max-height:120px;overflow:auto;user-select:all}
 .ccard header .tt small{display:block;font-size:13px;margin-top:1px}
@@ -535,6 +561,10 @@ mark{background:var(--warning-bg);color:inherit;border-radius:3px}
 .tllink .card.warn > .ic:first-child{background:color-mix(in srgb, var(--mango) 30%, var(--surface));color:var(--warning)}
 .tllink .card.dashed > .ic:first-child{background:var(--sand-soft);color:var(--text-muted)}
 .tllink .card.gebucht > .ic:first-child{background:var(--success-bg);color:var(--success)}
+
+/* Barrierefreiheit der Karte: weniger Transparenz macht die schwebenden Flächen deckend, mehr Kontrast gibt ihnen eine klare Kante */
+@media (prefers-reduced-transparency: reduce){ .glass,.mapctl,.mround,.mapcard,.mf{-webkit-backdrop-filter:none;backdrop-filter:none} .glass,.mapctl,.mround,.mapcard{background:var(--surface)} .mf[aria-pressed="false"]{background:var(--surface)} }
+@media (prefers-contrast: more){ .glass,.mapctl,.mround,.mapcard,.mf{border-color:var(--border-strong)} .mc-grab i{background:var(--text-muted)} }
 
 </style>
 </head>
@@ -1300,9 +1330,9 @@ const screenEl = () => $("#screen");
 const stackOf = () => UI.stacks[UI.tab];
 const current = () => stackOf()[stackOf().length - 1] || {view:UI.tab, params:{}};
 const scrollKey = () => UI.tab + ":" + stackOf().length;
-function go(view, params = {}){ UI.scroll[scrollKey()] = screenEl().scrollTop; stackOf().push({view, params}); render({top:true}); }
-function back(){ if(!stackOf().length) return; stackOf().pop(); render({restore:true}); }
-function replaceView(view, params = {}){ stackOf().pop(); stackOf().push({view, params}); render({top:true}); }
+function go(view, params = {}){ UI.scroll[scrollKey()] = screenEl().scrollTop; stackOf().push({view, params}); render({top:true, richtung:"vor"}); }
+function back(){ if(!stackOf().length) return; stackOf().pop(); render({restore:true, richtung:"zurueck"}); }
+function replaceView(view, params = {}, richtung){ stackOf().pop(); stackOf().push({view, params}); render({top:true, richtung}); }
 function switchTab(t){
   if(UI.tab === t){ if(stackOf().length){ UI.stacks[t] = []; render({top:true}); } else screenEl().scrollTo({top:0, behavior:"smooth"}); return; }
   UI.scroll[scrollKey()] = screenEl().scrollTop; UI.tab = t; render({restore:true});
@@ -1312,6 +1342,9 @@ let _formDirty = false;
 function render(opt = {}){
   const cur = current(), V = (VIEWS[cur.view] || VIEWS.reise)(cur.params || {});
   const hasBack = stackOf().length > 0, scr = screenEl();
+  // Dieselbe Ansicht wird neu gezeichnet (Daten geändert): Positionen merken, damit verschobene Einträge gleiten statt springen
+  const ansicht = UI.tab + ":" + stackOf().length + ":" + cur.view + ":" + JSON.stringify(cur.params || {}), vorher = !opt.richtung && ansicht === UI.letzteAnsicht ? flipMessen(scr) : null;
+  UI.letzteAnsicht = ansicht;
   document.body.classList.toggle("formmode", !!V.form);
   scr.classList.toggle("formmode", !!V.form);
   $("#tabbar").classList.toggle("versteckt", !!V.form);
@@ -1329,6 +1362,8 @@ function render(opt = {}){
     if(V.form) scr.querySelectorAll("input,select,textarea").forEach(x => x.addEventListener("input", () => _formDirty = true));
     if(opt.restore) scr.scrollTop = UI.scroll[scrollKey()] || 0; else if(opt.top) scr.scrollTop = 0;
     const nv = scr.querySelector(".nav"); if(nv) nv.classList.toggle("scrolled", scr.scrollTop > 4);
+    if(opt.richtung) seitenWechsel(scr.querySelector(".page"), opt.richtung);
+    else if(vorher) flipSpielen(scr, vorher);
   }
   renderTabbar();
 }
@@ -1344,6 +1379,9 @@ function commit(msg, icon = "haken"){ persist(); onDataChanged(); if(msg) toast(
 function renderTabbar(){
   const k = planIssues().filter(i => i.lvl === "konflikt").length;
   $("#tabbar").innerHTML = TABS.map(([id, label, icon]) => `<button class="tab" data-tab="${id}" ${UI.tab === id ? 'aria-current="page"' : ""}>${ic(icon)}<span>${label}</span>${id === "reise" && k ? `<span class="dot" aria-label="${k} Konflikte">${k}</span>` : ""}</button>`).join("");
+  // Ein neuer Konflikt meldet sich einmal am Reise-Tab, auch wenn ihr gerade woanders seid
+  if(UI.konflikte !== undefined && k > UI.konflikte) bewege($("#tabbar .dot"), [{transform:"scale(.4)", opacity:0}, {transform:"scale(1.25)", opacity:1, offset:.6}, {transform:"none"}], {duration:320, easing:EASE.aus});
+  UI.konflikte = k;
 }
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-tab],[data-go],[data-back]"); if(!t) return;
@@ -1351,6 +1389,7 @@ document.addEventListener("click", e => {
   if(t.hasAttribute("data-back")){ if(_formDirty) return confirmSheet({title:"Änderungen verwerfen?", text:"Was ihr hier eingetragen habt, wird nicht gespeichert.", ok:"Verwerfen", danger:true}).then(y => y && back()); return back(); }
   if(t.hasAttribute("data-go")){ e.preventDefault(); go(t.dataset.go, t.dataset.p ? JSON.parse(t.dataset.p) : {}); }
 });
+document.addEventListener("touchstart", () => {}, {passive:true}); // sonst zeigt Safari auf dem iPhone kein :active beim Antippen
 document.addEventListener("scroll", e => { if(e.target === screenEl()){ const nv = screenEl().querySelector(".nav"); if(nv) nv.classList.toggle("scrolled", screenEl().scrollTop > 4); } }, true);
 
 /* ---------- Bausteine (geben HTML zurück) ---------- */
@@ -1403,7 +1442,15 @@ function sheet(html, mount){
   bg.querySelector("button")?.focus({preventScroll:true});
   return bg;
 }
-function closeSheets(){ document.querySelectorAll(".sheetbg").forEach(x => x.remove()); }
+// Ein Blatt geht den Weg zurück, den es gekommen ist. Es wird sofort umbenannt, damit Abfragen und neue Blätter es nicht mehr sehen.
+function closeSheets(){
+  document.querySelectorAll(".sheetbg").forEach(bg => {
+    const sh = bg.querySelector(".sheet"); bg.className = "sheetbg-aus"; bg.inert = true; sh?.classList.replace("sheet", "sheet-aus");
+    if(RUHIG.matches || !bg.animate) return bg.remove();
+    bg.animate([{opacity:1}, {opacity:0}], {duration:200, easing:EASE.aus, fill:"forwards"}).onfinish = () => bg.remove();
+    sh?.animate([{transform:"none"}, {transform:"translateY(48px)"}], {duration:200, easing:EASE.aus, fill:"forwards"});
+  });
+}
 function confirmSheet({title, text, ok = "OK", danger = false, cancel = "Abbrechen"}){
   return new Promise(res => sheet(`<h3>${esc(title)}</h3>${text ? `<p>${text}</p>` : ""}<div class="btns"><button class="btn" data-x="0">${esc(cancel)}</button><button class="btn ${danger ? "danger" : "primary"}" data-x="1">${esc(ok)}</button></div>`,
     sh => sh.querySelectorAll("[data-x]").forEach(b => b.onclick = () => { closeSheets(); res(b.dataset.x === "1"); })));
@@ -1415,7 +1462,38 @@ function pickSheet({title, text, items}){
 function toast(msg, icon = "haken", ms = 2400, warn = false){
   document.querySelectorAll(".toast").forEach(x => x.remove());
   const t = document.createElement("div"); t.className = "toast" + (warn ? " warn" : ""); t.setAttribute("role", "status");
-  t.innerHTML = ic(icon) + `<span>${esc(msg)}</span>`; document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+  t.innerHTML = ic(icon) + `<span>${esc(msg)}</span>`; document.body.appendChild(t);
+  setTimeout(() => { if(!t.isConnected) return; if(RUHIG.matches || !t.animate) return t.remove(); t.animate([{opacity:1}, {transform:"translate(-50%,-12px)", opacity:0}], {duration:180, easing:EASE.aus, fill:"forwards"}).onfinish = () => t.remove(); }, ms);
+}
+
+/* ---------- Bewegung ----------
+   Nur wo sie etwas erklärt: Richtung beim Vor- und Zurückgehen, Einträge, die nach einer Änderung umsortiert werden,
+   Rückmeldung bei Auswahl und neue Konflikte. Tabwechsel, Listen und Startseiten bleiben bewusst ohne Bewegung (zu häufig).
+   Kurven wie die Tokens in styles.css. Bei „Bewegung reduzieren“ bleiben nur kurze Überblendungen. */
+const EASE = {aus:"cubic-bezier(0.23, 1, 0.32, 1)", wechsel:"cubic-bezier(0.77, 0, 0.175, 1)"};
+const RUHIG = matchMedia("(prefers-reduced-motion: reduce)");
+const bewege = (el, frames, opt) => el?.animate && !RUHIG.matches ? el.animate(frames, opt) : null;
+function seitenWechsel(page, richtung){
+  if(!page?.animate) return;
+  if(RUHIG.matches) return page.animate([{opacity:.4}, {opacity:1}], {duration:140, easing:EASE.aus});
+  page.animate([{transform:`translateX(${richtung === "zurueck" ? -18 : 18}px)`, opacity:.5}, {transform:"none", opacity:1}], {duration:200, easing:EASE.aus});
+}
+// FLIP: Elemente mit data-flip gleiten von der alten an die neue Stelle in ihrer Liste, neue blenden ein.
+// Gemessen wird innerhalb der Liste: verschiebt sich nur der Inhalt darüber (Suchergebnisse klappen zu), bewegt sich nichts.
+const flipLage = el => el.getBoundingClientRect().top - el.parentElement.getBoundingClientRect().top;
+function flipMessen(scr){
+  const m = new Map();
+  scr.querySelectorAll("[data-flip]").forEach(el => m.set(el.dataset.flip, flipLage(el)));
+  return m.size ? m : null;
+}
+function flipSpielen(scr, vorher){
+  if(RUHIG.matches) return;
+  scr.querySelectorAll("[data-flip]").forEach(el => {
+    const alt = vorher.get(el.dataset.flip);
+    if(alt === undefined) return bewege(el, [{opacity:0}, {opacity:1}], {duration:200, easing:EASE.aus});
+    const dy = alt - flipLage(el);
+    if(Math.abs(dy) > 1) bewege(el, [{transform:`translateY(${dy}px)`}, {transform:"none"}], {duration:260, easing:EASE.wechsel});
+  });
 }
 // Zweistufiges Löschen ohne Dialog: erster Tipp fragt nach, zweiter löscht
 function armDelete(btn, label, onDelete){
@@ -2127,7 +2205,7 @@ VIEWS.day = ({d}) => {
         return `<div class="dlrow leg"><span class="time"></span><span class="rail"><i></i></span><div class="body">${ic(M.icon)}<span>ca. ${legTxt(r.min)}${mode === "fuss" ? " zu Fuß" : ""}${r.km >= 1 ? " · " + Math.round(r.km) + " km" : ""}${mode === "fuss" && r.min > 60 ? " · weiter Fußweg" : ""}</span>${link(r)}</div><span></span></div>`;
       }
       const c = r.place ? TYPES[r.place.typ][1] : "--accent", icon = r.icon || TIC(r.place.typ);
-      return `<div class="dlrow"><span class="time">${toHHMM(r.time)}</span><span class="rail"><i style="--c:var(${c})">${ic(icon)}</i></span><div class="body">${r.place ? `<button class="t" ${attrGo("spot", {id:r.place.id})}>${esc(r.name)}</button><div class="mini"><button data-stay="${r.index}" data-dd="-15" aria-label="Kürzer bleiben">−</button><output>${durTxt(r.dauer)}</output><button data-stay="${r.index}" data-dd="15" aria-label="Länger bleiben">+</button></div>` : `<span class="t">${esc(r.name)}</span>`}</div>${r.index !== undefined ? `<span class="tools"><button class="iconbtn" data-del="${r.index}" aria-label="${esc(r.name)} aus dem Tag nehmen">${ic("x")}</button></span>` : "<span></span>"}</div>`;
+      return `<div class="dlrow"${r.place ? ` data-flip="${esc(r.place.id)}"` : ""}><span class="time">${toHHMM(r.time)}</span><span class="rail"><i style="--c:var(${c})">${ic(icon)}</i></span><div class="body">${r.place ? `<button class="t" ${attrGo("spot", {id:r.place.id})}>${esc(r.name)}</button><div class="mini"><button data-stay="${r.index}" data-dd="-15" aria-label="Kürzer bleiben">−</button><output>${durTxt(r.dauer)}</output><button data-stay="${r.index}" data-dd="15" aria-label="Länger bleiben">+</button></div>` : `<span class="t">${esc(r.name)}</span>`}</div>${r.index !== undefined ? `<span class="tools"><button class="iconbtn" data-del="${r.index}" aria-label="${esc(r.name)} aus dem Tag nehmen">${ic("x")}</button></span>` : "<span></span>"}</div>`;
     }).join("");
     body = `<div class="summary"><span>${ic("pin")}${plural(anz, "Spot", "Spots")}</span>${drive ? `<span>${ic(M.icon)}${mode === "frei" ? "" : "ca. "}${durTxt(drive)} ${M.wort}${km ? " · " + Math.round(km) + " km" : ""}</span>` : ""}<span>${ic("uhr")}${end ? "zurück" : "Ende"} ${toHHMM(endT)}</span></div>
       ${missing ? `<p class="note warn">${missing === 1 ? "Eine Zeit fehlt" : missing + " Zeiten fehlen"}, die Uhrzeiten danach sind deshalb zu früh. ${mode === "frei" ? "Für Boot, Bus und Bahn rechnet die App nichts, tragt die Zeiten mit + ein." : "Mit Netz werden fehlende Routen nachgeladen."}</p>` : ""}
@@ -2142,7 +2220,7 @@ VIEWS.day = ({d}) => {
       ${sect(has ? "Ablauf" : "", body)}
       <div class="btns"><button class="btn" data-act="karte">${ic("karte")}Auf der Karte</button>${has ? `<button class="btn" data-act="clear">${ic("x")}Tag leeren</button>` : ""}</div>`,
     mount(el){
-      el.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => replaceView("day", {d:b.dataset.jump}));
+      el.querySelectorAll("[data-jump]").forEach(b => b.onclick = () => replaceView("day", {d:b.dataset.jump}, b.dataset.jump < d ? "zurueck" : "vor"));
       const q = el.querySelector("#q"), res = el.querySelector("#res");
       const search = () => {
         const inPlan = new Set((dayPlanFor(d)?.plan.stationen || []).map(x => x.placeId));
@@ -2342,11 +2420,13 @@ function initMap(){
       <div class="mapfilter" id="mFilter" role="group" aria-label="Kategorien"></div>
       <div class="glass mapday" id="mDay" hidden></div>
       <button class="mround" id="mLoc" aria-label="Mein Standort">${ic("navi")}</button></div>
-    <div class="mapbar" role="group" aria-label="Kartenwerkzeuge">
-      <button class="mround" id="mEbene" aria-pressed="${ebene === "sat"}" aria-label="Satellitenbild ein oder aus">${ic("ebenen")}</button>
-      <button class="mround" id="mHome" aria-label="Ganze Reise zeigen">${ic("rahmen")}</button>
+    <div class="mapbar">
+      <div class="mapctl" role="group" aria-label="Kartenwerkzeuge">
+        <button id="mEbene" aria-pressed="${ebene === "sat"}" aria-label="Satellitenbild ein oder aus">${ic("ebenen")}</button>
+        <button id="mHome" aria-label="Ganze Reise zeigen">${ic("rahmen")}</button></div>
       <button class="mapadd" id="mAdd">${ic("plus")}Spot</button></div>
-    <div class="mapcard" id="mCard" hidden></div>`);
+    <div class="mapcard" id="mCard" role="region" aria-label="Ausgewählter Ort" hidden></div>`);
+  blattBinden($("#mCard"));
   wrap.classList.toggle("ebene-sat", ebene === "sat");
   wrap.querySelectorAll("[data-km]").forEach(b => b.onclick = () => { UI.karteModus = b.dataset.km; render(); });
   $("#mAdd").onclick = () => go("spotEdit", {neu:true});
@@ -2379,22 +2459,102 @@ function renderFilter(){
   box.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { const k = b.dataset.g; S.filter.has(k) ? S.filter.delete(k) : S.filter.add(k); renderFilter(); renderMarkers(); });
 }
 
-/* Infokarte unten: Tippen auf einen Marker wählt ihn aus, statt sofort die Detailseite zu öffnen.
-   Sie zeigt nur, was eingetragen ist. Ein Tipp auf die freie Karte schließt sie, ein Tipp auf die Infokarte öffnet die Details. */
-function openMapCard(sel){
-  UI.mapSel = sel; renderMapCard(); renderMarkers();
-  // Der gewählte Punkt darf nicht hinter der Infokarte liegen
-  const r = sel.art === "spot" ? P(sel.id) : rec("lodgings", sel.id), box = $("#mCard");
-  if(map && r && box && !box.hidden){ const y = map.latLngToContainerPoint([r.lat, r.lng]).y, frei = map.getSize().y - box.offsetHeight - 40; if(y > frei) map.panBy([0, y - frei], {animate:true, duration:.25}); }
+/* Infokarte unten als Blatt wie in Karten-Apps: Tippen auf einen Marker wählt ihn aus, statt sofort die Detailseite zu öffnen.
+   Zwei Stufen: kurz (Name, Fakten, Hauptaktion) und voll (Beschreibung, Hinweise, Route, Details). Das Blatt folgt dem Finger 1:1,
+   übernimmt beim Loslassen den Schwung und landet auf der Stufe, auf die der Schwung zeigt. Nach unten geworfen schließt es.
+   Ein Tipp auf die freie Karte schließt es auch. Es zeigt nur, was eingetragen ist. */
+const BLATT = {y:0, H:0, peek:0, zu:0, stufe:"peek", lauf:null, gezogen:false};
+// Feder ohne feste Dauer (Apple: Dämpfung und Antwortzeit). Startet immer vom aktuellen Wert, lässt sich jederzeit abbrechen.
+function feder(von, nach, v0, {daempfung = 1, antwort = .35} = {}, schritt, fertig){
+  const h = {id:0, stop(){ cancelAnimationFrame(h.id); }};
+  if(RUHIG.matches){ schritt(nach); fertig?.(); return h; }
+  const k = (2 * Math.PI / antwort) ** 2, c = 2 * daempfung * Math.sqrt(k); let x = von, v = v0, t0 = performance.now();
+  const tick = t => {
+    // nach echter Zeit in kleinen Schritten: fallen Bilder aus (Stromsparen), kommt die Feder trotzdem pünktlich an
+    let rest = Math.min(.1, (t - t0) / 1000); t0 = t;
+    while(rest > 0){ const dt = Math.min(1 / 240, rest); v += (-k * (x - nach) - c * v) * dt; x += v * dt; rest -= dt; }
+    if(Math.abs(x - nach) < .5 && Math.abs(v) < 10){ schritt(nach); return fertig?.(); }
+    schritt(x); h.id = requestAnimationFrame(tick);
+  };
+  h.id = requestAnimationFrame(tick);
+  return h;
 }
-function closeMapCard(){ if(!UI.mapSel) return; UI.mapSel = null; renderMapCard(); renderMarkers(); }
+// Wohin der Schwung zeigt (Apples Projektion wie beim Scrollen), dann die nächste Stufe dazu
+const projektion = v => v / 1000 * .998 / (1 - .998);
+function blattZiel(y, v, stufen){
+  const ziel = y + projektion(v);
+  return Object.entries(stufen).reduce((a, b) => Math.abs(b[1] - ziel) < Math.abs(a[1] - ziel) ? b : a)[0];
+}
+const gummi = (x, d) => x * d * .55 / (d + .55 * x); // über die volle Stufe hinaus nur noch zäh
+function blattSetzen(y){
+  const box = $("#mCard"); BLATT.y = y; box.style.transform = "translateY(" + y + "px)";
+  $("#mapWrap").style.setProperty("--mc-h", Math.max(0, BLATT.H - y) + "px");
+}
+const blattStufen = () => BLATT.peek > 4 ? {voll:0, peek:BLATT.peek, zu:BLATT.zu} : {peek:0, zu:BLATT.zu};
+function blattZu(stufe, v = 0){
+  BLATT.lauf?.stop(); const pos = blattStufen()[stufe]; if(pos === undefined) return;
+  BLATT.stufe = stufe; $("#mapWrap").classList.add("ziehen");
+  const g = $("#mCard [data-mc=grab]"); if(g){ g.setAttribute("aria-expanded", stufe === "voll"); g.setAttribute("aria-label", stufe === "voll" ? "Weniger anzeigen" : "Mehr anzeigen"); }
+  // Schwung nur, wenn ein Wurf vorausging. Ohne Wurf landet das Blatt ohne Nachschwingen.
+  BLATT.lauf = feder(BLATT.y, pos, v, {daempfung:Math.abs(v) > 600 && stufe !== "zu" ? .8 : 1, antwort:.35}, blattSetzen, () => {
+    $("#mapWrap").classList.remove("ziehen");
+    if(stufe === "zu"){ UI.mapSel = null; renderMapCard(); renderMarkers(); }
+  });
+}
+function blattBinden(box){
+  box.addEventListener("pointerdown", e => {
+    if(e.button || box.hidden) return;
+    const mehr = e.target.closest(".mc-mehr"), rollbar = !!mehr && mehr.scrollHeight > mehr.clientHeight + 2;
+    if(rollbar && mehr.scrollTop > 0) return; // erst den Inhalt zurückrollen
+    const start = e.clientY, basis = BLATT.y, id = e.pointerId, verlauf = [[e.timeStamp, e.clientY]];
+    let zieht = false;
+    const move = ev => {
+      if(ev.pointerId !== id) return;
+      const dy = ev.clientY - start;
+      if(!zieht){
+        if(Math.abs(dy) < 8) return;
+        if(rollbar && dy < 0 && BLATT.stufe === "voll") return ende(); // nach oben rollt der Inhalt
+        zieht = true; BLATT.lauf?.stop(); try{ box.setPointerCapture(id); }catch(e){} $("#mapWrap").classList.add("ziehen");
+      }
+      verlauf.push([ev.timeStamp, ev.clientY]); if(verlauf.length > 5) verlauf.shift();
+      const y = basis + dy; blattSetzen(y < 0 ? -gummi(-y, BLATT.H) : y);
+    };
+    const ende = () => {
+      box.removeEventListener("pointermove", move); box.removeEventListener("pointerup", ende); box.removeEventListener("pointercancel", ende);
+      if(!zieht) return;
+      BLATT.gezogen = true; setTimeout(() => BLATT.gezogen = false, 80); // der Klick nach dem Ziehen löst nichts aus
+      const [t0, y0] = verlauf[0], [t1, y1] = verlauf[verlauf.length - 1], v = t1 > t0 ? (y1 - y0) / (t1 - t0) * 1000 : 0;
+      blattZu(blattZiel(BLATT.y, v, blattStufen()), v);
+    };
+    box.addEventListener("pointermove", move); box.addEventListener("pointerup", ende); box.addEventListener("pointercancel", ende);
+  });
+  box.addEventListener("click", e => { if(BLATT.gezogen){ e.stopPropagation(); e.preventDefault(); } }, true);
+}
+function openMapCard(sel){
+  if(!UI.mapSel || UI.mapSel.art !== sel.art || UI.mapSel.id !== sel.id) BLATT.stufe = "peek"; // ein neuer Ort beginnt kurz
+  UI.mapSel = sel; renderMapCard(); renderMarkers();
+  // Der gewählte Punkt darf nicht hinter dem Blatt liegen
+  const r = sel.art === "spot" ? P(sel.id) : rec("lodgings", sel.id), box = $("#mCard");
+  if(map && r && box && !box.hidden){ const y = map.latLngToContainerPoint([r.lat, r.lng]).y, frei = map.getSize().y - (BLATT.H - BLATT.y) - 40; if(y > frei) map.panBy([0, y - frei], {animate:true, duration:.25}); }
+}
+// Schließen per Tipp auf die Karte: Zustand sofort zurücksetzen, ein Abbild des Blatts geht den Weg nach unten
+function closeMapCard(){
+  if(!UI.mapSel) return;
+  const box = $("#mCard");
+  if(box && !box.hidden && !RUHIG.matches){
+    const k = box.cloneNode(true); k.removeAttribute("id"); k.classList.add("aus"); k.inert = true; box.after(k);
+    feder(BLATT.y, BLATT.zu, 0, {daempfung:1, antwort:.3}, y => k.style.transform = "translateY(" + y + "px)", () => k.remove());
+  }
+  UI.mapSel = null; renderMapCard(); renderMarkers();
+}
 function renderMapCard(){
   const box = $("#mCard"); if(!box) return;
   const sel = UI.mapSel, wrap = $("#mapWrap");
   const p = sel?.art === "spot" ? P(sel.id) : null, l = sel?.art === "lodging" ? rec("lodgings", sel.id) : null;
-  if(!p && !l){ box.hidden = true; box.innerHTML = ""; wrap.classList.remove("hascard"); UI.mapSel = null; return; }
+  if(!p && !l){ BLATT.lauf?.stop(); box.hidden = true; box.innerHTML = ""; wrap.classList.remove("hascard", "ziehen"); UI.mapSel = null; BLATT.stufe = "peek"; return; }
   const chip = (icon, t) => `<span class="mc-fact">${ic(icon)}${esc(t)}</span>`;
-  let bild, kopf, sub, facts = [], acts, merk = "";
+  const absatz = (t, x) => x ? `<div class="mc-abs"><h4>${t}</h4><p>${esc(x)}</p></div>` : "";
+  let bild, kopf, sub, facts = [], acts, merk = "", mehr;
   if(p){
     const pl = dayPlanFor(editDay()), nr = (pl?.plan.stationen || []).findIndex(x => x.placeId === p.id), hm = hotelMin(p), c = TYPES[p.typ][1];
     // Es gibt keine Fotos und keine Fremdbewertungen im Datenmodell: statt erfundener Inhalte eine ruhige Fläche in der Kategoriefarbe
@@ -2407,6 +2567,9 @@ function renderMapCard(){
     if(p.status === "besucht") facts.push(chip("haken", "Schon gesehen"));
     else merk = `<button class="mc-merk" data-mc="merk" aria-pressed="${p.status === "gemerkt"}">${ic("herz")}${p.status === "gemerkt" ? "Gemerkt" : "Merken"}</button>`;
     acts = `<button class="btn small" data-mc="day">${ic("kalender")}Zu einem Tag</button>`;
+    mehr = `<div class="mc-facts">${chip("uhr", durTxt(p.dauerMin || 60) + " Aufenthalt")}${p.aktivitaet ? chip(AKTIV[p.aktivitaet], AKTIVT[p.aktivitaet]) : ""}</div>
+      ${absatz("Beschreibung", p.kurzbeschreibung)}${absatz("Hinweise", p.hinweise)}
+      <div class="mc-acts"><a class="btn small" href="${esc(mapsDir(p))}" target="_blank" rel="noopener">${ic("route")}Route</a><button class="btn small teal" data-mc="spot">Alle Details</button></div>`;
   } else {
     const s = rec("stays", l.stayId), pr = lodgingPrice(l, nights(s));
     bild = `<span class="mc-bild hotel">${ic("hotel")}</span>`;
@@ -2415,14 +2578,27 @@ function renderMapCard(){
     facts.push(pill(l.status));
     if(pr.nacht !== null) facts.push(chip("euro", money(pr.nacht, l.waehrung) + " pro Nacht")); else if(pr.gesamt !== null) facts.push(chip("euro", money(pr.gesamt, l.waehrung) + " gesamt"));
     acts = `<button class="btn small" data-mc="pin">${ic("pin")}Punkt ändern</button>`;
+    mehr = `${l.checkin || l.checkout ? `<div class="mc-facts">${chip("uhr", "Check-in " + (l.checkin || "–") + " · Check-out " + (l.checkout || "–"))}</div>` : ""}${absatz("Notiz", l.notiz)}
+      <div class="mc-acts">${l.link ? `<a class="btn small" href="${esc(l.link)}" target="_blank" rel="noopener">${ic("extern")}Seite</a>` : ""}<button class="btn small teal" data-mc="lodging">Alle Details</button></div>`;
   }
-  box.innerHTML = `<button class="mc-main" data-mc="${p ? "spot" : "lodging"}" aria-label="Details zu ${esc(p ? p.name : l.name)}">${bild}<span class="mc-t"><b>${kopf}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${facts.length ? `<span class="mc-facts">${facts.join("")}</span>` : ""}</span>${ic("weiter")}</button>${merk}<div class="mc-acts">${acts}</div>`;
-  box.hidden = false; wrap.classList.add("hascard"); wrap.style.setProperty("--mc-h", box.offsetHeight + "px");
+  const neu = box.hidden;
+  box.innerHTML = `<button class="mc-grab" data-mc="grab" aria-expanded="false" aria-label="Mehr anzeigen"><i></i></button>
+    <div class="mc-kopf"><button class="mc-main" data-mc="${p ? "spot" : "lodging"}" aria-label="Details zu ${esc(p ? p.name : l.name)}">${bild}<span class="mc-t"><b>${kopf}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${facts.length ? `<span class="mc-facts">${facts.join("")}</span>` : ""}</span>${ic("weiter")}</button>${merk}<div class="mc-acts">${acts}</div></div>
+    <div class="mc-mehr">${mehr}</div>`;
+  box.hidden = false; wrap.classList.add("hascard");
+  // Maße der Stufen: kurz zeigt Kopf und Hauptaktion, der Rest liegt darunter verborgen
+  const kopfEl = box.querySelector(".mc-kopf");
+  BLATT.H = box.offsetHeight; BLATT.zu = BLATT.H + 24; BLATT.peek = Math.max(0, BLATT.H - (kopfEl.offsetTop + kopfEl.offsetHeight + 14));
+  if(neu){ BLATT.stufe = "peek"; blattSetzen(BLATT.zu); blattZu("peek"); }
+  else { BLATT.lauf?.stop(); wrap.classList.remove("ziehen"); if(blattStufen()[BLATT.stufe] === undefined) BLATT.stufe = "peek"; blattSetzen(blattStufen()[BLATT.stufe]); }
+  const g = box.querySelector("[data-mc=grab]"); g.setAttribute("aria-expanded", BLATT.stufe === "voll"); g.setAttribute("aria-label", BLATT.stufe === "voll" ? "Weniger anzeigen" : "Mehr anzeigen");
   box.querySelectorAll("[data-mc]").forEach(b => b.onclick = e => { e.stopPropagation(); const a = b.dataset.mc, id = sel.id;
+    if(a === "grab") return blattZu(BLATT.stufe === "voll" ? "peek" : "voll");
     if(a === "merk"){ setOver(id, {status:p.status === "gemerkt" ? "offen" : "gemerkt"}); persist(); renderMapCard(); return toast(p.status === "gemerkt" ? "Nicht mehr gemerkt" : "Gemerkt", "herz"); }
     UI.mapSel = null; renderMapCard();
     if(a === "spot") go("spot", {id}); else if(a === "lodging") go("lodging", {id}); else if(a === "pin") go("ortWahl", {lodgingId:id}); else if(a === "day") addSpotToDay(id); });
 }
+let letzteWahl = null;
 function renderMarkers(){
   if(!map) return; markerLayer.clearLayers(); routeLayer.clearLayers(); poiLabelLayer.clearLayers();
   const bucket = lastBucket = zoomBucket(map.getZoom()), size = bucket === 0 ? 32 : 36, sat = ebene === "sat", sel = UI.mapSel;
@@ -2437,6 +2613,10 @@ function renderMarkers(){
       .addTo(markerLayer).on("click", e => { L.DomEvent.stopPropagation(e); openMapCard({art:"spot", id:p.id}); });
     if(bucket === 2 && !TOWNNAMES.has(p.name)) L.marker([p.lat, p.lng], {interactive:false, keyboard:false, zIndexOffset:-500, icon:L.divIcon({className:"", html:`<span class="lbl poi${done ? " done" : ""}">${esc(p.name)}</span>`, iconSize:null, iconAnchor:[-size/2-5, size/2+16]})}).addTo(poiLabelLayer);
   });
+  // Rückmeldung beim Antippen: der neu gewählte Marker springt kurz auf, Neuzeichnen ohne neue Wahl bleibt ruhig
+  const wahl = sel ? sel.art + ":" + sel.id : null;
+  if(wahl && wahl !== letzteWahl) requestAnimationFrame(() => bewege(document.querySelector("#map .sel"), [{transform:"scale(1)"}, {transform:"scale(1.3)", offset:.55}, {transform:"scale(1.2)"}], {duration:240, easing:EASE.aus}));
+  letzteWahl = wahl;
   const box = $("#mDay");
   if(pl && pl.plan.stationen.some(s => P(s.placeId))){
     const legs = planLegs(pl.plan), mode = modeOf(pl.plan);
@@ -2710,7 +2890,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.5";
+const APP_VERSION = "Version 2.7";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
