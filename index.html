@@ -472,6 +472,15 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 .lbl.town{font-size:13px}.lbl.town.major{font-size:15px}
 .lbl.poi{font-size:12px;transform:none}
 .lbl.poi.done{opacity:.6}
+/* Reiseroute: nummerierte Stationen in der Strukturfarbe mit heller Kontur, Verkehrsmittel als Symbol im Strichstil */
+.station{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#245F59;color:#FFFAF2;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px #FFFAF2,0 2px 6px rgba(36,95,89,.28);transition:transform .1s var(--ease-out)}
+.station:active{transform:scale(.9)}
+.mk:focus-visible > .station{box-shadow:0 0 0 3px #FFFAF2,0 0 0 5px var(--coral)}
+.stlbl{display:inline-block;white-space:nowrap;font-size:13px;font-weight:650;color:#245F59;background:rgba(255,250,242,.94);padding:2px 8px;border-radius:var(--r-pill);box-shadow:0 1px 3px rgba(36,95,89,.16);pointer-events:none}
+.wegic{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#FFFAF2;color:#245F59;box-shadow:inset 0 0 0 1.6px #245F59,0 1px 3px rgba(36,95,89,.2)}
+.wegic .ic{width:16px;height:16px}
+.wegic.ungefaehr{box-shadow:inset 0 0 0 1.6px rgba(36,95,89,.5);color:rgba(36,95,89,.75)}
+.ebene-sat .wegic{box-shadow:inset 0 0 0 1.6px #245F59,0 0 0 2px rgba(11,20,17,.35)}
 .rtlbl{display:inline-block;transform:translate(-50%,-50%);background:#245F59;color:#fff;font-size:12px;font-weight:650;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap;box-shadow:0 0 0 2px #FFFAF2}
 .mepin{width:18px;height:18px;border-radius:50%;background:#1E7BFF;box-shadow:0 0 0 3px #fff,0 0 0 9px rgba(30,123,255,.18),0 2px 8px rgba(0,0,0,.3)}
 .mepin.stale{background:#8AA0B8;box-shadow:0 0 0 3px #fff,0 2px 8px rgba(0,0,0,.3)}
@@ -900,6 +909,35 @@ const dayEnd = d => isTravelDay(d) ? null : ukNight(d);
 const baseFor = d => ukNight(d) || ukNight(addDays(d, -1));
 // alle Unterkünfte mit Ort, die für die Karte und das Vorladen zählen (nicht verworfen oder storniert)
 const mapLodgings = () => live("lodgings").filter(l => Number.isFinite(l.lat) && !RAUS.has(l.status) && rec("stays", l.stayId));
+
+/* ---------- Reiseroute für die Karte ----------
+   Ortspunkt eines Aufenthalts: die gewählte Unterkunft, sonst sein eigener Kartenpunkt (lat, lng), sonst keiner. Die App setzt keinen selbst.
+   Verbindungen zählen nur mit genau einer gewählten Option. Deren optionaler Pfad (pfad: [{art, pts:[[lat, lng] | null, …]}]) kommt
+   wie alle Reisedaten nur über die Geräte. null am Anfang oder Ende steht für den Ortspunkt des Aufenthalts. Liegt der Ortspunkt
+   abseits des Pfads (Unterkunft statt Ortsmitte), verbindet ein Zubringer beide. Ohne Pfad gibt es nur eine ungefähre Linie. */
+const stayPoint = s => { const l = lodgingPoint(stayLodging(s.id)); if(l) return {lat:l.lat, lng:l.lng, quelle:"unterkunft"};
+  return Number.isFinite(s?.lat) && Number.isFinite(s?.lng) ? {lat:s.lat, lng:s.lng, quelle:"ort"} : null; };
+const ptOf = p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]) ? {lat:p[0], lng:p[1]} : null;
+function tripRoute(){
+  const orte = datedStays().map((s, i) => ({id:s.id, nr:i + 1, name:s.ort || "Aufenthalt", von:s.von, bis:s.bis, pt:stayPoint(s)})).filter(o => o.pt);
+  const wege = [];
+  for(const c of conns()){
+    const o = connOpt(c.id); if(!o) continue;
+    const v = c.vonStay && rec("stays", c.vonStay), n = c.nachStay && rec("stays", c.nachStay);
+    const pv = v ? stayPoint(v) : null, pn = n ? stayPoint(n) : null;
+    const pfad = Array.isArray(o.pfad) ? o.pfad.filter(t => t && Array.isArray(t.pts) && t.pts.length >= 2) : [];
+    let teile = pfad.map((t, i) => ({art:TRANSPORT[t.art] ? t.art : "sonst", pts:t.pts.map((p, j) => ptOf(p) || (i === 0 && j === 0 ? pv : i === pfad.length - 1 && j === t.pts.length - 1 ? pn : null))}));
+    if(teile.some(t => t.pts.some(p => !p))) teile = [];
+    if(teile.length){
+      const a = teile[0].pts[0], z = teile.at(-1).pts.at(-1);
+      if(pv && airKm(pv, a) > .3) teile.unshift({art:"zubringer", pts:[pv, a]});
+      if(pn && airKm(z, pn) > .3) teile.push({art:"zubringer", pts:[z, pn]});
+      wege.push({connId:c.id, art:o.art, datum:o.datum || null, genau:true, teile});
+    } else if(pv && pn) wege.push({connId:c.id, art:o.art, datum:o.datum || null, genau:false, teile:[{art:o.art, pts:[pv, pn]}]});
+  }
+  wege.sort((a, b) => (a.datum || "9999").localeCompare(b.datum || "9999"));
+  return {orte, wege};
+}
 // Verbindungen, die an einem Tag abfahren oder ankommen (gewählte Option, sonst die Verbindung selbst)
 function connsOnDay(d){
   return conns().map(c => ({c, o:connOpt(c.id)})).filter(({c, o}) => {
@@ -2354,7 +2392,7 @@ async function addSpotToDay(id){
    „Satellit“ legt Esris Luftbild unter dieselben Straßen und Namen, wahlweise und nur auf diesem Gerät gemerkt (localStorage).
    Die Karte wird einmal angelegt und bleibt bestehen, Detailseiten legen sich darüber.
    Vorgeladen werden die Landesübersicht (bis Zoom 8), 6 km um jede Unterkunft (Zoom 10 bis 14) und die Schriften. */
-let map = null, markers = [], meMarker = null;
+let map = null, markers = [], reiseMarker = [], meMarker = null;
 const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 const OFM = "https://tiles.openfreemap.org", VEKTOR_URL = OFM + "/planet", SCHRIFT_URL = OFM + "/fonts/{fontstack}/{range}.pbf";
 const SCHRIFT = {n:["Noto Sans Regular"], b:["Noto Sans Bold"], i:["Noto Sans Italic"]};
@@ -2372,7 +2410,7 @@ let lastBucket = -1;
 // Farben der Karte aus der App: Sand als Land, Salbei für Wald und Grün, Lagune als Wasser, warme weiße Straßen
 const KF = {land:"#F3EBDC", sand:"#EEDFC0", wald:"#CFE0BE", gruen:"#DDE8CC", wohn:"#ECE1CE", wasser:"#A9DFD8", fluss:"#93D2CA",
   grenze:"#A08F79", haupt:"#FFF7E8", hauptRand:"#DCC6A4", neben:"#FFFFFF", nebenRand:"#E6D7C1", gebaeude:"#E6D9C5", faehre:"#3E9C94",
-  text:"#2C4A46", leise:"#5F756F", halo:"#FFFAF2", meer:"#2B686C", route:"#2A7A72", routeRand:"#FFFAF2"};
+  text:"#2C4A46", leise:"#5F756F", halo:"#FFFAF2", meer:"#2B686C", route:"#2A7A72", routeRand:"#FFFAF2", reise:"#245F59"};
 // Beschreibung, Kacheln und Schriften laufen über ein eigenes Kürzel („kt://“) im Hauptprozess. So gehen sie sicher durch den
 // Service Worker und sind offline da. Anfragen aus MapLibres Hintergrundprozess sieht er auf dem iPhone nicht in jedem Fall.
 const KT = "kt://", ktZuHttps = u => u.replace(KT, "https://"), zuKt = u => u.replace("https://", KT);
@@ -2388,45 +2426,49 @@ function ktProtokoll(){
 const NAME = ["coalesce", ["get", "name:de"], ["get", "name:en"], ["get", "name_int"], ["get", "name:latin"], ["get", "name"]];
 const zoomBreite = (...st) => ["interpolate", ["exponential", 1.5], ["zoom"], ...st];
 const klasse = (...k) => ["in", ["get", "class"], ["literal", k]];
-const schrift = (font, groesse, farbe = KF.text, extra = {}) => ({layout:{"text-field":NAME, "text-font":font, "text-size":groesse, ...extra.layout}, paint:{"text-color":farbe, "text-halo-color":KF.halo, "text-halo-width":1.4, "text-halo-blur":.4, ...extra.paint}});
+const schrift = (font, groesse, farbe = KF.text, extra = {}) => ({layout:{"text-field":NAME, "text-font":font, "text-size":groesse, ...extra.layout}, paint:{"text-color":farbe, "text-halo-color":KF.halo, "text-halo-width":1.3, "text-halo-blur":0, ...extra.paint}});
 function kartenStil(mitSat = ebene === "sat"){
   ktProtokoll();
   const om = {source:"om"}, vis = an => ({visibility:an ? "visible" : "none"});
-  const strasse = (id, klassen, min, rand, innen, breite) => [
-    {id:id + "-rand", type:"line", ...om, "source-layer":"transportation", minzoom:min, filter:["all", klasse(...klassen), ["!=", ["get", "brunnel"], "tunnel"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":rand, "line-width":zoomBreite(...breite.map((w, i) => i % 2 ? w * 1.6 + .6 : w))}},
-    {id, type:"line", ...om, "source-layer":"transportation", minzoom:min, filter:["all", klasse(...klassen), ["!=", ["get", "brunnel"], "tunnel"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":innen, "line-width":zoomBreite(...breite)}}];
+  const strasse = (id, klassen, min, farbe, breite) => [
+    {id, type:"line", ...om, "source-layer":"transportation", minzoom:min, filter:["all", klasse(...klassen), ["!=", ["get", "brunnel"], "tunnel"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":farbe, "line-width":zoomBreite(...breite)}}];
   const layers = [
     {id:"hintergrund", type:"background", paint:{"background-color":KF.land}},
-    {id:"wald", type:"fill", ...om, "source-layer":"landcover", filter:klasse("wood", "forest"), paint:{"fill-color":KF.wald, "fill-opacity":["interpolate", ["linear"], ["zoom"], 4, .6, 12, .85]}},
-    {id:"gruen", type:"fill", ...om, "source-layer":"landcover", filter:klasse("grass", "farmland", "wetland", "scrub"), paint:{"fill-color":KF.gruen, "fill-opacity":.65}},
+    {id:"gruen", type:"fill", ...om, "source-layer":"landcover", filter:klasse("wood", "forest", "grass", "farmland", "wetland", "scrub"), paint:{"fill-color":KF.gruen, "fill-opacity":["interpolate", ["linear"], ["zoom"], 4, .55, 12, .8]}},
     {id:"sand", type:"fill", ...om, "source-layer":"landcover", filter:klasse("sand", "beach"), paint:{"fill-color":KF.sand}},
-    {id:"wohnen", type:"fill", ...om, "source-layer":"landuse", minzoom:9, filter:klasse("residential", "suburb", "neighbourhood", "commercial", "retail", "industrial"), paint:{"fill-color":KF.wohn, "fill-opacity":.75}},
-    {id:"park", type:"fill", ...om, "source-layer":"park", paint:{"fill-color":KF.gruen, "fill-opacity":.7}},
+    {id:"wohnen", type:"fill", ...om, "source-layer":"landuse", minzoom:11, filter:klasse("residential", "suburb", "neighbourhood", "commercial", "retail", "industrial"), paint:{"fill-color":KF.wohn, "fill-opacity":.6}},
+    {id:"park", type:"fill", ...om, "source-layer":"park", minzoom:10, paint:{"fill-color":KF.gruen, "fill-opacity":.6}},
     {id:"wasser", type:"fill", ...om, "source-layer":"water", paint:{"fill-color":KF.wasser}},
-    {id:"fluss", type:"line", ...om, "source-layer":"waterway", minzoom:8, layout:{"line-cap":"round"}, paint:{"line-color":KF.fluss, "line-width":zoomBreite(8, .6, 14, 2.4, 18, 6)}},
-    {id:"gebaeude", type:"fill", ...om, "source-layer":"building", minzoom:14, paint:{"fill-color":KF.gebaeude, "fill-opacity":.85}},
+    {id:"fluss", type:"line", ...om, "source-layer":"waterway", minzoom:9, layout:{"line-cap":"round"}, paint:{"line-color":KF.fluss, "line-width":zoomBreite(9, .5, 14, 2, 18, 5)}},
+    {id:"gebaeude", type:"fill", ...om, "source-layer":"building", minzoom:15, paint:{"fill-color":KF.gebaeude, "fill-opacity":.85}},
     {id:"satellit", type:"raster", source:"sat", layout:vis(mitSat), paint:{"raster-fade-duration":150}},
-    {id:"grenze", type:"line", ...om, "source-layer":"boundary", filter:["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]], paint:{"line-color":KF.grenze, "line-width":zoomBreite(4, .6, 10, 1.4), "line-dasharray":[3, 2]}},
-    {id:"faehre", type:"line", ...om, "source-layer":"transportation", minzoom:8, filter:klasse("ferry"), paint:{"line-color":KF.faehre, "line-width":zoomBreite(8, .6, 14, 1.6), "line-dasharray":[1, 3], "line-opacity":["interpolate", ["linear"], ["zoom"], 8, .25, 12, .5]}},
-    ...strasse("neben", ["secondary", "tertiary", "minor", "service"], 10, KF.nebenRand, KF.neben, [10, .4, 14, 3, 18, 12]),
-    ...strasse("fern", ["motorway", "trunk", "primary"], 6, KF.hauptRand, KF.haupt, [6, .5, 10, 1.8, 14, 5, 18, 16]),
+    {id:"grenze", type:"line", ...om, "source-layer":"boundary", filter:["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]], paint:{"line-color":KF.grenze, "line-width":zoomBreite(4, .5, 10, 1.1), "line-dasharray":[3, 2], "line-opacity":.6}},
+    ...strasse("neben", ["secondary", "tertiary", "minor", "service"], 12, KF.nebenRand, [12, .4, 14, 1.4, 18, 8]),
+    ...strasse("fern", ["motorway", "trunk", "primary"], 6, KF.hauptRand, [6, .4, 10, 1, 14, 2.6, 18, 9]),
+    // Eure Reise als Struktur der Karte: Bus durchgezogen, Fähre gestrichelt, Flug gepunktet im Bogen, Zubringer zart, Pfeile für die Richtung
+    {id:"reise-rand", type:"line", source:"reise", filter:["!=", ["get", "art"], "zubringer"], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.routeRand, "line-width":zoomBreite(5, 5, 12, 8), "line-opacity":.9}},
+    {id:"reise-bus", type:"line", source:"reise", filter:["!", ["in", ["get", "art"], ["literal", ["faehre", "flug", "zubringer"]]]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.reise, "line-width":zoomBreite(5, 2.4, 12, 4), "line-opacity":["case", ["get", "genau"], 1, .55]}},
+    {id:"reise-faehre", type:"line", source:"reise", filter:["==", ["get", "art"], "faehre"], layout:{"line-join":"round"}, paint:{"line-color":KF.reise, "line-width":zoomBreite(5, 2.4, 12, 4), "line-dasharray":[2.4, 1.4], "line-opacity":["case", ["get", "genau"], 1, .55]}},
+    {id:"reise-flug", type:"line", source:"reise", filter:["==", ["get", "art"], "flug"], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.reise, "line-width":zoomBreite(5, 2.4, 12, 4), "line-dasharray":[.1, 2], "line-opacity":["case", ["get", "genau"], 1, .55]}},
+    {id:"reise-zubringer", type:"line", source:"reise", filter:["==", ["get", "art"], "zubringer"], layout:{"line-cap":"round"}, paint:{"line-color":KF.reise, "line-width":1.6, "line-dasharray":[.1, 2.2], "line-opacity":.7}},
+    {id:"reise-pfeil", type:"symbol", source:"reise", filter:["!=", ["get", "art"], "zubringer"], layout:{"symbol-placement":"line", "symbol-spacing":["interpolate", ["linear"], ["zoom"], 5, 70, 12, 140], "icon-image":"pfeil", "icon-size":["interpolate", ["linear"], ["zoom"], 5, .55, 12, .8], "icon-rotation-alignment":"map", "icon-allow-overlap":true, "icon-ignore-placement":true}, paint:{"icon-color":KF.reise, "icon-halo-color":KF.routeRand, "icon-halo-width":1.5}},
     // Route des aktiven Tages: über den Straßen, unter den Namen. Ohne berechnete Route gestrichelt.
     {id:"route-rand", type:"line", source:"route", layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.routeRand, "line-width":8, "line-opacity":.95}},
     {id:"route", type:"line", source:"route", filter:["!", ["get", "gestrichelt"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.route, "line-width":4}},
     {id:"route-offen", type:"line", source:"route", filter:["get", "gestrichelt"], layout:{"line-cap":"round"}, paint:{"line-color":KF.route, "line-width":4, "line-dasharray":[.5, 2.5]}},
     {id:"ich-genau", type:"fill", source:"ich", paint:{"fill-color":"#1E7BFF", "fill-opacity":.1, "fill-outline-color":"rgba(30,123,255,.5)"}},
     // Namen: Straßen ab Zoom 13, Orte nach Größe gestaffelt, Meere kursiv, Länder gesperrt
-    {id:"name-strasse", type:"symbol", ...om, "source-layer":"transportation_name", minzoom:13, ...schrift(SCHRIFT.n, 11.5, KF.leise, {layout:{"symbol-placement":"line", "text-letter-spacing":.02}})},
+    {id:"name-strasse", type:"symbol", ...om, "source-layer":"transportation_name", minzoom:15, ...schrift(SCHRIFT.n, 11.5, KF.leise, {layout:{"symbol-placement":"line", "text-letter-spacing":.02}})},
     {id:"name-meer", type:"symbol", ...om, "source-layer":"water_name", filter:["==", ["geometry-type"], "Point"], ...schrift(SCHRIFT.i, ["interpolate", ["linear"], ["zoom"], 4, 12, 8, 15], KF.meer, {layout:{"text-letter-spacing":.08, "text-max-width":7}})},
-    {id:"name-dorf", type:"symbol", ...om, "source-layer":"place", minzoom:11, filter:klasse("village", "suburb", "neighbourhood", "quarter"), ...schrift(SCHRIFT.n, 12, KF.leise)},
+    {id:"name-dorf", type:"symbol", ...om, "source-layer":"place", minzoom:12, filter:klasse("village", "suburb", "neighbourhood", "quarter"), ...schrift(SCHRIFT.n, 12, KF.leise)},
     {id:"name-insel", type:"symbol", ...om, "source-layer":"place", minzoom:7, filter:klasse("island", "islet"), ...schrift(SCHRIFT.i, ["interpolate", ["linear"], ["zoom"], 7, 11.5, 12, 14], KF.meer)},
-    {id:"name-ort", type:"symbol", ...om, "source-layer":"place", minzoom:8, filter:klasse("town"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 8, 12, 13, 15])},
+    {id:"name-ort", type:"symbol", ...om, "source-layer":"place", minzoom:9, filter:klasse("town"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 8, 12, 13, 15])},
     {id:"name-stadt", type:"symbol", ...om, "source-layer":"place", minzoom:4, filter:klasse("city"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 4, 12, 10, 17])},
     {id:"name-land", type:"symbol", ...om, "source-layer":"place", maxzoom:8, filter:klasse("country"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 4, 12, 7, 15], KF.leise, {layout:{"text-transform":"uppercase", "text-letter-spacing":.18, "text-max-width":8}})},
   ];
   return {version:8, glyphs:zuKt(SCHRIFT_URL),
     sources:{om:{type:"vector", url:zuKt(VEKTOR_URL), attribution:""}, sat:{type:"raster", tiles:[TILE_URL], tileSize:256, maxzoom:18},
-      route:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, ich:{type:"geojson", data:{type:"FeatureCollection", features:[]}}},
+      route:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, reise:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, ich:{type:"geojson", data:{type:"FeatureCollection", features:[]}}},
     layers};
 }
 // Daten in eine Quelle schreiben. Ist der Stil noch nicht geladen, wartet der Stand und wird beim Laden nachgereicht.
@@ -2436,12 +2478,12 @@ function quelleSetzen(id, features){
   const q = map?.getSource?.(id); if(q) q.setData(data); else wartend[id] = data;
 }
 // Marker: ein schlichter Halter, den MapLibre verschiebt, darin das gestaltete Element (so stören sich Position und Antippen-Skalierung nicht)
-function setzeMarker(lat, lng, html, {anchor = "bottom", offset = [0, 0], z = 0, titel, klick} = {}){
+function setzeMarker(lat, lng, html, {anchor = "bottom", offset = [0, 0], z = 0, titel, klick, liste = markers} = {}){
   const el = document.createElement("div"); el.className = "mk"; el.innerHTML = html; if(z) el.style.zIndex = z;
   if(titel){ el.title = titel; el.setAttribute("aria-label", titel); }
   if(klick){ el.setAttribute("role", "button"); el.tabIndex = 0; el.addEventListener("click", e => { e.stopPropagation(); klick(); }); el.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); klick(); } }); }
   const m = new maplibregl.Marker({element:el, anchor, offset}).setLngLat([lng, lat]).addTo(map);
-  markers.push(m); return m;
+  liste.push(m); return m;
 }
 const zentrum = () => { const c = map.getCenter(); return [c.lat, c.lng]; };
 const kartenHoehe = () => map.getContainer().clientHeight;
@@ -2535,9 +2577,10 @@ function initMap(){
   } catch(e){ return fehlt(); }
   map.touchZoomRotate.disableRotation();
   DATA.labels.forEach(l => TOWNNAMES.add(l[2])); // eigene Ortsnamen: kein doppeltes Spot-Etikett
-  map.on("load", () => { Object.entries(wartend).forEach(([id, d]) => map.getSource(id)?.setData(d)); Object.keys(wartend).forEach(k => delete wartend[k]); setEbene(ebene); });
+  map.on("styleimagemissing", e => { if(e.id === "pfeil") pfeilBild(); });
+  map.on("load", () => { pfeilBild(); Object.entries(wartend).forEach(([id, d]) => map.getSource(id)?.setData(d)); Object.keys(wartend).forEach(k => delete wartend[k]); setEbene(ebene); });
   $("#attrib").textContent = ATTRIB[ebene];
-  map.on("zoomend", () => { if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); });
+  map.on("zoomend", () => { if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); else renderReise(); });
   map.on("click", () => closeMapCard());
   renderMarkers(); drawMe();
   setTimeout(prefetchTiles, 5000);
@@ -2705,9 +2748,52 @@ function renderMarkers(){
     if(box){ box.hidden = false; box.innerHTML = `${ic("route")}<span>Route ${esc(fmtDate(ad))} · ${plural(order.size, "Stopp", "Stopps")}</span><button class="navbtn" data-openday>Tag öffnen</button>`; box.querySelector("[data-openday]").onclick = () => go("day", {d:ad}); }
   } else if(box) box.hidden = true;
   quelleSetzen("route", linien);
+  renderReise();
   // Route auf dem Satellitenbild hell mit dunklem Rand, auf der Karte petrol mit cremefarbenem Rand
   if(map.getLayer("route")){ ["route", "route-offen"].forEach(id => map.setPaintProperty(id, "line-color", sat ? "#7FE0C6" : KF.route)); map.setPaintProperty("route-rand", "line-color", sat ? "#0B1411" : KF.routeRand); map.setPaintProperty("route-rand", "line-opacity", sat ? .55 : .95); }
   if(meMarker) drawMe();
+}
+
+/* ---------- Reiseroute: Stationen in Reihenfolge, Verbindungen nach Verkehrsmittel ----------
+   Die Stationen sind nummeriert wie die Aufenthalte. Linienform und Symbol zeigen das Verkehrsmittel (nie nur die Farbe),
+   Pfeile die Richtung. Ohne Pfad ist die Linie blasser und das Symbol als ungefähr markiert. */
+// Flug als flacher Bogen links der Flugrichtung, damit er sich von Fähre und Bus abhebt
+function bogen(a, b, n = 28){
+  const k = Math.cos((a.lat + b.lat) / 2 * Math.PI / 180), dx = (b.lng - a.lng) * k, dy = b.lat - a.lat;
+  const mx = (a.lng + b.lng) / 2 * k - dy * .18, my = (a.lat + b.lat) / 2 + dx * .18;
+  return Array.from({length:n + 1}, (_, i) => { const t = i / n, u = 1 - t; return [(u * u * a.lng * k + 2 * u * t * mx + t * t * b.lng * k) / k, u * u * a.lat + 2 * u * t * my + t * t * b.lat]; });
+}
+// Pfeilspitze im Strichstil der Symbole, als SDF eingefärbt
+function pfeilBild(){
+  if(!map || map.hasImage("pfeil")) return;
+  const r = 2, n = 20 * r, c = document.createElement("canvas"); c.width = c.height = n; const g = c.getContext("2d");
+  g.strokeStyle = "#000"; g.lineWidth = 3.4 * r; g.lineCap = "round"; g.lineJoin = "round";
+  g.beginPath(); g.moveTo(7 * r, 4.5 * r); g.lineTo(13.5 * r, 10 * r); g.lineTo(7 * r, 15.5 * r); g.stroke();
+  map.addImage("pfeil", g.getImageData(0, 0, n, n), {pixelRatio:r, sdf:true});
+}
+function renderReise(){
+  if(!map) return; reiseMarker.forEach(m => m.remove()); reiseMarker = [];
+  const {orte, wege} = tripRoute(), feat = [], sat = ebene === "sat", liste = reiseMarker;
+  wege.forEach(w => w.teile.forEach(t => {
+    const coords = t.art === "flug" && t.pts.length === 2 ? bogen(t.pts[0], t.pts[1]) : t.pts.map(p => [p.lng, p.lat]);
+    feat.push({type:"Feature", properties:{art:t.art, genau:w.genau}, geometry:{type:"LineString", coordinates:coords}});
+    if(t.art === "zubringer") return;
+    const ll = coords.map(([x, y]) => [y, x]), mid = midOf(ll), a = punktAufKarte(...ll[0]), b = punktAufKarte(...ll.at(-1));
+    if(Math.hypot(a.x - b.x, a.y - b.y) > 96) setzeMarker(mid[0], mid[1], `<span class="wegic${w.genau ? "" : " ungefaehr"}">${ic(TRANSPORT[t.art]?.[1] || "reise")}</span>`,
+      {anchor:"center", z:3, liste, titel:(TRANSPORT[t.art]?.[0] || "Verbindung") + (w.genau ? "" : ", Strecke ungefähr")});
+  }));
+  quelleSetzen("reise", feat);
+  const gezeigt = [];
+  orte.forEach(o => {
+    const px = punktAufKarte(o.pt.lat, o.pt.lng), frei = !gezeigt.some(q => Math.abs(q.x - px.x) < 120 && Math.abs(q.y - px.y) < 26);
+    setzeMarker(o.pt.lat, o.pt.lng, `<div class="station${o.pt.quelle === "ort" ? " ort" : ""}"><b>${o.nr}</b></div>`, {anchor:"center", z:40, liste, titel:`${o.nr}. ${o.name}`, klick:() => go("stay", {id:o.id})});
+    if(frei){ gezeigt.push(px); setzeMarker(o.pt.lat, o.pt.lng, `<span class="stlbl">${esc(o.name)}</span>`, {anchor:"left", offset:[17, 0], z:39, liste}); }
+  });
+  if(map.getLayer("reise-bus")){
+    ["reise-bus", "reise-faehre", "reise-flug", "reise-zubringer"].forEach(id => map.setPaintProperty(id, "line-color", sat ? "#FFFAF2" : KF.reise));
+    map.setPaintProperty("reise-rand", "line-color", sat ? "#0B1411" : KF.routeRand); map.setPaintProperty("reise-rand", "line-opacity", sat ? .5 : .9);
+    map.setPaintProperty("reise-pfeil", "icon-color", sat ? "#FFFAF2" : KF.reise); map.setPaintProperty("reise-pfeil", "icon-halo-color", sat ? "#0B1411" : KF.routeRand);
+  }
 }
 
 function midOf(pts){
@@ -2720,7 +2806,8 @@ function mapRedraw(){ if(map && !$("#mapWrap").hidden){ renderMapCard(); renderM
 function mapFocus(ll, z){ initMap(); if(!map) return; setTimeout(() => { map.resize(); map.jumpTo({center:lngLat(ll), zoom:z || 13}); }, 60); }
 function mapFitAll(){
   if(!map) return;
-  zeigePunkte([...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])], 60, 12);
+  const r = tripRoute();
+  zeigePunkte([...r.orte.map(o => [o.pt.lat, o.pt.lng]), ...r.wege.flatMap(w => w.teile.flatMap(t => t.pts.map(p => [p.lat, p.lng]))), ...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])], {top:150, bottom:110, left:40, right:90}, 12); // oben Ansicht und Filter, rechts die Werkzeuge
 }
 function mapShowDay(){
   setTimeout(() => { if(!map) return; map.resize(); const pl = dayPlanFor(editDay()); if(!pl) return; const pts = planLegs(pl.plan).flat().map(p => [p.lat, p.lng]); const st = pl.plan.stationen.map(x => P(x.placeId)).filter(Boolean).map(p => [p.lat, p.lng]); const all = [...pts, ...st]; if(all.length) zeigePunkte(all, 70, 13); }, 80);
@@ -2969,7 +3056,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.11";
+const APP_VERSION = "Version 2.12";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
