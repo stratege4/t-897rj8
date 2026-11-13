@@ -210,6 +210,8 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 .tllink .card .t{flex:1;min-width:0;font-size:15px;font-weight:600;overflow-wrap:anywhere}
 .tllink .card .t small{display:block;font-size:13px;font-weight:400;color:var(--text-muted)}
 .tllink .card.warn .t small,.tllink .card.konflikt .t small{color:inherit;opacity:.85}
+.tlnach{padding:0 0 4px 52px;margin-top:-4px}
+.tlnach .btn{min-height:36px;padding:0 4px;font-size:14px}
 
 /* ---------- Knöpfe ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:var(--r-s);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-weight:600;font-size:16px;text-decoration:none}
@@ -948,6 +950,16 @@ function connsOnDay(d){
   });
 }
 
+/* ---------- Bewusst freie Nächte ----------
+   Eine Nacht, die ihr absichtlich ohne Unterkunft lasst (etwa Wartezeit am Flughafen vor einem Nachtflug). Gespeichert als
+   meta.frei {Datum der Nacht: true}, abgeglichen wie der Reisezeitraum. Nur ihr setzt die Markierung, die App nie von selbst. */
+const bewusstFrei = d => !!S.meta.frei?.[d];
+function setzeFrei(von, bis, an){
+  const f = {...(S.meta.frei || {})};
+  for(let d = von; d < bis; d = addDays(d, 1)) if(an) f[d] = true; else delete f[d];
+  S.meta = {...S.meta, frei:f, at:Date.now()};
+}
+
 /* ---------- Chronologische Übersicht ----------
    Eine Zeitachse aus Aufenthalten, Verbindungen, Nächten ohne Aufenthalt und Platzhaltern für fehlende Verbindungen.
    Verbindungen stehen am Datum ihrer gewählten Option, sonst an der Ab- bzw. Anreise des verknüpften Aufenthalts.
@@ -971,11 +983,12 @@ function overview(){
     if(!next && !cs.some(c => c.vonStay === s.id)) put(s.bis, 4, {art:"connFehlt", von:s, richtung:"abreise"});
   });
   if(b){ // Nächte ohne Aufenthalt, zusammengefasst. Eine Nacht in einer gewählten Nachtverbindung (Flug, Nachtzug) ist keine Lücke.
-    let start = null;
+    // Bewusst frei gelassene Nächte stehen als eigener, ruhiger Eintrag da und zählen nicht als Lücke.
+    let start = null, art = null;
     for(let d = b.start; d <= b.end; d = addDays(d, 1)){
-      const frei = d < b.end && !stayForNight(d) && !nightInTransit(d);
-      if(frei && !start) start = d;
-      if(!frei && start){ put(start, 5, {art:"luecke", von:start, bis:d, n:dayDiff(d, start)}); start = null; }
+      const offen = d < b.end && !stayForNight(d) && !nightInTransit(d), k = offen ? (bewusstFrei(d) ? "frei" : "luecke") : null;
+      if(start && k !== art){ put(start, 5, {art, von:start, bis:d, n:dayDiff(d, start)}); start = null; }
+      if(k && !start){ start = d; art = k; }
     }
   }
   items.sort((x, y) => x._d.localeCompare(y._d) || x._r - y._r);
@@ -1750,6 +1763,8 @@ VIEWS.reise = () => {
     : r ? `<div class="allok">${ic("haken")}<span>Alles geprüft: keine Konflikte, keine Lücken, alles entschieden.</span></div>` : "";
   const tl = ov.items.map((x, i) => x.art === "stay" ? stayCard(x.s) : x.art === "conn" ? connCard(x.c)
     : x.art === "luecke" ? linkCard(`${ic("warn")}<span class="t">${plural(x.n, "Nacht", "Nächte")} ohne Aufenthalt<small>${esc(fmtRange(x.von, x.bis))} · Aufenthalt anlegen</small></span>${ic("plus")}`, attrGo("neuStay", {von:x.von, luecke:x.bis}), "warn")
+      + `<div class="tlnach"><button class="btn ghost" data-frei="${i}">${ic("haken")}Bewusst ohne Unterkunft lassen</button></div>`
+    : x.art === "frei" ? linkCard(`${ic("uhr")}<span class="t">${plural(x.n, "Nacht", "Nächte")} bewusst ohne Unterkunft<small>${esc(fmtRange(x.von, x.bis))} · Markierung aufheben</small></span>`, `data-unfrei="${i}"`, "dashed")
     : linkCard(`${ic("plus")}<span class="t">${x.richtung === "anreise" ? "Anreise nach " + esc(stayName(x.nach)) : x.richtung === "abreise" ? "Abreise ab " + esc(stayName(x.von)) : esc(stayName(x.von)) + " → " + esc(stayName(x.nach))}<small>Verbindung fehlt · zuordnen oder anlegen</small></span>`, `data-gap="${i}"`, "dashed")).join("");
   return {title:"Reise", hero:tripHero(sub),
     html:`${setup}${status}${planOverview(ov)}
@@ -1760,6 +1775,8 @@ VIEWS.reise = () => {
       mountAdd(el);
       el.querySelector('[data-act="tage"]')?.addEventListener("click", () => switchTab("tage"));
       el.querySelectorAll("[data-gap]").forEach(b => b.onclick = () => fillGap(ov.items[+b.dataset.gap]));
+      el.querySelectorAll("[data-frei]").forEach(b => b.onclick = () => { const x = ov.items[+b.dataset.frei]; setzeFrei(x.von, x.bis, true); commit("Als bewusst frei vermerkt"); });
+      el.querySelectorAll("[data-unfrei]").forEach(b => b.onclick = () => { const x = ov.items[+b.dataset.unfrei]; setzeFrei(x.von, x.bis, false); commit("Markierung aufgehoben", "info"); });
     }};
 };
 
@@ -2795,9 +2812,16 @@ function renderReise(){
   const pos = orte.map(o => punktAufKarte(o.pt.lat, o.pt.lng)), gezeigt = [];
   const verdeckt = i => pos.some((q, j) => j > i && Math.hypot(q.x - pos[i].x, q.y - pos[i].y) < 22);
   orte.forEach((o, i) => setzeMarker(o.pt.lat, o.pt.lng, `<div class="station${o.pt.quelle === "ort" ? " ort" : ""}"><b>${o.nr}</b></div>`, {anchor:"center", z:40 + i, liste, titel:`${o.nr}. ${o.name}`, klick:() => go("stay", {id:o.id})}));
-  orte.forEach((o, i) => { const px = pos[i];
-    if(verdeckt(i) || gezeigt.some(q => Math.abs(q.x - px.x) < 120 && Math.abs(q.y - px.y) < 26)) return;
-    gezeigt.push(px); setzeMarker(o.pt.lat, o.pt.lng, `<span class="stlbl">${esc(o.name)}</span>`, {anchor:"left", offset:[17, 0], z:39, liste}); });
+  // Schild rechts der Station, sonst links. Es bleibt ganz im Bild und überdeckt weder eine andere Station noch ein Schild, sonst entfällt es.
+  const breite = o => 18 + o.name.length * 7.6;
+  const bildBreite = map.getContainer().clientWidth;
+  const frei = (x0, x1, y, eigen) => x0 >= 8 && x1 <= bildBreite - 8 && !pos.some((q, j) => j !== eigen && q.x + 17 > x0 && q.x - 17 < x1 && Math.abs(q.y - y) < 28) && !gezeigt.some(g => g.x0 < x1 && g.x1 > x0 && Math.abs(g.y - y) < 26);
+  orte.forEach((o, i) => { const px = pos[i], w = breite(o); if(verdeckt(i)) return;
+    for(const rechts of [true, false]){
+      const x0 = rechts ? px.x + 17 : px.x - 17 - w, x1 = x0 + w;
+      if(!frei(x0, x1, px.y, i)) continue;
+      gezeigt.push({x0, x1, y:px.y}); setzeMarker(o.pt.lat, o.pt.lng, `<span class="stlbl">${esc(o.name)}</span>`, {anchor:rechts ? "left" : "right", offset:[rechts ? 17 : -17, 0], z:39, liste}); break;
+    } });
   if(map.getLayer("reise-bus")){
     ["reise-bus", "reise-faehre", "reise-flug", "reise-zubringer"].forEach(id => map.setPaintProperty(id, "line-color", sat ? "#FFFAF2" : KF.reise));
     map.setPaintProperty("reise-rand", "line-color", sat ? "#0B1411" : KF.routeRand); map.setPaintProperty("reise-rand", "line-opacity", sat ? .5 : .9);
@@ -3066,7 +3090,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.14";
+const APP_VERSION = "Version 2.16";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
