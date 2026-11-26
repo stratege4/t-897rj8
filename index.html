@@ -1434,6 +1434,64 @@ async function importCode(code){
   return {ok:true, n};
 }
 
+/* ===== 07-reiseupdate.js ===== */
+/* ---------- Reise-Updates: verschlüsselte Datei neben der App (seit 2.19) ----------
+   reise.dat liegt öffentlich neben der App, ist aber mit AES-256-GCM verschlüsselt. Ohne Schlüssel ist sie nicht lesbar.
+   Den Schlüssel (32 Zufallsbytes, base64url, 43 Zeichen) tragt ihr einmal je Gerät ein. Er bleibt nur auf diesem Gerät (localStorage),
+   steht nie im Code, nie in einer Sicherung und geht nie in den Abgleich.
+   Beim Öffnen, beim Zurückkehren in die App und wenn wieder Netz da ist (höchstens alle 10 Minuten) holt die App die Datei,
+   entschlüsselt sie und führt sie zusammen wie „Sicherung laden“: je Feld gilt die neuere Änderung, nichts wird überschrieben.
+   Dateiformat: „TR1.“ + iv (12 Byte, base64url) + „.“ + Geheimtext samt Prüfwert (base64url). Inhalt: ein Stand wie in einer Sicherung. */
+const UPD = {SCHLUESSEL:"thailand2027-schluessel", STAND:"thailand2027-update", DATEI:"reise.dat", ABSTAND:10 * 60 * 1000};
+const updSchluessel = () => { const k = LS.get(UPD.SCHLUESSEL); return typeof k === "string" && k.length >= 40 ? k : null; };
+const updStand = () => LS.get(UPD.STAND) || {};
+// Eingabe bereinigen: Leerzeichen und Zeilenumbrüche, wie sie beim Kopieren entstehen, fallen weg
+const updSauber = k => String(k || "").replace(/\s+/g, "");
+async function updEntschluesseln(text, schluessel){
+  const [kopf, iv, ct] = String(text).trim().split(".");
+  if(kopf !== "TR1" || !iv || !ct) throw new Error("format");
+  const k = await crypto.subtle.importKey("raw", unb64(schluessel), "AES-GCM", false, ["decrypt"]);
+  const klar = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(iv)}, k, unb64(ct));
+  return JSON.parse(new TextDecoder().decode(klar));
+}
+let updLaeuft = null;
+// Ergebnis: {ok, n} oder {ok:false, grund}. „still“ unterdrückt den Hinweis, „immer“ prüft auch innerhalb der 10 Minuten.
+function reiseUpdate({still = false, immer = false, schluessel = updSchluessel()} = {}){
+  if(!schluessel) return Promise.resolve({ok:false, grund:"Reise-Updates sind auf diesem Gerät noch nicht eingerichtet."});
+  if(!window.crypto?.subtle) return Promise.resolve({ok:false, grund:"Dieses Gerät kann das Reise-Update nicht entschlüsseln."});
+  if(!navigator.onLine) return Promise.resolve({ok:false, grund:"Kein Netz. Das Reise-Update kommt, sobald wieder Netz da ist."});
+  const st = updStand();
+  if(!immer && st.geprueft && Date.now() - st.geprueft < UPD.ABSTAND) return Promise.resolve({ok:true, n:0, warte:true});
+  if(updLaeuft) return updLaeuft;
+  return updLaeuft = (async () => {
+    try{
+      const res = await fetch(UPD.DATEI + "?t=" + Date.now(), {cache:"no-store"});
+      if(res.status === 404) return {ok:false, grund:"Es liegt noch kein Reise-Update bereit."};
+      if(!res.ok) throw new Error("netz");
+      let js;
+      try{ js = await updEntschluesseln(await res.text(), schluessel); }
+      catch(e){ return {ok:false, grund:"Der Schlüssel passt nicht zum Reise-Update."}; }
+      if(js?.app !== SYNC_KEY) return {ok:false, grund:"Das Reise-Update gehört nicht zu diesem Reiseplaner."};
+      // Derselbe Stand wie beim letzten Mal: nichts zu tun. Sonst zusammenführen wie beim Laden einer Sicherung.
+      const n = st.t === js.t ? 0 : mergeState(js);
+      if(n) persist();
+      LS.set(UPD.STAND, {t:js.t, geprueft:Date.now(), am:n ? Date.now() : st.am || null, n:n || st.n || 0});
+      if(n){ onDataChanged(); if(!still) toast("Reise aktualisiert: " + plural(n, "Änderung", "Änderungen"), "haken", 3200); }
+      return {ok:true, n};
+    } catch(e){ return {ok:false, grund:"Das Reise-Update ist gerade nicht erreichbar."}; }
+    finally { updLaeuft = null; }
+  })();
+}
+// Einrichten: Schlüssel erst prüfen, dann speichern. Ein falscher Schlüssel wird nicht gespeichert.
+async function updEinrichten(eingabe){
+  const k = updSauber(eingabe);
+  if(!/^[A-Za-z0-9_-]{43}$/.test(k)) return {ok:false, grund:"Der Schlüssel hat 43 Zeichen aus Buchstaben, Ziffern, „-“ und „_“. Bitte vollständig einfügen."};
+  const r = await reiseUpdate({schluessel:k, immer:true, still:true});
+  if(!r.ok && !/noch kein Reise-Update/.test(r.grund)) return r;
+  LS.set(UPD.SCHLUESSEL, k);
+  return {ok:true, n:r.n || 0};
+}
+
 /* ===== 10-ui.js ===== */
 /* ---------- Oberfläche: Navigation und Bausteine ----------
    Vier Bereiche in der Tab-Leiste, jeder mit eigenem Verlauf (Stapel). Detailseiten schieben sich darüber, Zurück oben links.
@@ -3229,7 +3287,8 @@ VIEWS.mehr = () => {
   const hidden = Object.values(places()).filter(p => p.status === "abgelehnt");
   const n = {stays:live("stays").length, lodgings:live("lodgings").length, conns:live("conns").length, opts:live("opts").length, spots:Object.keys(places()).length};
   return {title:"Mehr", large:true,
-    html:`${sect("Mit dem anderen iPhone abgleichen", group([
+    html:`${sect("Reise-Updates", group([updZeile()]))}
+      ${sect("Mit dem anderen iPhone abgleichen", group([
         row({icon:"kopieren", t:"Meinen Stand senden", s:"Code kopieren und per Nachricht schicken", go:"syncSend"}),
         row({icon:"einfuegen", t:"Stand vom anderen iPhone übernehmen", s:"Code einfügen, es wird zusammengeführt", go:"syncReceive"}),
       ]) + `<p class="hint">Eure Daten liegen nur auf den Geräten. Nach dem Übernehmen einmal zurücksenden, dann sind beide gleich.</p>`)}
@@ -3241,6 +3300,43 @@ VIEWS.mehr = () => {
       ]))}
       ${sect("Hilfe", group([row({icon:"info", t:"So funktioniert die App", go:"hilfe"})]))}
       <p class="hint">Thailand 2027 · ${esc(APP_VERSION)}</p>`};
+};
+// Zeile in „Mehr“: Stand der Reise-Updates auf einen Blick
+const updDatum = ms => ms ? new Date(ms).toLocaleString("de-DE", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"}) + " Uhr" : null;
+function updZeile(){
+  const st = updStand();
+  return row({icon:"herunter", t:"Reise-Updates", s:!updSchluessel() ? "Noch nicht eingerichtet, einmal den Schlüssel eintragen" : st.am ? "Zuletzt aktualisiert " + updDatum(st.am) : st.geprueft ? "Eingerichtet, zuletzt geprüft " + updDatum(st.geprueft) : "Eingerichtet", go:"reiseupdate"});
+}
+VIEWS.reiseupdate = () => {
+  const an = !!updSchluessel(), st = updStand();
+  return {title:"Reise-Updates", large:true,
+    html:an ? `${group([row({icon:"haken", t:"Eingerichtet", s:"Die App holt neue Reisedaten selbst, wenn ihr sie mit Netz öffnet."}),
+        row({icon:"zeitraum", t:"Zuletzt geprüft", s:updDatum(st.geprueft) || "noch nie"}),
+        row({icon:"reise", t:"Zuletzt etwas übernommen", s:st.am ? updDatum(st.am) + " · " + plural(st.n || 0, "Änderung", "Änderungen") : "noch nichts"})])}
+      <div class="btns"><button class="btn primary" data-act="jetzt">${ic("herunter")}Jetzt prüfen</button><button class="btn" data-act="weg">Schlüssel entfernen</button></div>
+      <p class="hint">Zusammengeführt wird wie beim Laden einer Sicherung: Was ihr auf dem iPhone selbst neuer eingetragen habt, bleibt.</p>`
+    : `<p class="hint">Einmal den Schlüssel eintragen. Danach holt die App neue Reisedaten selbst, sobald ihr sie mit Netz öffnet. Kein Code und keine Datei mehr.</p>
+      <div class="fgroup">${fText("schluessel", "Schlüssel (43 Zeichen)", "", {ph:"Hier einfügen", ac:false})}</div>
+      <button class="btn primary block" data-act="ein">${ic("haken")}Einrichten</button>
+      <p class="hint">Der Schlüssel bleibt nur auf diesem Gerät. Die Datei neben der App ist ohne ihn nicht lesbar.</p>`,
+    mount(el){
+      el.querySelector('[data-act="ein"]')?.addEventListener("click", async () => {
+        const r = await updEinrichten(readForm(el).schluessel);
+        if(!r.ok) return toast(r.grund, "warn", 4200, true);
+        toast(r.n ? "Eingerichtet, " + plural(r.n, "Änderung", "Änderungen") + " übernommen" : "Eingerichtet", "haken", 3200);
+        onDataChanged(); render();
+      });
+      el.querySelector('[data-act="jetzt"]')?.addEventListener("click", async () => {
+        const r = await reiseUpdate({immer:true, still:true});
+        if(!r.ok) return toast(r.grund, "warn", 3600, true);
+        toast(r.n ? "Reise aktualisiert: " + plural(r.n, "Änderung", "Änderungen") : "Schon auf dem neuesten Stand", "haken", 3000); render();
+      });
+      el.querySelector('[data-act="weg"]')?.addEventListener("click", async () => {
+        if(!await confirmSheet({title:"Schlüssel entfernen?", text:"Die App holt dann keine Reise-Updates mehr. Eure Daten bleiben.", ok:"Entfernen", danger:true})) return;
+        try{ localStorage.removeItem(UPD.SCHLUESSEL); localStorage.removeItem(UPD.STAND); }catch(e){}
+        render();
+      });
+    }};
 };
 VIEWS.syncSend = () => ({title:"Stand senden", large:true,
   html:`<ol class="hint" style="font-size:15px;color:var(--ink2);padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px"><li>„Code kopieren“ tippen.</li><li>Den Code per Nachricht ans andere iPhone schicken.</li><li>Dort in der installierten App unter „Mehr“ den Stand übernehmen.</li></ol>
@@ -3314,11 +3410,15 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.18";
+const APP_VERSION = "Version 2.19";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
 addEventListener("hashchange", syncFromLink);
+// Reise-Updates: beim Start, beim Zurückkehren in die App und wenn wieder Netz da ist (höchstens alle 10 Minuten)
+setTimeout(() => reiseUpdate(), 1500);
+document.addEventListener("visibilitychange", () => { if(!document.hidden) reiseUpdate(); });
+addEventListener("online", () => reiseUpdate());
 // Akku schonen: nur orten, solange die App sichtbar ist und der Standort einmal angefragt wurde
 document.addEventListener("visibilitychange", () => { if(document.hidden) stopLocate(); else if(ME && meError !== 1) startLocate(); });
 setInterval(drawMe, 60000);
