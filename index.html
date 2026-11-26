@@ -387,24 +387,36 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 #mapWrap{position:fixed;inset:0 0 calc(var(--tab) + var(--safe-b)) 0;background:#A9DFD8;overflow:hidden}
 #mapWrap.ebene-sat{background:#1E4A52}
 #map{position:absolute;inset:0}
-.maplibregl-map{background:#F3EBDC;font-family:var(--font)}
+.maplibregl-map{background:#F5F0E6;font-family:var(--font)}
 .ebene-sat .maplibregl-map{background:#1E4A52}
 /* Marker-Halter: MapLibre verschiebt ihn, das gestaltete Element darin darf sich beim Antippen frei skalieren */
 .mk{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mk:focus-visible{outline:none}
 .mk:focus-visible > .mpin,.mk:focus-visible > .hpin{box-shadow:0 0 0 3px #FFFAF2,0 0 0 5px var(--teal)}
 @media (prefers-color-scheme: dark){ #mapWrap:not(.ebene-sat) .maplibregl-canvas{filter:brightness(.8) saturate(.92)} }
-.maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:700;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+/* Kartenansicht 2.18: deckende Flächen, feine Kanten, Schatten nur zur Trennung. Keine Milchglasoptik, kein Schein. */
+.maptop{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:66px;z-index:700;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .maptop > *{pointer-events:auto}
-.glass{background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 2px 10px rgba(70,48,24,.10);border-radius:var(--r)}
-.maptop .seg{padding:4px;border-radius:var(--r);background:color-mix(in srgb, var(--surface) 82%, transparent)}
-.maptop .seg button{min-height:40px;font-size:15px}
-.mapfilter{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;pointer-events:none}
-.mf{pointer-events:auto;min-height:42px;padding:0 4px;border-radius:var(--r);border:1px solid color-mix(in srgb, var(--c) 22%, var(--surface));background:color-mix(in srgb, var(--c) 17%, var(--surface));display:flex;align-items:center;justify-content:center;gap:5px;font-size:13.5px;font-weight:650;color:var(--c);white-space:nowrap;min-width:0;box-shadow:0 2px 8px rgba(70,48,24,.10)}
-.mf .ic{width:18px;height:18px;flex:none}
-.mf[aria-pressed="false"]{background:color-mix(in srgb, var(--surface) 88%, transparent);border-color:color-mix(in srgb, var(--border) 85%, transparent);color:var(--text-faint)}
+.glass{background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(40,30,15,.08);border-radius:var(--r)}
+.mapzeile{display:flex;gap:8px;align-items:center;pointer-events:none}
+.mapzeile > *{pointer-events:auto}
+.maptop .seg{padding:3px;border-radius:12px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(40,30,15,.08);gap:2px}
+.maptop .seg button{min-height:34px;width:42px;flex:none;border-radius:9px;padding:0}
+.maptop .seg button .ic{width:19px;height:19px}
+.maptop .seg button[aria-pressed="true"]{background:var(--teal-dark);color:var(--surface);box-shadow:none}
+.mfk{height:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--border);background:var(--surface);box-shadow:0 1px 2px rgba(40,30,15,.08);display:inline-flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;color:var(--text)}
+.mfk .ic{width:18px;height:18px;color:var(--teal-dark)}
+.mfk[aria-expanded="true"]{border-color:var(--teal-dark)}
+.mfk-n:not(:empty){font-weight:500;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.mfk-n:not(:empty)::before{content:"· "}
+.mapfilter{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;pointer-events:none}
+.mapfilter[hidden]{display:none}
+.mf{pointer-events:auto;min-height:36px;padding:0 4px;border-radius:10px;border:1px solid var(--border);background:var(--surface);box-shadow:0 1px 2px rgba(40,30,15,.08);display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;font-weight:600;color:var(--c);white-space:nowrap;min-width:0;overflow:hidden}
+.mf .ic{width:16px;height:16px;flex:none}
+.mf[aria-pressed="false"]{color:var(--text-faint);background:var(--surface2)}
 .mf[aria-pressed="false"] .ic{opacity:.6}
-.mapday{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;font-size:14px;color:var(--text)}
+.mapday{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;font-size:14px;color:var(--text);pointer-events:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(40,30,15,.08)}
+.mapday[hidden]{display:none}
 .mapday > .ic{color:var(--teal);width:18px;height:18px}
 .mapday span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mapday .navbtn{min-height:36px;font-size:15px}
@@ -412,20 +424,26 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 .mround .ic{width:23px;height:23px}
 .mround[aria-pressed="true"]{background:var(--teal);color:var(--accent-ink);border-color:var(--teal)}
 .mround.on{color:var(--coral-strong)}
-.mapbar{position:absolute;right:12px;bottom:18px;z-index:700;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;transition:transform .22s var(--ease-out)}
+.mapbar{position:absolute;right:12px;bottom:16px;z-index:700;display:flex;flex-direction:column;align-items:flex-end;gap:10px;pointer-events:none;transition:transform .22s var(--ease-out)}
 .mapbar > *{pointer-events:auto;align-self:flex-end}
-.mapadd{height:50px;padding:0 20px 0 15px;border-radius:25px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;font-size:17px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(70,48,24,.22)}
-.mapadd .ic{width:21px;height:21px}
+.mapadd{height:42px;padding:0 15px 0 11px;border-radius:12px;border:0;background:var(--coral-strong);color:#fff;font-weight:650;font-size:15px;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 3px rgba(120,45,20,.25)}
+.mapadd .ic{width:19px;height:19px}
+.maplegende{position:absolute;left:12px;bottom:22px;z-index:690;display:flex;flex-direction:row;flex-wrap:wrap;gap:4px 10px;max-width:calc(100% - 118px);padding:6px 9px;border-radius:10px;background:var(--surface);border:1px solid var(--border);font-size:11.5px;font-weight:600;color:var(--text-muted);pointer-events:none}
+.maplegende[hidden],#mapWrap.hascard .maplegende{display:none}
+.maplegende span{display:flex;align-items:center;gap:5px}
+.maplegende svg{width:22px;height:8px;flex:none}
 #mapWrap.hascard .mapbar{transform:translateY(calc(-1 * var(--mc-h, 150px) - 16px))}
 #mapWrap.ziehen .mapbar{transition:none}
 /* Ebene und Gesamtansicht als eine Kapsel: zusammen, was zusammen gehört */
-.mapctl{display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:color-mix(in srgb, var(--surface) 88%, transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid color-mix(in srgb, var(--border) 85%, transparent);box-shadow:0 3px 12px rgba(70,48,24,.14)}
-.mapctl button{width:48px;height:48px;border:0;background:none;display:grid;place-items:center;color:var(--teal-dark);transition:background-color .15s ease, color .15s ease}
+/* Werkzeuge: Ebene, ganze Reise, Standort in einer deckenden Kapsel oben rechts */
+.mapctl{position:absolute;top:calc(var(--safe-t) + 10px);right:12px;z-index:700;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(40,30,15,.08)}
+.mapctl button{width:42px;height:42px;border:0;background:none;display:grid;place-items:center;color:var(--teal-dark);transition:background-color .15s ease, color .15s ease}
+.mapctl button.on{color:var(--coral-strong)}
 .mapctl button + button{border-top:1px solid color-mix(in srgb, var(--border) 80%, transparent)}
 .mapctl button:active{background:color-mix(in srgb, var(--teal) 14%, transparent);transition:none}
 .mapctl button[aria-pressed="true"]{background:var(--teal);color:var(--accent-ink)}
-.mapctl .ic{width:23px;height:23px}
-.mapcard{position:absolute;left:10px;right:10px;bottom:22px;z-index:720;background:color-mix(in srgb, var(--surface) 96%, transparent);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--border);border-radius:24px;padding:0 12px 14px;display:flex;flex-direction:column;box-shadow:0 8px 28px rgba(70,48,24,.18);touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
+.mapctl .ic{width:20px;height:20px}
+.mapcard{position:absolute;left:8px;right:8px;bottom:12px;z-index:720;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:0 14px 14px;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(40,30,15,.14);touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform}
 /* Blatt: der Griff oben, die volle Stufe liegt unter dem Rand und wird hochgezogen */
 .mapcard.aus{z-index:719;pointer-events:none}
 .mc-grab{display:block;width:100%;height:24px;border:0;background:none;padding:0;flex:none;cursor:grab}
@@ -437,9 +455,22 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 @media (prefers-reduced-motion: reduce){ .mapbar{transition:none} }
 .mc-main{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--text);min-width:0}
 .mc-main > .ic{width:18px;height:18px;flex:none;color:var(--text-muted);margin-right:2px}
-.mc-bild{width:84px;height:84px;flex:none;border-radius:var(--r);display:grid;place-items:center;color:var(--c);background:color-mix(in srgb, var(--c) 18%, var(--surface))}
+.mc-bild{width:64px;height:64px;flex:none;border-radius:14px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb, var(--c) 14%, var(--surface))}
+.mc-nr{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;background:#1E4C48;color:#fff;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px var(--surface), 0 0 0 4px #1E4C48}
+.mc-nr .ic{width:22px;height:22px}
+.mc-fact.ok{background:var(--success-bg);color:var(--success);height:auto;min-height:24px;padding:3px 9px 3px 8px;line-height:1.25;max-width:100%}
+.mc-fact.ok .ic{flex:none}
+.mc-blaettern{position:absolute;top:0;right:0;height:32px;display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text-muted);font-variant-numeric:tabular-nums;background:var(--surface)}
+.mc-blaettern button{width:32px;height:30px;border:0;background:none;display:grid;place-items:center;color:var(--teal-dark);padding:0}
+.mc-blaettern .ic{width:17px;height:17px}
+.mc-zeile{display:grid;grid-template-columns:34px minmax(0,1fr) 16px;gap:10px;align-items:center;width:100%;border:0;border-bottom:1px solid var(--border);background:none;padding:6px 0 10px;text-align:left;color:var(--text)}
+.mc-zsym{width:34px;height:34px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;color:var(--teal-dark)}
+.mc-zsym .ic{width:18px;height:18px}
+.mc-zt b{display:block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted)}
+.mc-zt small{display:block;font-size:14.5px;line-height:1.3;color:var(--text);overflow-wrap:anywhere}
+.mc-zeile > .ic{width:16px;height:16px;color:var(--text-muted)}
 .mc-bild.hotel{--c:#245F59}
-.mc-bild .ic{width:34px;height:34px}
+.mc-bild .ic{width:28px;height:28px}
 .mc-ic{width:22px;height:22px;flex:none;border-radius:50%;display:inline-grid;place-items:center;background:var(--c);color:#fff;vertical-align:-5px;margin-right:6px}
 .mc-ic .ic{width:14px;height:14px}
 .mc-t{flex:1;min-width:0;display:block}
@@ -465,7 +496,11 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 .mpin.done{--rand:var(--c);background:#FFFAF2;color:var(--c);box-shadow:0 0 0 2px var(--c),0 2px 6px rgba(40,25,10,.2);opacity:.65}
 .mpin.inplan{box-shadow:0 0 0 2.5px var(--rand),0 0 0 4.5px var(--coral),0 3px 8px rgba(40,25,10,.3)}
 .mpin .nr{position:absolute;top:-8px;right:-8px;min-width:18px;height:18px;border-radius:9px;padding:0 4px;background:var(--coral-strong);color:#fff;font-size:11px;font-weight:750;line-height:18px;text-align:center;box-shadow:0 0 0 2px #FFFAF2}
-.hpin{width:36px;height:36px;border-radius:11px;background:#245F59;color:#fff;box-shadow:0 0 0 2.5px var(--rand),0 3px 10px rgba(40,25,10,.32)}
+.hpin{width:36px;height:36px;border-radius:11px;background:#1E4C48;color:#fff;box-shadow:0 0 0 2.5px var(--rand),0 1px 3px rgba(40,25,10,.25)}
+.hpin.mini{width:18px;height:18px;border-radius:6px;box-shadow:0 0 0 1.5px #FFFFFF,0 1px 2px rgba(40,25,10,.25)}
+.hpin.mini::after{display:none}
+.hpin.mini .ic{width:12px;height:12px}
+.hpin.mini.kand{box-shadow:0 0 0 1.5px #1E4C48}
 .hpin .ic{width:21px;height:21px}
 .hpin.kand{--rand:#245F59;background:#FFFAF2;color:#245F59;box-shadow:0 0 0 2px #245F59,0 2px 6px rgba(40,25,10,.22)}
 .mpin.sel,.hpin.sel{transform:scale(1.2);box-shadow:0 0 0 3px #FFFAF2,0 0 0 6px var(--coral),0 4px 12px rgba(40,25,10,.3)}
@@ -475,19 +510,44 @@ button.row:active, a.row:active{background:var(--surface2);transition:none}
 .lbl.poi{font-size:12px;transform:none}
 .lbl.poi.done{opacity:.6}
 /* Reiseroute: nummerierte Stationen in der Strukturfarbe mit heller Kontur, Verkehrsmittel als Symbol im Strichstil */
-.station{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#245F59;color:#FFFAF2;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;box-shadow:0 0 0 3px #FFFAF2,0 2px 6px rgba(36,95,89,.28);transition:transform .1s var(--ease-out)}
+/* Stationen: Nummer im petrolfarbenen Kreis, klare weiße Kontur, kaum Schatten. Gewählt: Korallenring. */
+.station{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#1E4C48;color:#FFFFFF;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px #FFFFFF,0 1px 2px rgba(20,40,38,.3);transition:transform .1s var(--ease-out)}
+.station.sel{background:var(--coral-strong);transform:scale(1.15);box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px var(--coral-strong)}
+.stpunkt{display:block;width:7px;height:7px;border-radius:50%;background:#1E4C48;box-shadow:0 0 0 1.5px #FFFFFF}
 .station:active{transform:scale(.9)}
 .mk:focus-visible > .station{box-shadow:0 0 0 3px #FFFAF2,0 0 0 5px var(--coral)}
-.stlbl{display:inline-block;white-space:nowrap;font-size:13px;font-weight:650;color:#245F59;background:rgba(255,250,242,.94);padding:2px 8px;border-radius:var(--r-pill);box-shadow:0 1px 3px rgba(36,95,89,.16);pointer-events:none}
+.stlbl{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:13px;line-height:1;color:#1E3533;background:#FFFFFF;padding:5px 8px;border-radius:7px;border:1px solid #E3D9C9;box-shadow:0 1px 2px rgba(40,30,15,.08);transition:border-color .15s ease, background-color .15s ease}
+/* Rückmeldung: Zeigen hebt leicht hervor (nur mit Maus oder Stift), Tippen drückt kurz ein. Keine Dauerbewegung. */
+.mk:active > .stlbl{background:#F1ECE2}
+.mk:focus-visible > .stlbl{border-color:var(--coral-strong)}
+@media (hover: hover){
+  .mk:hover > .station:not(.sel){transform:scale(1.1)}
+  .mk:hover > .stlbl{border-color:#1E4C48}
+  .mapctl button:hover,.maptop .seg button[aria-pressed="false"]:hover{background:var(--surface2)}
+  .mfk:hover,.mf:hover{border-color:var(--border-strong)}
+  .mapadd:hover{background:color-mix(in srgb, var(--coral-strong) 88%, #000)}
+  .mc-zeile:hover .mc-zsym{background:var(--sea-light)}
+}
+/* Aufbau der Route beim ersten Zeigen: Stationen und Schilder erscheinen mit ihrer Etappe, einmalig */
+.station.auftritt,.stpunkt.auftritt{animation:auftritt .32s var(--ease-out) var(--d, 0ms) backwards}
+.stlbl.auftritt{animation:schild .28s var(--ease-out) var(--d, 0ms) backwards}
+@keyframes auftritt{from{transform:scale(.55);opacity:0}to{transform:none;opacity:1}}
+@keyframes schild{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){ .station.auftritt,.stpunkt.auftritt,.stlbl.auftritt{animation:none} }
+.stlbl b{font-weight:650;letter-spacing:-.005em}
+@media (max-width: 359px){ .stlbl{font-size:12px;padding:4px 7px} }
+.stlbl small{font-size:11.5px;font-weight:500;color:#5E6E6A;font-variant-numeric:tabular-nums}
 /* Verkehrsmittel-Symbol direkt auf der Linie, ohne Kachel (Elias 12.11.2026, nach seiner Routenkarte). Heller Saum trennt es von der Linie. */
-.wegic{display:grid;place-items:center;width:26px;height:26px;color:#245F59;filter:drop-shadow(0 0 1px #FFFAF2) drop-shadow(0 0 1.5px #FFFAF2) drop-shadow(0 0 2px #FFFAF2)}
-.wegic .ic{width:22px;height:22px}
+/* Verkehrsmittel: kleines Symbol in einer deckenden weißen Plakette, Rand und Symbol in der Farbe der Linie */
+.wegic{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#FFFFFF;color:var(--c);box-shadow:0 0 0 1.5px var(--c)}
+.wegic i{display:grid;place-items:center}
+.wegic .ic{width:15px;height:15px}
 .wegic.ungefaehr{opacity:.6}
-.ebene-sat .wegic{color:#FFFAF2;filter:drop-shadow(0 0 1.5px #0B1411) drop-shadow(0 0 2px #0B1411)}
+.ebene-sat .wegic{background:#0B1411;color:#FFFAF2;box-shadow:0 0 0 1.5px #FFFAF2}
 .rtlbl{display:inline-block;transform:translate(-50%,-50%);background:#245F59;color:#fff;font-size:12px;font-weight:650;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap;box-shadow:0 0 0 2px #FFFAF2}
 .mepin{width:18px;height:18px;border-radius:50%;background:#1E7BFF;box-shadow:0 0 0 3px #fff,0 0 0 9px rgba(30,123,255,.18),0 2px 8px rgba(0,0,0,.3)}
 .mepin.stale{background:#8AA0B8;box-shadow:0 0 0 3px #fff,0 2px 8px rgba(0,0,0,.3)}
-.attrib{position:absolute;left:10px;bottom:3px;z-index:650;font-size:10px;color:rgba(41,58,61,.72);text-shadow:0 0 3px #FFFAF2;pointer-events:none}
+.attrib{position:absolute;left:12px;bottom:4px;z-index:650;font-size:9.5px;color:rgba(41,58,61,.7);pointer-events:none}
 .ebene-sat .attrib{color:rgba(255,255,255,.8);text-shadow:0 0 3px #000}
 .picker{position:relative;height:min(58vh,460px);margin:0 -16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .picker .pmap{position:absolute;inset:0}
@@ -578,8 +638,8 @@ mark{background:var(--warning-bg);color:inherit;border-radius:3px}
 .tllink .card.gebucht > .ic:first-child{background:var(--success-bg);color:var(--success)}
 
 /* Barrierefreiheit der Karte: weniger Transparenz macht die schwebenden Flächen deckend, mehr Kontrast gibt ihnen eine klare Kante */
-@media (prefers-reduced-transparency: reduce){ .glass,.mapctl,.mround,.mapcard,.mf{-webkit-backdrop-filter:none;backdrop-filter:none} .glass,.mapctl,.mround,.mapcard{background:var(--surface)} .mf[aria-pressed="false"]{background:var(--surface)} }
-@media (prefers-contrast: more){ .glass,.mapctl,.mround,.mapcard,.mf{border-color:var(--border-strong)} .mc-grab i{background:var(--text-muted)} }
+@media (prefers-reduced-transparency: reduce){ .glass,.mround,.mf{-webkit-backdrop-filter:none;backdrop-filter:none} .glass,.mround{background:var(--surface)} }
+@media (prefers-contrast: more){ .glass,.mapctl,.mround,.mapcard,.mf,.mfk,.maptop .seg,.stlbl{border-color:var(--border-strong)} .mc-grab i{background:var(--text-muted)} }
 
 </style>
 </head>
@@ -651,6 +711,7 @@ const ICONS = {
   pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
   liste: '<path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12"/><path d="M4 6.5h.01M4 12h.01M4 17.5h.01" stroke-width="2.6"/>',
   zeitraum: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 14.5h9"/>',
+  filter: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
   navi: '<path d="M20.5 3.5 3.5 10.6l7 2.9 2.9 7z"/>',
   ebenen: '<path d="M12 3.5 21 8l-9 4.5L3 8z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16 9 4.5 9-4.5"/>',
   rahmen: '<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/><circle cx="12" cy="12" r="2.2"/>',
@@ -2426,9 +2487,14 @@ const zoomBucket = z => z < 10 ? 0 : z < 11 ? 1 : 2;
 let lastBucket = -1;
 
 // Farben der Karte aus der App: Sand als Land, Salbei für Wald und Grün, Lagune als Wasser, warme weiße Straßen
-const KF = {land:"#F3EBDC", sand:"#EEDFC0", wald:"#CFE0BE", gruen:"#DDE8CC", wohn:"#ECE1CE", wasser:"#A9DFD8", fluss:"#93D2CA",
-  grenze:"#A08F79", haupt:"#FFF7E8", hauptRand:"#DCC6A4", neben:"#FFFFFF", nebenRand:"#E6D7C1", gebaeude:"#E6D9C5", faehre:"#3E9C94",
-  text:"#2C4A46", leise:"#5F756F", halo:"#FFFAF2", meer:"#2B686C", route:"#2A7A72", routeRand:"#FFFAF2", reise:"#245F59"};
+// Kartenansicht 2.18: flächige, ruhige Farben, klare Kante zwischen Land und Wasser, keine weichen Übergänge
+const KF = {land:"#F5F0E6", sand:"#EFE5CF", wald:"#DCE5CF", gruen:"#E1E9D4", wohn:"#EDE6D9", wasser:"#9DD0CB", fluss:"#93CAC4",
+  grenze:"#A99C88", haupt:"#FFFFFF", hauptRand:"#DDD1BE", neben:"#FFFFFF", nebenRand:"#E6DCCC", gebaeude:"#E7DFD1", faehre:"#1F7F80",
+  text:"#22383A", leise:"#5E6E6A", halo:"#F5F0E6", meer:"#2F6F70", route:"#1F5A55", routeRand:"#FFFFFF", reise:"#1E4C48",
+  wegFlug:"#4B5C68", wegFaehre:"#1F7F80", wegLand:"#1E4C48"};
+// Farbe je Weg-Art: Flug schiefergrau, Fähre türkis, Bus, Auto und Zug dunkles Petrol. Nie nur die Farbe: Linienform und Symbol unterscheiden mit.
+const WEG_FARBE = art => art === "flug" ? KF.wegFlug : art === "faehre" ? KF.wegFaehre : KF.wegLand;
+const WEG_FARBE_STIL = ["match", ["get", "art"], "flug", KF.wegFlug, "faehre", KF.wegFaehre, KF.wegLand];
 // Beschreibung, Kacheln und Schriften laufen über ein eigenes Kürzel („kt://“) im Hauptprozess. So gehen sie sicher durch den
 // Service Worker und sind offline da. Anfragen aus MapLibres Hintergrundprozess sieht er auf dem iPhone nicht in jedem Fall.
 const KT = "kt://", ktZuHttps = u => u.replace(KT, "https://"), zuKt = u => u.replace("https://", KT);
@@ -2463,13 +2529,15 @@ function kartenStil(mitSat = ebene === "sat"){
     {id:"grenze", type:"line", ...om, "source-layer":"boundary", filter:["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]], paint:{"line-color":KF.grenze, "line-width":zoomBreite(4, .5, 10, 1.1), "line-dasharray":[3, 2], "line-opacity":.6}},
     ...strasse("neben", ["secondary", "tertiary", "minor", "service"], 12, KF.nebenRand, [12, .4, 14, 1.4, 18, 8]),
     ...strasse("fern", ["motorway", "trunk", "primary"], 6, KF.hauptRand, [6, .4, 10, 1, 14, 2.6, 18, 9]),
-    // Eure Reise als Struktur der Karte, Linienarten wie auf Elias’ Routenkarte (12.11.2026): Flug gestrichelt im Bogen, Fähre durchgezogen, Bus gepunktet, Zubringer zart, Pfeile für die Richtung
-    {id:"reise-rand", type:"line", source:"reise", filter:["!=", ["get", "art"], "zubringer"], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.routeRand, "line-width":zoomBreite(5, 5, 12, 8), "line-opacity":.9}},
-    {id:"reise-bus", type:"line", source:"reise", filter:["!", ["in", ["get", "art"], ["literal", ["faehre", "flug", "zubringer"]]]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.reise, "line-width":zoomBreite(5, 2.4, 12, 4), "line-dasharray":[.1, 2], "line-opacity":["case", ["get", "genau"], 1, .55]}},
-    {id:"reise-faehre", type:"line", source:"reise", filter:["==", ["get", "art"], "faehre"], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.reise, "line-width":zoomBreite(5, 2.4, 12, 4), "line-opacity":["case", ["get", "genau"], 1, .55]}},
-    {id:"reise-flug", type:"line", source:"reise", filter:["==", ["get", "art"], "flug"], layout:{"line-join":"round"}, paint:{"line-color":KF.reise, "line-width":zoomBreite(5, 2.4, 12, 4), "line-dasharray":[2.4, 1.4], "line-opacity":["case", ["get", "genau"], 1, .55]}},
-    {id:"reise-zubringer", type:"line", source:"reise", filter:["==", ["get", "art"], "zubringer"], layout:{"line-cap":"round"}, paint:{"line-color":KF.reise, "line-width":1.6, "line-dasharray":[.1, 2.2], "line-opacity":.7}},
-    {id:"reise-pfeil", type:"symbol", source:"reise", filter:["!=", ["get", "art"], "zubringer"], layout:{"symbol-placement":"line", "symbol-spacing":["interpolate", ["linear"], ["zoom"], 5, 70, 12, 140], "icon-image":"pfeil", "icon-size":["interpolate", ["linear"], ["zoom"], 5, .55, 12, .8], "icon-rotation-alignment":"map", "icon-allow-overlap":true, "icon-ignore-placement":true}, paint:{"icon-color":KF.reise, "icon-halo-color":KF.routeRand, "icon-halo-width":1.5}},
+    // Eure Reise (2.18): Bus, Auto und Zug durchgezogen in Petrol, Fähre gestrichelt in Türkis, Flug fein gepunktet im Bogen in Schiefergrau.
+    // Ein schmaler weißer Saum trennt die Linie klar vom Untergrund, ohne Schein. Pfeile sparsam für die Richtung.
+    {id:"reise-rand", type:"line", source:"reise", filter:["!", ["in", ["get", "art"], ["literal", ["zubringer", "fuehrung"]]]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.routeRand, "line-width":zoomBreite(5, 4.4, 12, 6.6), "line-opacity":["coalesce", ["feature-state", "o"], 1]}},
+    {id:"reise-bus", type:"line", source:"reise", filter:["!", ["in", ["get", "art"], ["literal", ["faehre", "flug", "zubringer", "fuehrung"]]]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.wegLand, "line-width":zoomBreite(5, 2.4, 12, 3.6), "line-opacity":["*", ["case", ["get", "genau"], 1, .5], ["coalesce", ["feature-state", "o"], 1]]}},
+    {id:"reise-faehre", type:"line", source:"reise", filter:["==", ["get", "art"], "faehre"], layout:{"line-join":"round"}, paint:{"line-color":KF.wegFaehre, "line-width":zoomBreite(5, 2.4, 12, 3.6), "line-dasharray":[2.6, 1.6], "line-opacity":["*", ["case", ["get", "genau"], 1, .5], ["coalesce", ["feature-state", "o"], 1]]}},
+    {id:"reise-flug", type:"line", source:"reise", filter:["==", ["get", "art"], "flug"], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.wegFlug, "line-width":zoomBreite(5, 2.4, 12, 3.4), "line-dasharray":[.1, 2.1], "line-opacity":["*", ["case", ["get", "genau"], 1, .5], ["coalesce", ["feature-state", "o"], 1]]}},
+    {id:"reise-zubringer", type:"line", source:"reise", filter:["==", ["get", "art"], "zubringer"], layout:{"line-cap":"round"}, paint:{"line-color":KF.wegLand, "line-width":1.5, "line-dasharray":[.1, 2.2], "line-opacity":.7}},
+    {id:"reise-fuehrung", type:"line", source:"reise", filter:["==", ["get", "art"], "fuehrung"], layout:{"line-cap":"round"}, paint:{"line-color":KF.reise, "line-width":1.2, "line-opacity":["*", .75, ["coalesce", ["feature-state", "o"], 1]]}},
+    {id:"reise-pfeil", type:"symbol", source:"reise", filter:["!", ["in", ["get", "art"], ["literal", ["zubringer", "fuehrung"]]]], layout:{"symbol-placement":"line", "symbol-spacing":["interpolate", ["linear"], ["zoom"], 5, 120, 12, 220], "icon-image":"pfeil", "icon-size":["interpolate", ["linear"], ["zoom"], 5, .5, 12, .7], "icon-rotation-alignment":"map", "icon-allow-overlap":true, "icon-ignore-placement":true}, paint:{"icon-color":WEG_FARBE_STIL, "icon-halo-color":KF.routeRand, "icon-halo-width":1.2, "icon-opacity":["coalesce", ["feature-state", "o"], 1]}},
     // Route des aktiven Tages: über den Straßen, unter den Namen. Ohne berechnete Route gestrichelt.
     {id:"route-rand", type:"line", source:"route", layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.routeRand, "line-width":8, "line-opacity":.95}},
     {id:"route", type:"line", source:"route", filter:["!", ["get", "gestrichelt"]], layout:{"line-cap":"round", "line-join":"round"}, paint:{"line-color":KF.route, "line-width":4}},
@@ -2484,10 +2552,12 @@ function kartenStil(mitSat = ebene === "sat"){
     // Übersicht leise: Städtenamen erst ab Zoom 7, davor tragen nur Länder, Meere und eure Stationen Namen
     {id:"name-stadt", type:"symbol", ...om, "source-layer":"place", minzoom:7, filter:klasse("city"), ...schrift(SCHRIFT.b, ["interpolate", ["linear"], ["zoom"], 7, 12.5, 10, 17])},
     {id:"name-land", type:"symbol", ...om, "source-layer":"place", maxzoom:8, filter:klasse("country"), ...schrift(SCHRIFT.n, ["interpolate", ["linear"], ["zoom"], 4, 10, 7, 12.5], KF.leise, {layout:{"text-transform":"uppercase", "text-letter-spacing":.2, "text-max-width":8}, paint:{"text-opacity":.65}})},
+    // Unsichtbare Platzhalter über Stationen und Schildern: die Namen der Karte weichen ihnen aus, statt darunter zu liegen
+    {id:"freihalter", type:"symbol", source:"frei", layout:{"text-field":["get", "t"], "text-font":SCHRIFT.b, "text-size":13, "text-padding":3, "text-allow-overlap":true, "text-ignore-placement":false}, paint:{"text-opacity":0}},
   ];
   return {version:8, glyphs:zuKt(SCHRIFT_URL),
     sources:{om:{type:"vector", url:zuKt(VEKTOR_URL), attribution:""}, sat:{type:"raster", tiles:[TILE_URL], tileSize:256, maxzoom:18},
-      route:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, reise:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, ich:{type:"geojson", data:{type:"FeatureCollection", features:[]}}},
+      route:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, reise:{type:"geojson", data:{type:"FeatureCollection", features:[]}, promoteId:"i"}, frei:{type:"geojson", data:{type:"FeatureCollection", features:[]}}, ich:{type:"geojson", data:{type:"FeatureCollection", features:[]}}},
     layers};
 }
 // Daten in eine Quelle schreiben. Ist der Stil noch nicht geladen, wartet der Stand und wird beim Laden nachgereicht.
@@ -2571,22 +2641,25 @@ function initMap(){
   if(map) return;
   const wrap = $("#mapWrap");
   wrap.insertAdjacentHTML("beforeend", `<div class="maptop">
-      <div class="seg glass" role="group" aria-label="Ansicht"><button data-km="karte" aria-pressed="true">${ic("karte")}Karte</button><button data-km="liste" aria-pressed="false">${ic("liste")}Liste</button></div>
-      <div class="mapfilter" id="mFilter" role="group" aria-label="Kategorien"></div>
-      <div class="glass mapday" id="mDay" hidden></div>
-      <button class="mround" id="mLoc" aria-label="Mein Standort">${ic("navi")}</button></div>
-    <div class="mapbar">
-      <div class="mapctl" role="group" aria-label="Kartenwerkzeuge">
-        <button id="mEbene" aria-pressed="${ebene === "sat"}" aria-label="Satellitenbild ein oder aus">${ic("ebenen")}</button>
-        <button id="mHome" aria-label="Ganze Reise zeigen">${ic("rahmen")}</button></div>
-      <button class="mapadd" id="mAdd">${ic("plus")}Spot</button></div>
+      <div class="mapzeile">
+        <div class="seg" role="group" aria-label="Ansicht"><button data-km="karte" aria-pressed="true" aria-label="Karte">${ic("karte")}</button><button data-km="liste" aria-pressed="false" aria-label="Liste">${ic("liste")}</button></div>
+        <button class="mfk" id="mFilterK" aria-expanded="false" aria-controls="mFilter">${ic("filter")}<span>Spots</span><span class="mfk-n" id="mFilterN"></span></button></div>
+      <div class="mapfilter" id="mFilter" role="group" aria-label="Kategorien" hidden></div>
+      <div class="mapday" id="mDay" hidden></div></div>
+    <div class="mapctl" role="group" aria-label="Kartenwerkzeuge">
+      <button id="mEbene" aria-pressed="${ebene === "sat"}" aria-label="Satellitenbild ein oder aus">${ic("ebenen")}</button>
+      <button id="mHome" aria-label="Ganze Reise zeigen">${ic("rahmen")}</button>
+      <button id="mLoc" aria-label="Mein Standort">${ic("navi")}</button></div>
+    <div class="mapbar"><button class="mapadd" id="mAdd">${ic("plus")}Spot</button></div>
+    <div class="maplegende" id="mLeg" aria-label="Linienarten der Reise" hidden></div>
     <div class="mapcard" id="mCard" role="region" aria-label="Ausgewählter Ort" hidden></div>`);
+  $("#mFilterK").onclick = () => { const f = $("#mFilter"), auf = f.hidden; f.hidden = !auf; $("#mFilterK").setAttribute("aria-expanded", auf); };
   blattBinden($("#mCard"));
   wrap.classList.toggle("ebene-sat", ebene === "sat");
   wrap.querySelectorAll("[data-km]").forEach(b => b.onclick = () => { UI.karteModus = b.dataset.km; render(); });
   $("#mAdd").onclick = () => go("spotEdit", {neu:true});
   $("#mLoc").onclick = centerMe;
-  $("#mHome").onclick = mapFitAll;
+  $("#mHome").onclick = () => { AUFBAU.offen = true; mapFitAll(); renderMarkers(); };
   $("#mEbene").onclick = () => setEbene(ebene === "sat" ? "karte" : "sat");
   const fehlt = () => { $("#map").innerHTML = '<p style="padding:120px 20px">Karte konnte nicht geladen werden. Alles andere funktioniert.</p>'; map = null; };
   if(!window.maplibregl) return fehlt();
@@ -2597,12 +2670,13 @@ function initMap(){
   map.touchZoomRotate.disableRotation();
   // Gibt es eine Reise mit Punkten, öffnet die Karte auf ihr statt auf ganz Thailand (nur mit sichtbarer Fläche, sonst stimmt die Rechnung nicht)
   const rp = reisePunkte(), box = map.getContainer();
-  if(rp.length > 1 && box.clientWidth > 200 && box.clientHeight > 300) zeigePunkte(rp, ALLES_RAND, 12);
+  if(rp.length > 1 && box.clientWidth > 200 && box.clientHeight > 300) zeigePunkte(rp, reiseRand(), 12);
   DATA.labels.forEach(l => TOWNNAMES.add(l[2])); // eigene Ortsnamen: kein doppeltes Spot-Etikett
   map.on("styleimagemissing", e => { if(e.id === "pfeil") pfeilBild(); });
   map.on("load", () => { pfeilBild(); Object.entries(wartend).forEach(([id, d]) => map.getSource(id)?.setData(d)); Object.keys(wartend).forEach(k => delete wartend[k]); setEbene(ebene); });
   $("#attrib").textContent = ATTRIB[ebene];
-  map.on("zoomend", () => { if(zoomBucket(map.getZoom()) !== lastBucket) renderMarkers(); else renderReise(); });
+  // Nach jedem Zoom neu: Stationen fächern je nach Zoom anders auf, und Unterkünfte sitzen in der Übersicht als Plakette an ihrer Station
+  map.on("zoomend", () => renderMarkers());
   map.on("click", () => closeMapCard());
   renderMarkers(); drawMe();
   setTimeout(prefetchTiles, 5000);
@@ -2611,6 +2685,7 @@ function renderFilter(){
   const box = $("#mFilter"); if(!box) return;
   box.innerHTML = Object.entries(GROUPS).map(([k, [label, icon, c]]) => `<button class="mf" data-g="${k}" style="--c:var(${c})" aria-pressed="${S.filter.has(k)}">${ic(icon)}<span>${label}</span></button>`).join("");
   box.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { const k = b.dataset.g; S.filter.has(k) ? S.filter.delete(k) : S.filter.add(k); renderFilter(); renderMarkers(); });
+  const n = $("#mFilterN"), alle = Object.keys(GROUPS).length; if(n) n.textContent = S.filter.size === alle ? "" : S.filter.size + " von " + alle;
 }
 
 /* Infokarte unten als Blatt wie in Karten-Apps: Tippen auf einen Marker wählt ihn aus, statt sofort die Detailseite zu öffnen.
@@ -2671,9 +2746,9 @@ function blattBinden(box){
 function openMapCard(sel){
   if(!UI.mapSel || UI.mapSel.art !== sel.art || UI.mapSel.id !== sel.id) BLATT.stufe = "peek"; // ein neuer Ort beginnt kurz
   UI.mapSel = sel; renderMapCard(); renderMarkers();
-  // Der gewählte Punkt darf nicht hinter dem Blatt liegen
-  const r = sel.art === "spot" ? P(sel.id) : rec("lodgings", sel.id), box = $("#mCard");
-  if(map && r && box && !box.hidden){ const y = punktAufKarte(r.lat, r.lng).y, frei = kartenHoehe() - (BLATT.H - BLATT.y) - 40; if(y > frei) map.panBy([0, y - frei], {duration:250}); }
+  // Der gewählte Punkt darf nicht hinter dem Blatt liegen (gerechnet mit dem Ziel des Blatts, nicht seiner Lage mitten in der Bewegung)
+  const r = sel.art === "spot" ? P(sel.id) : sel.art === "stay" ? (rec("stays", sel.id) && stayPoint(rec("stays", sel.id))) : rec("lodgings", sel.id), box = $("#mCard");
+  if(map && r && box && !box.hidden){ const y = punktAufKarte(r.lat, r.lng).y, frei = kartenHoehe() - (BLATT.H - (blattStufen()[BLATT.stufe] ?? BLATT.y)) - 40; if(y > frei) map.panBy([0, y - frei], {duration:250}); }
 }
 // Schließen per Tipp auf die Karte: Zustand sofort zurücksetzen, ein Abbild des Blatts geht den Weg nach unten
 function closeMapCard(){
@@ -2688,8 +2763,8 @@ function closeMapCard(){
 function renderMapCard(){
   const box = $("#mCard"); if(!box) return;
   const sel = UI.mapSel, wrap = $("#mapWrap");
-  const p = sel?.art === "spot" ? P(sel.id) : null, l = sel?.art === "lodging" ? rec("lodgings", sel.id) : null;
-  if(!p && !l){ BLATT.lauf?.stop(); box.hidden = true; box.innerHTML = ""; wrap.classList.remove("hascard", "ziehen"); UI.mapSel = null; BLATT.stufe = "peek"; return; }
+  const p = sel?.art === "spot" ? P(sel.id) : null, l = sel?.art === "lodging" ? rec("lodgings", sel.id) : null, st = sel?.art === "stay" ? rec("stays", sel.id) : null;
+  if(!p && !l && !st){ BLATT.lauf?.stop(); box.hidden = true; box.innerHTML = ""; wrap.classList.remove("hascard", "ziehen"); UI.mapSel = null; BLATT.stufe = "peek"; return; }
   const chip = (icon, t) => `<span class="mc-fact">${ic(icon)}${esc(t)}</span>`;
   const absatz = (t, x) => x ? `<div class="mc-abs"><h4>${t}</h4><p>${esc(x)}</p></div>` : "";
   let bild, kopf, sub, facts = [], acts, merk = "", mehr;
@@ -2708,6 +2783,19 @@ function renderMapCard(){
     mehr = `<div class="mc-facts">${chip("uhr", durTxt(p.dauerMin || 60) + " Aufenthalt")}${p.aktivitaet ? chip(AKTIV[p.aktivitaet], AKTIVT[p.aktivitaet]) : ""}</div>
       ${absatz("Beschreibung", p.kurzbeschreibung)}${absatz("Hinweise", p.hinweise)}
       <div class="mc-acts"><a class="btn small" href="${esc(mapsDir(p))}" target="_blank" rel="noopener">${ic("route")}Route</a><button class="btn small teal" data-mc="spot">Alle Details</button></div>`;
+  } else if(st){
+    // Station der Reise: nur, was eingetragen ist. Nummer statt Bild, Blättern in der Reihenfolge der Reise.
+    const orte = tripRoute().orte, i = orte.findIndex(o => o.id === st.id), lg = stayLodging(st.id), kand = lodgingsOf(st.id).filter(x => !RAUS.has(x.status)).length, n = nights(st);
+    bild = `<span class="mc-nr">${i >= 0 ? orte[i].nr : ic("pin")}</span>`;
+    kopf = esc(stayName(st));
+    sub = [st.von && st.bis ? fmtRange(st.von, st.bis) : null, n ? plural(n, "Nacht", "Nächte") : null].filter(Boolean).join(" · ");
+    facts.push(lg ? `<span class="mc-fact ok">${ic("hotel")}${esc(lg.name)}</span>` : chip("hotel", kand ? plural(kand, "Unterkunftsoption", "Unterkunftsoptionen") + ", keine gewählt" : "Noch keine Unterkunft"));
+    if(i >= 0 && orte.length > 1) merk = `<div class="mc-blaettern"><button data-mc="zurueck" aria-label="Vorige Station">${ic("zurueck")}</button><span>${orte[i].nr} / ${orte.length}</span><button data-mc="vor" aria-label="Nächste Station">${ic("weiter")}</button></div>`;
+    acts = `<button class="btn small teal" data-mc="stay">Aufenthalt öffnen</button>`;
+    const zeile = (c, t) => { const z = connLine(c); return `<button class="mc-zeile" data-mc="conn" data-cid="${esc(c.id)}"><span class="mc-zsym">${ic(z.icon)}</span><span class="mc-zt"><b>${t}</b><small>${esc(connTitle(c))} · ${esc(z.s)}</small></span>${ic("weiter")}</button>`; };
+    const an = conns().filter(c => c.nachStay === st.id), ab = conns().filter(c => c.vonStay === st.id);
+    mehr = `${an.map(c => zeile(c, "Anreise")).join("")}${ab.map(c => zeile(c, "Weiter")).join("")}${absatz("Notiz", st.notiz)}
+      <div class="mc-acts"><button class="btn small" data-mc="stay">Unterkünfte und Tage</button></div>`;
   } else {
     const s = rec("stays", l.stayId), pr = lodgingPrice(l, nights(s));
     bild = `<span class="mc-bild hotel">${ic("hotel")}</span>`;
@@ -2721,7 +2809,7 @@ function renderMapCard(){
   }
   const neu = box.hidden;
   box.innerHTML = `<button class="mc-grab" data-mc="grab" aria-expanded="false" aria-label="Mehr anzeigen"><i></i></button>
-    <div class="mc-kopf"><button class="mc-main" data-mc="${p ? "spot" : "lodging"}" aria-label="Details zu ${esc(p ? p.name : l.name)}">${bild}<span class="mc-t"><b>${kopf}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${facts.length ? `<span class="mc-facts">${facts.join("")}</span>` : ""}</span>${ic("weiter")}</button>${merk}<div class="mc-acts">${acts}</div></div>
+    <div class="mc-kopf"><button class="mc-main" data-mc="${p ? "spot" : st ? "stay" : "lodging"}" aria-label="Details zu ${esc(p ? p.name : st ? stayName(st) : l.name)}">${bild}<span class="mc-t"><b>${kopf}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${facts.length ? `<span class="mc-facts">${facts.join("")}</span>` : ""}</span>${ic("weiter")}</button>${merk}<div class="mc-acts">${acts}</div></div>
     <div class="mc-mehr">${mehr}</div>`;
   box.hidden = false; wrap.classList.add("hascard");
   // Maße der Stufen: kurz zeigt Kopf und Hauptaktion, der Rest liegt darunter verborgen
@@ -2732,9 +2820,11 @@ function renderMapCard(){
   const g = box.querySelector("[data-mc=grab]"); g.setAttribute("aria-expanded", BLATT.stufe === "voll"); g.setAttribute("aria-label", BLATT.stufe === "voll" ? "Weniger anzeigen" : "Mehr anzeigen");
   box.querySelectorAll("[data-mc]").forEach(b => b.onclick = e => { e.stopPropagation(); const a = b.dataset.mc, id = sel.id;
     if(a === "grab") return blattZu(BLATT.stufe === "voll" ? "peek" : "voll");
+    if(a === "vor" || a === "zurueck"){ const orte = tripRoute().orte, i = orte.findIndex(o => o.id === id), z = orte[(i + (a === "vor" ? 1 : orte.length - 1)) % orte.length]; if(map) map.easeTo({center:[z.pt.lng, z.pt.lat], duration:RUHIG.matches ? 0 : 350}); return openMapCard({art:"stay", id:z.id}); }
+    if(a === "conn"){ UI.mapSel = null; renderMapCard(); return go("conn", {id:b.dataset.cid}); }
     if(a === "merk"){ setOver(id, {status:p.status === "gemerkt" ? "offen" : "gemerkt"}); persist(); renderMapCard(); return toast(p.status === "gemerkt" ? "Nicht mehr gemerkt" : "Gemerkt", "herz"); }
     UI.mapSel = null; renderMapCard();
-    if(a === "spot") go("spot", {id}); else if(a === "lodging") go("lodging", {id}); else if(a === "pin") go("ortWahl", {lodgingId:id}); else if(a === "day") addSpotToDay(id); });
+    if(a === "spot") go("spot", {id}); else if(a === "stay") go("stay", {id}); else if(a === "lodging") go("lodging", {id}); else if(a === "pin") go("ortWahl", {lodgingId:id}); else if(a === "day") addSpotToDay(id); });
 }
 let letzteWahl = null;
 function renderMarkers(){
@@ -2742,8 +2832,11 @@ function renderMarkers(){
   const bucket = lastBucket = zoomBucket(map.getZoom()), size = bucket === 0 ? 32 : 36, sat = ebene === "sat", sel = UI.mapSel;
   const ad = editDay(), pl = dayPlanFor(ad), order = new Map((pl?.plan.stationen || []).filter(x => P(x.placeId)).map((x, i) => [x.placeId, i + 1]));
   const chosenIds = new Set(stays().map(s => stayLodging(s.id)?.id).filter(Boolean));
-  mapLodgings().forEach(l => { const gew = chosenIds.has(l.id), on = sel?.art === "lodging" && sel.id === l.id;
-    setzeMarker(l.lat, l.lng, `<div class="hpin${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, {offset:[0, -7], z:on ? 50 : gew ? 30 : 20, titel:l.name + (gew ? "" : " (Option)"), klick:() => openMapCard({art:"lodging", id:l.id})}); });
+  const klein = map.getZoom() < PLAKETTE_BIS, lagen = klein ? new Map(stationLagen().map(x => [x.o.id, x])) : null, je = {};
+  mapLodgings().sort((a, b) => chosenIds.has(b.id) - chosenIds.has(a.id)).forEach(l => { const gew = chosenIds.has(l.id), on = sel?.art === "lodging" && sel.id === l.id, titel = l.name + (gew ? "" : " (Option)"), klick = () => openMapCard({art:"lodging", id:l.id});
+    const st = lagen?.get(l.stayId);
+    if(st){ const k = je[l.stayId] = (je[l.stayId] || 0) + 1; setzeMarker(st.lat, st.lng, `<div class="hpin mini${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, {anchor:"center", offset:[11 + (k - 1) * 17, -12], z:on ? 90 : 80, titel, klick}); return; }
+    setzeMarker(l.lat, l.lng, `<div class="hpin${gew ? "" : " kand"}${on ? " sel" : ""}">${ic("hotel")}</div>`, {offset:[0, -7], z:on ? 50 : gew ? 30 : 20, titel, klick}); });
   Object.values(places()).forEach(p => {
     if(!S.filter.has(GOF[p.typ] || "kultur") || p.status === "abgelehnt") return;
     const done = p.status === "besucht", nr = order.get(p.id), on = sel?.art === "spot" && sel.id === p.id;
@@ -2794,39 +2887,162 @@ function pfeilBild(){
   map.addImage("pfeil", g.getImageData(0, 0, n, n), {pixelRatio:r, sdf:true});
 }
 const SYMBOL_AB = 7; // Verkehrsmittel-Symbole erst ab hier, in der Übersicht reichen Linie und Pfeile
+const PLAKETTE_BIS = 10; // darunter sitzen Unterkünfte als Plakette an ihrer Station
+const STATION_ABSTAND = 32; // so dicht dürfen zwei Stationen höchstens sitzen, sonst fächern sie auf
+/* Die Reise ist fest: jede Station bleibt einzeln sichtbar, keine wird zusammengefasst und keine überdeckt eine andere.
+   Liegen Stationen dichter als STATION_ABSTAND, fächern sie in ihrer Reihenfolge auf (Reihe darüber, darunter, links oder rechts,
+   je nachdem wo Platz ist). Ein kleiner Punkt mit feiner Linie bleibt am echten Ort. Gerechnet wird nur aus den Daten auf dem Gerät. */
+function stationLagen(){
+  const {orte} = tripRoute(), box = map.getContainer(), w = box.clientWidth, h = box.clientHeight;
+  const lagen = orte.map(o => { const p = punktAufKarte(o.pt.lat, o.pt.lng); return {o, x0:p.x, y0:p.y, x:p.x, y:p.y, lat:o.pt.lat, lng:o.pt.lng, versetzt:false}; });
+  let gruppen = [];
+  lagen.forEach(l => { const nah = gruppen.filter(g => g.some(q => Math.hypot(q.x0 - l.x0, q.y0 - l.y0) < STATION_ABSTAND)); gruppen = gruppen.filter(g => !nah.includes(g)); gruppen.push([...nah.flat(), l]); });
+  gruppen.filter(g => g.length > 1).forEach(g => {
+    g.sort((a, b) => a.o.nr - b.o.nr);
+    const cx = g.reduce((a, l) => a + l.x0, 0) / g.length, cy = g.reduce((a, l) => a + l.y0, 0) / g.length, d = STATION_ABSTAND + 2, m = (g.length - 1) / 2;
+    const reihe = (dx, dy, ox, oy) => g.map((l, k) => ({l, x:cx + ox + dx * (k - m) * d, y:cy + oy + dy * (k - m) * d}));
+    const andere = lagen.filter(l => !g.includes(l));
+    const ui = freiFlaechen(), passt = v => v.every(p => p.x > 18 && p.x < w - 18 && p.y > 18 && p.y < h - 18 && andere.every(q => Math.hypot(q.x - p.x, q.y - p.y) >= STATION_ABSTAND)
+      && !ui.some(q => ueber({x0:p.x - 15, x1:p.x + 15, y0:p.y - 15, y1:p.y + 15}, q)));
+    // Senkrecht zuerst: dann hat jede Station links und rechts eine eigene Seite für ihr Schild. Wohin, entscheidet der freie Platz.
+    const platz = v => Math.min(...v.map(p => Math.min(p.x, w - p.x)));
+    const spalten = [0, -.5, .5, -1, 1].flatMap(v => [reihe(0, 1, d, v * d), reihe(0, 1, -d, v * d)]);
+    const versuche = [...spalten.slice(0, 2).sort((a, b) => platz(b) - platz(a)), ...spalten.slice(2), reihe(1, 0, 0, -d), reihe(1, 0, 0, d)];
+    (versuche.find(passt) || versuche[0]).forEach(p => { Object.assign(p.l, {x:p.x, y:p.y, versetzt:true}); const ll = map.unproject([p.x, p.y]); p.l.lat = ll.lat; p.l.lng = ll.lng; });
+  });
+  return lagen;
+}
+// Flächen der Bedienelemente auf der Karte, damit kein Schild darunter rutscht
+function freiFlaechen(){
+  const b = map.getContainer().getBoundingClientRect();
+  return ["#mapWrap .maptop", "#mapWrap .mapctl", "#mapWrap .mapbar", "#mLeg", "#mCard"].map(q => document.querySelector(q)).filter(e => e && !e.hidden && e.offsetParent)
+    .map(e => { const r = e.getBoundingClientRect(); return {x0:r.left - b.left - 4, x1:r.right - b.left + 4, y0:r.top - b.top - 4, y1:r.bottom - b.top + 4}; });
+}
+// Aufbau der Route: beim ersten Zeigen und nach „Ganze Reise zeigen“ erscheinen die Etappen nacheinander, die Stationen mit ihnen.
+// Kurz und einmalig, ohne Dauerbewegung; bei „Bewegung reduzieren“ steht alles sofort da.
+const AUFBAU = {offen:true, lauf:0, TAKT:150, DAUER:320};
+function routeAufbauen(etappeVon){
+  if(!map?.getSource("reise")) return;
+  const n = etappeVon.length, k = Math.max(0, ...etappeVon) + 1, t0 = performance.now(), lauf = ++AUFBAU.lauf;
+  const setze = (i, o) => map.setFeatureState({source:"reise", id:i}, {o});
+  if(RUHIG.matches){ for(let i = 0; i < n; i++) setze(i, 1); return; }
+  for(let i = 0; i < n; i++) setze(i, 0);
+  const schritt = t => { if(lauf !== AUFBAU.lauf) return; let fertig = true;
+    for(let i = 0; i < n; i++){ const x = Math.min(1, Math.max(0, (t - t0 - etappeVon[i] * AUFBAU.TAKT) / AUFBAU.DAUER)); if(x < 1) fertig = false; setze(i, 1 - (1 - x) ** 3); }
+    if(!fertig) requestAnimationFrame(schritt); };
+  requestAnimationFrame(schritt);
+  return k;
+}
+// Punkt bei einem Anteil der Länge einer Linie (in Bildpunkten gemessen)
+function entlang(px, f){
+  const d = px.slice(1).map((p, i) => Math.hypot(p.x - px[i].x, p.y - px[i].y)); let rest = d.reduce((a, b) => a + b, 0) * f;
+  for(let i = 0; i < d.length; i++){ if(rest <= d[i]){ const q = d[i] ? rest / d[i] : 0; return {x:px[i].x + (px[i + 1].x - px[i].x) * q, y:px[i].y + (px[i + 1].y - px[i].y) * q, i}; } rest -= d[i]; }
+  return {...px.at(-1), i:px.length - 2};
+}
+function ueber(r, q){ return q.x0 < r.x1 && q.x1 > r.x0 && q.y0 < r.y1 && q.y1 > r.y0; }
+// Echte Breite eines Schilds, einmal gemessen und gemerkt
+const SCHILD_BREITE = new Map();
+function schildBreite(html){
+  if(SCHILD_BREITE.has(html)) return SCHILD_BREITE.get(html);
+  const m = document.createElement("span"); m.className = "stlbl"; m.style.cssText = "position:absolute;visibility:hidden;left:-9999px;top:0"; m.innerHTML = html;
+  map.getContainer().appendChild(m); const w = Math.ceil(m.getBoundingClientRect().width) + 2; m.remove();
+  if(w > 2) SCHILD_BREITE.set(html, w); return w > 2 ? w : 120;
+}
+const abstandZu = (r, p) => Math.hypot(Math.max(r.x0 - p.x, 0, p.x - r.x1), Math.max(r.y0 - p.y, 0, p.y - r.y1));
 function renderReise(){
   if(!map) return; reiseMarker.forEach(m => m.remove()); reiseMarker = [];
-  const {orte, wege} = tripRoute(), feat = [], sat = ebene === "sat", liste = reiseMarker;
-  wege.forEach(w => w.teile.forEach(t => {
+  const {wege} = tripRoute(), feat = [], sat = ebene === "sat", liste = reiseMarker, arten = new Set(), symbole = [], etappeVon = [];
+  wege.forEach((w, k) => w.teile.forEach(t => {
     const coords = t.art === "flug" && t.pts.length === 2 ? bogen(t.pts[0], t.pts[1]) : t.pts.map(p => [p.lng, p.lat]);
-    feat.push({type:"Feature", properties:{art:t.art, genau:w.genau}, geometry:{type:"LineString", coordinates:coords}});
+    feat.push({type:"Feature", properties:{i:feat.length, art:t.art, genau:w.genau}, geometry:{type:"LineString", coordinates:coords}}); etappeVon.push(k);
     if(t.art === "zubringer") return;
-    const ll = coords.map(([x, y]) => [y, x]), mid = midOf(ll), a = punktAufKarte(...ll[0]), b = punktAufKarte(...ll.at(-1));
-    // Symbol sitzt direkt auf der Linie, das Flugzeug zeigt in Flugrichtung (Richtung an der Linienmitte, Symbol ist um 45 Grad gedreht gezeichnet)
-    const j = Math.max(0, Math.floor((ll.length - 1) / 2) - (ll.length > 2 ? 1 : 0)), p0 = punktAufKarte(...ll[j]), p1 = punktAufKarte(...ll[Math.min(ll.length - 1, j + (ll.length > 2 ? 2 : 1))]);
-    const dreh = t.art === "flug" ? ` style="transform:rotate(${Math.round(Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180 / Math.PI + 45)}deg)"` : "";
-    if(map.getZoom() >= SYMBOL_AB && Math.hypot(a.x - b.x, a.y - b.y) > 96) setzeMarker(mid[0], mid[1], `<span class="wegic${w.genau ? "" : " ungefaehr"}"${dreh}>${ic(TRANSPORT[t.art]?.[1] || "reise")}</span>`,
-      {anchor:"center", z:3, liste, titel:(TRANSPORT[t.art]?.[0] || "Verbindung") + (w.genau ? "" : ", Strecke ungefähr")});
+    arten.add(t.art === "flug" || t.art === "faehre" ? t.art : "land");
+    const px = coords.map(([x, y]) => punktAufKarte(y, x));
+    if(map.getZoom() >= SYMBOL_AB && Math.hypot(px[0].x - px.at(-1).x, px[0].y - px.at(-1).y) > 96) symbole.push({w, t, px});
   }));
+  const lagen = stationLagen(), versetzt = lagen.filter(l => l.versetzt);
+  versetzt.forEach(l => { feat.push({type:"Feature", properties:{i:feat.length, art:"fuehrung", genau:true}, geometry:{type:"LineString", coordinates:[[l.o.pt.lng, l.o.pt.lat], [l.lng, l.lat]]}}); etappeVon.push(Math.max(0, l.o.nr - 2)); });
+  const auftritt = AUFBAU.offen && !RUHIG.matches;
+  // Verzögerung je Station: sie erscheint mit der Etappe, die zu ihr führt
+  const stil = nr => auftritt ? ` style="--d:${Math.max(0, nr - 1) * AUFBAU.TAKT}ms"` : "";
+  versetzt.forEach(l => setzeMarker(l.o.pt.lat, l.o.pt.lng, `<span class="stpunkt${auftritt ? " auftritt" : ""}"${stil(l.o.nr)}></span>`, {anchor:"center", z:37, liste}));
+  const gew = UI.mapSel?.art === "stay" ? UI.mapSel.id : null;
+  lagen.forEach((l, i) => { const o = l.o, on = o.id === gew;
+    setzeMarker(l.lat, l.lng, `<div class="station${o.pt.quelle === "ort" ? " ort" : ""}${on ? " sel" : ""}${auftritt ? " auftritt" : ""}"${stil(o.nr)}><b>${o.nr}</b></div>`, {anchor:"center", z:on ? 70 : 40 + i, liste, titel:`${o.nr}. ${o.name}`, klick:() => openMapCard({art:"stay", id:o.id})}); });
+  // Schilder: Name und Nächte. Acht Lagen rund um die Station in drei Abständen.
+  // Fest frei bleiben müssen Stationen, Punkte, andere Schilder und Bedienelemente. Die Linien der Route sollen frei bleiben:
+  // gewählt wird die erste Lage ohne Linie, sonst die mit den wenigsten Berührungen. Findet sich gar nichts, steht das Schild rechts.
+  // Auf schmalen Bildschirmen (unter 360 Punkten) nur der Name, die Nächte stehen im Blatt
+  const kompakt = map.getContainer().clientWidth < 360;
+  const inhalt = l => { const n = kompakt ? 0 : nights(rec("stays", l.o.id)); return `<b>${esc(l.o.name)}</b>${n ? `<small>${n} N</small>` : ""}`; };
+  const breite = l => schildBreite(inhalt(l)), H = 26, R = 15;
+  const W = map.getContainer().clientWidth, Hk = map.getContainer().clientHeight, ui = freiFlaechen(), belegt = [];
+  lagen.forEach(l => belegt.push({x0:l.x - R, x1:l.x + R, y0:l.y - R, y1:l.y + R}));
+  versetzt.forEach(l => belegt.push({x0:l.x0 - 5, x1:l.x0 + 5, y0:l.y0 - 5, y1:l.y0 + 5}));
+  const linien = [];
+  feat.forEach(ft => { if(ft.properties.art === "fuehrung") return; const px = ft.geometry.coordinates.map(([x, y]) => punktAufKarte(y, x));
+    for(let i = 1; i < px.length; i++){ const a = px[i - 1], b = px[i], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 8));
+      for(let j = 0; j <= n; j++){ const x = a.x + (b.x - a.x) * j / n, y = a.y + (b.y - a.y) * j / n; if(x > -20 && x < W + 20 && y > -20 && y < Hk + 20) linien.push({x0:x - 3, x1:x + 3, y0:y - 3, y1:y + 3}); } } });
+  const LAGEN = [[1, 0], [-1, 0], [0, -1], [0, 1], [1, -1], [-1, -1], [1, 1], [-1, 1]];
+  const frei = lagen.map(l => ({type:"Feature", properties:{t:"WW"}, geometry:{type:"Point", coordinates:[l.lng, l.lat]}}));
+  lagen.forEach(l => {
+    // Bewertung: jede berührte Linienstelle zählt ½ (höchstens 4), jeder Schritt weiter weg 5, über/unter 1,5, schräg 4,5. Die kleinste Zahl gewinnt.
+    const bw = breite(l); let beste = null;
+    // Erster Durchgang: eindeutig zugeordnet. Zweiter, nur falls nötig: ohne diese Bedingung, aber weiter ohne Überdeckung.
+    // Stufen: 0 eindeutig und nah, 1 etwas weiter (dann mit feiner Linie), 2 auch überdeckend als letzter Ausweg
+    for(const stufe of [0, 1, 2]){ if(beste) break; const streng = stufe === 0; (stufe === 0 ? [5, 14] : [5, 14, 26, 40, 56]).forEach((abst, ring) => LAGEN.forEach(([dx, dy]) => {
+      const cx = l.x + dx * (R + abst + bw / 2), cy = l.y + dy * (R + abst + H / 2), r = {x0:cx - bw / 2, x1:cx + bw / 2, y0:cy - H / 2, y1:cy + H / 2};
+      if(r.x0 < 6 || r.x1 > W - 6 || r.y0 < 6 || r.y1 > Hk - 6 || ui.some(q => ueber(r, q))) return; // Bedienelemente nie
+      const hart = belegt.filter(q => ueber(r, q)).length; if(hart && stufe < 2) return;
+      const linie = stufe > 0 && abst > 5;
+      // Eindeutig: das Schild steht näher an seiner Station als an jeder anderen
+      const eigen = abstandZu(r, l); if(!linie && lagen.some(q => q !== l && abstandZu(r, q) < eigen - (streng ? 2 : 10))) return;
+      // Gerade Lagen vor schrägen: neben der Station am klarsten, darüber oder darunter gut, schräg nur wenn nötig
+      const lage = dx && dy ? 4.5 : dy ? 1.5 : 0;
+      const wert = Math.min(linien.filter(q => ueber(r, q)).length, 8) * .5 + ring * 5 + lage + hart * 100;
+      if(!beste || wert < beste.wert) beste = {r, dx:cx - l.x, dy:cy - l.y, wert, linie};
+    })); }
+    const wahl = beste || {r:{x0:l.x + R + 5, x1:l.x + R + 5 + bw, y0:l.y - H / 2, y1:l.y + H / 2}, dx:R + 5 + bw / 2, dy:0};
+    belegt.push(wahl.r);
+    // Steht das Schild weiter weg, verbindet eine feine Linie es mit seiner Station
+    if(wahl.linie){ const px = Math.max(wahl.r.x0, Math.min(l.x, wahl.r.x1)), py = Math.max(wahl.r.y0, Math.min(l.y, wahl.r.y1)), d = Math.hypot(px - l.x, py - l.y) || 1;
+      const a = map.unproject([l.x + (px - l.x) / d * 14, l.y + (py - l.y) / d * 14]), b = map.unproject([px, py]);
+      feat.push({type:"Feature", properties:{i:feat.length, art:"fuehrung", genau:true}, geometry:{type:"LineString", coordinates:[[a.lng, a.lat], [b.lng, b.lat]]}}); etappeVon.push(Math.max(0, l.o.nr - 2)); }
+    const n = nights(rec("stays", l.o.id)), mitte = map.unproject([l.x + wahl.dx, l.y + wahl.dy]);
+    frei.push({type:"Feature", properties:{t:l.o.name + (n ? "   " + n + " N" : "")}, geometry:{type:"Point", coordinates:[mitte.lng, mitte.lat]}});
+    setzeMarker(l.lat, l.lng, `<span class="stlbl${auftritt ? " auftritt" : ""}"${auftritt ? ` style="--d:${Math.max(0, l.o.nr - 1) * AUFBAU.TAKT + 120}ms"` : ""}>${inhalt(l)}</span>`,
+      {anchor:"center", offset:[Math.round(wahl.dx), Math.round(wahl.dy)], z:39, liste, titel:`${l.o.nr}. ${l.o.name}`, klick:() => openMapCard({art:"stay", id:l.o.id})});
+  });
+  // Verkehrsmittel-Symbol: auf der Linie, aber nicht unter einer Station, einem Schild oder einem anderen Symbol. Bevorzugt nahe der Mitte.
   quelleSetzen("reise", feat);
-  const pos = orte.map(o => punktAufKarte(o.pt.lat, o.pt.lng)), gezeigt = [];
-  const verdeckt = i => pos.some((q, j) => j > i && Math.hypot(q.x - pos[i].x, q.y - pos[i].y) < 22);
-  orte.forEach((o, i) => setzeMarker(o.pt.lat, o.pt.lng, `<div class="station${o.pt.quelle === "ort" ? " ort" : ""}"><b>${o.nr}</b></div>`, {anchor:"center", z:40 + i, liste, titel:`${o.nr}. ${o.name}`, klick:() => go("stay", {id:o.id})}));
-  // Schild rechts der Station, sonst links. Es bleibt ganz im Bild und überdeckt weder eine andere Station noch ein Schild, sonst entfällt es.
-  const breite = o => 18 + o.name.length * 7.6;
-  const bildBreite = map.getContainer().clientWidth;
-  const frei = (x0, x1, y, eigen) => x0 >= 8 && x1 <= bildBreite - 8 && !pos.some((q, j) => j !== eigen && q.x + 17 > x0 && q.x - 17 < x1 && Math.abs(q.y - y) < 28) && !gezeigt.some(g => g.x0 < x1 && g.x1 > x0 && Math.abs(g.y - y) < 26);
-  orte.forEach((o, i) => { const px = pos[i], w = breite(o); if(verdeckt(i)) return;
-    for(const rechts of [true, false]){
-      const x0 = rechts ? px.x + 17 : px.x - 17 - w, x1 = x0 + w;
-      if(!frei(x0, x1, px.y, i)) continue;
-      gezeigt.push({x0, x1, y:px.y}); setzeMarker(o.pt.lat, o.pt.lng, `<span class="stlbl">${esc(o.name)}</span>`, {anchor:rechts ? "left" : "right", offset:[rechts ? 17 : -17, 0], z:39, liste}); break;
-    } });
+  if(AUFBAU.offen && map.getSource("reise")){ AUFBAU.offen = false; routeAufbauen(etappeVon); }
+  belegt.push(...ui);
+  symbole.forEach(({w, t, px}) => {
+    for(const f of [.5, .42, .58, .34, .66, .26, .74]){
+      const p = entlang(px, f), r = {x0:p.x - 14, x1:p.x + 14, y0:p.y - 14, y1:p.y + 14};
+      if(r.x0 < 4 || r.x1 > W - 4 || r.y0 < 4 || r.y1 > Hk - 4 || belegt.some(q => ueber(r, q))) continue;
+      belegt.push(r);
+      const a = px[p.i], b = px[Math.min(px.length - 1, p.i + 1)], dreh = t.art === "flug" ? ` style="transform:rotate(${Math.round(Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 45)}deg)"` : "";
+      const ll = map.unproject([p.x, p.y]);
+      setzeMarker(ll.lat, ll.lng, `<span class="wegic${w.genau ? "" : " ungefaehr"}" style="--c:${WEG_FARBE(t.art)}"><i${dreh}>${ic(TRANSPORT[t.art]?.[1] || "reise")}</i></span>`,
+        {anchor:"center", z:3, liste, titel:(TRANSPORT[t.art]?.[0] || "Verbindung") + (w.genau ? "" : ", Strecke ungefähr")});
+      break;
+    }
+  });
+  quelleSetzen("frei", frei);
+  renderLegende(arten);
   if(map.getLayer("reise-bus")){
-    ["reise-bus", "reise-faehre", "reise-flug", "reise-zubringer"].forEach(id => map.setPaintProperty(id, "line-color", sat ? "#FFFAF2" : KF.reise));
-    map.setPaintProperty("reise-rand", "line-color", sat ? "#0B1411" : KF.routeRand); map.setPaintProperty("reise-rand", "line-opacity", sat ? .5 : .9);
-    map.setPaintProperty("reise-pfeil", "icon-color", sat ? "#FFFAF2" : KF.reise); map.setPaintProperty("reise-pfeil", "icon-halo-color", sat ? "#0B1411" : KF.routeRand);
+    ["reise-bus", "reise-faehre", "reise-flug", "reise-zubringer", "reise-fuehrung"].forEach(id => map.setPaintProperty(id, "line-color", sat ? "#FFFAF2" : id === "reise-faehre" ? KF.wegFaehre : id === "reise-flug" ? KF.wegFlug : KF.wegLand));
+    map.setPaintProperty("reise-rand", "line-color", sat ? "#0B1411" : KF.routeRand); map.setPaintProperty("reise-rand", "line-opacity", ["*", sat ? .5 : 1, ["coalesce", ["feature-state", "o"], 1]]);
+    map.setPaintProperty("reise-pfeil", "icon-color", sat ? "#FFFAF2" : WEG_FARBE_STIL); map.setPaintProperty("reise-pfeil", "icon-halo-color", sat ? "#0B1411" : KF.routeRand);
   }
+}
+// Legende nur mit den Arten, die eure Reise wirklich hat
+function renderLegende(arten){
+  const box = $("#mLeg"); if(!box) return;
+  const ART = [["flug", "Flug", "flug"], ["faehre", "Fähre", "faehre"], ["land", "Bus", "bus"]].filter(([a]) => arten.has(a));
+  box.hidden = !ART.length;
+  box.innerHTML = ART.map(([a, t]) => `<span><svg viewBox="0 0 28 8" aria-hidden="true"><line x1="3" y1="4" x2="25" y2="4" stroke="${WEG_FARBE(a)}" stroke-width="2.6" stroke-linecap="round"${a === "flug" ? ' stroke-dasharray="0.1 5"' : a === "faehre" ? ' stroke-dasharray="6 4" stroke-linecap="butt"' : ""}/></svg>${t}</span>`).join("");
 }
 
 function midOf(pts){
@@ -2837,11 +3053,19 @@ function midOf(pts){
 }
 function mapRedraw(){ if(map && !$("#mapWrap").hidden){ renderMapCard(); renderMarkers(); } else lastBucket = -1; }
 function mapFocus(ll, z){ initMap(); if(!map) return; setTimeout(() => { map.resize(); map.jumpTo({center:lngLat(ll), zoom:z || 13}); }, 60); }
-const ALLES_RAND = {top:150, bottom:110, left:40, right:90}; // oben Ansicht und Filter, rechts die Werkzeuge
+const ALLES_RAND = {top:80, bottom:96, left:44, right:72}; // oben die Ansichtszeile, rechts die Werkzeuge, unten Legende und Spot
 const reisePunkte = () => { const r = tripRoute(); return [...r.orte.map(o => [o.pt.lat, o.pt.lng]), ...r.wege.flatMap(w => w.teile.flatMap(t => t.pts.map(p => [p.lat, p.lng])))]; };
+// Ränder für „Ganze Reise“: oben unter der Ansichtszeile, unten über Legende und Spot-Knopf, rechts neben den Werkzeugen
+function reiseRand(){
+  const b = map.getContainer().getBoundingClientRect(), r = q => document.querySelector(q)?.getBoundingClientRect();
+  const oben = r("#mapWrap .maptop"), leg = r("#mLeg"), bar = r("#mapWrap .mapbar"), ctl = r("#mapWrap .mapctl");
+  if(!oben || !b.height) return ALLES_RAND;
+  const unten = Math.min(...[leg, bar].filter(x => x && x.height).map(x => x.top), b.bottom);
+  return {top:Math.round(oben.bottom - b.top + 26), bottom:Math.round(b.bottom - unten + 26), left:30, right:ctl ? Math.round(b.right - ctl.left + 10) : 60};
+}
 function mapFitAll(){
   if(!map) return;
-  zeigePunkte([...reisePunkte(), ...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])], ALLES_RAND, 12);
+  zeigePunkte([...reisePunkte(), ...mapLodgings().map(l => [l.lat, l.lng]), ...Object.values(places()).filter(p => S.filter.has(GOF[p.typ])).map(p => [p.lat, p.lng])], reiseRand(), 12);
 }
 function mapShowDay(){
   setTimeout(() => { if(!map) return; map.resize(); const pl = dayPlanFor(editDay()); if(!pl) return; const pts = planLegs(pl.plan).flat().map(p => [p.lat, p.lng]); const st = pl.plan.stationen.map(x => P(x.placeId)).filter(Boolean).map(p => [p.lat, p.lng]); const all = [...pts, ...st]; if(all.length) zeigePunkte(all, 70, 13); }, 80);
@@ -3090,7 +3314,7 @@ VIEWS.hilfe = () => ({title:"So funktioniert’s", large:true,
 
 /* ===== 20-start.js ===== */
 /* ---------- Start ---------- */
-const APP_VERSION = "Version 2.17";
+const APP_VERSION = "Version 2.18";
 migrateLegacy() && persist(); // Daten aus Version 1 übernehmen, wiederholbar
 render();
 syncFromLink();
